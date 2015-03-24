@@ -1,6 +1,4 @@
-FROM centos:7
-# Install java.. TODO: make it configuraable
-RUN yum -y install java-1.7.0-openjdk-devel && yum clean all
+FROM java:7
 ENV HZVERSION 3.4.1
 ENV HZ_HOME /opt/hazelcast/
 RUN mkdir -p HZ_HOME
