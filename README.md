@@ -1,6 +1,3 @@
-## Work in Progress, Please don't use it yet
-
-
 # Hazelcast Docker Image
 
 This repo contains docker image for [Hazelcast](http://hazelcast.org) open-source in-memory data-grid.
