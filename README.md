@@ -32,6 +32,21 @@ docker run -ti -e HZ_LICENSE_KEY=YOUR_LICENSE_KEY hazelcast/hazelcast:enterprise
 
 Then console app will be started and you can play with Hazelcast.
 
+## Hazelcast Management Center
+
+You need to pull hazelcast enterpise docker image from Docker registry via command below : 
+
+```
+docker pull hazelcast/hazelcast:management-center-latest
+```
+
+After that you should be able to run Hazelcast docker image by : 
+
+```
+docker run -ti -p 9000:9000 hazelcast/hazelcast:management-center-latest
+```
+then open from browser MACHINE_IP:9000/mancenter
+
 ## Extending the image
 
 You need to create a new `Dockerfile` and build it in order to be able to use it. In the `Dockerfile` example below we are creating a new image based on Hazelcast image and adding our own configuration file, from our host to the container,  which is going to be used with Hazelcast when the container runs.
