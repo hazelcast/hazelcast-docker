@@ -3,7 +3,7 @@
 This repo contains docker image for [Hazelcast](http://hazelcast.org) open-source in-memory data-grid.
 
 
-# Usage
+## Hazelcast OSS
 
 You need to pull hazelcast docker image from Docker registry via command below : 
 
@@ -16,11 +16,21 @@ After that you should be able to run Hazelcast docker image by :
 ```
 docker run -ti hazelcast/hazelcast
 ```
+## Hazelcast Enterprise
 
-# Custom configuration
+You need to pull hazelcast enterpise docker image from Docker registry via command below : 
 
-You can use docker image to start Hazelcast instance with default configuration. If you'd like to customize your  hazelcast instance you can extend the hazelcast base image, provide your own configuration file and customize your initialization process.
+```
+docker pull hazelcast/hazelcast:enterprise-latest
+```
 
+After that you should be able to run Hazelcast docker image by : 
+
+```
+docker run -ti -e HZ_LICENSE_KEY=YOUR_LICENSE_KEY hazelcast/hazelcast:enterprise-latest
+```
+
+Then console app will be started and you can play with Hazelcast.
 
 ## Extending the image
 
