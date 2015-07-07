@@ -21,13 +21,13 @@ docker run -ti hazelcast/hazelcast
 You need to pull hazelcast enterpise docker image from Docker registry via command below : 
 
 ```
-docker pull hazelcast/hazelcast:enterprise-latest
+docker pull hazelcast/hazelcast-enterprise:latest
 ```
 
 After that you should be able to run Hazelcast docker image by : 
 
 ```
-docker run -ti -e HZ_LICENSE_KEY=YOUR_LICENSE_KEY hazelcast/hazelcast:enterprise-latest
+docker run -ti -e HZ_LICENSE_KEY=YOUR_LICENSE_KEY hazelcast/hazelcast-enterprise:latest
 ```
 
 Then console app will be started and you can play with Hazelcast.
@@ -37,13 +37,13 @@ Then console app will be started and you can play with Hazelcast.
 You need to pull hazelcast enterpise docker image from Docker registry via command below : 
 
 ```
-docker pull hazelcast/hazelcast:management-center-latest
+docker pull hazelcast/management-center:latest
 ```
 
 After that you should be able to run Hazelcast docker image by : 
 
 ```
-docker run -ti -p 9000:9000 hazelcast/hazelcast:management-center-latest
+docker run -ti -p 9000:9000 hazelcast/management-center:latest
 ```
 then open from browser MACHINE_IP:9000/mancenter
 
