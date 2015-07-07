@@ -30,7 +30,7 @@ After that you should be able to run Hazelcast docker image by :
 docker run -ti -e HZ_LICENSE_KEY=YOUR_LICENSE_KEY hazelcast/hazelcast-enterprise:latest
 ```
 
-Then console app will be started and you can play with Hazelcast.
+Then a Hazelcast Node will be started..
 
 ## Hazelcast Management Center
 
