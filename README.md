@@ -43,9 +43,9 @@ docker pull hazelcast/management-center:latest
 After that you should be able to run Hazelcast docker image by : 
 
 ```
-docker run -ti -p 9000:9000 hazelcast/management-center:latest
+docker run -ti -p 8080:8080 hazelcast/management-center:latest
 ```
-then open from browser MACHINE_IP:9000/mancenter
+then open from browser MACHINE_IP:8080/mancenter
 
 ## Extending the image
 
