@@ -1,4 +1,4 @@
-ENV HZ_VERSION 3.5
+ENV HZ_VERSION 3.5.1
 FROM java:7
 ENV HZ_HOME /opt/hazelcast/
 RUN mkdir -p $HZ_HOME
