@@ -8,3 +8,4 @@ ADD http://download.hazelcast.com/download.jsp?version=hazelcast-$HZ_VERSION&p=d
 RUN unzip hazelcast.zip
 WORKDIR $HZ_HOME/hazelcast-$HZ_VERSION/mancenter
 CMD sh startManCenter.sh
+EXPOSE 8080
