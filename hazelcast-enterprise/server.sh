@@ -13,7 +13,7 @@ if [ "x$MAX_HEAP_SIZE" != "x" ]; then
 	JAVA_OPTS="$JAVA_OPTS -Xmx${MAX_HEAP_SIZE}"
 fi
 
-export CLASSPATH=$HAZELCAST_HOME/hazelcast-enterprise-$HZ_VERSION/lib/hazelcast-enterprise-all-$HZ_VERSION.jar
+export CLASSPATH=$HAZELCAST_HOME/hazelcast-enterprise-$HZ_VERSION/lib/hazelcast-enterprise-all-$HZ_VERSION.jar:$CLASSPATH/*
 
 echo "########################################"
 echo "# RUN_JAVA=$RUN_JAVA"
