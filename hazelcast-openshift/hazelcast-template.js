@@ -35,7 +35,7 @@
 				},
 				"spec": {
 					"containers": [{
-						"image": "hazelcast/hazelcast-openshift:${DEPLOYMENT_NAME}",
+						"image": "hazelcast/openshift:${HAZELCAST_VERSION}",
 						"name": "hazelcast-openshift",
 						"env": [{
 							"name": "HAZELCAST_KUBERNETES_SERVICE_DNS",
@@ -101,9 +101,9 @@
 		"value": "cluster.local",
 		"required": true
 	},{
-        "name": "DEPLOYMENT_NAME",
-        "description": "Defines the hazelcast version.",
-        "value": "3.6.1",
+        "name": "HAZELCAST_VERSION",
+        "description": "Defines the hazelcast version.Default is latest. eg: 3.6.1",
+        "value": "latest",
         "required": true
     }]
 }
