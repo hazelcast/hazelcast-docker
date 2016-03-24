@@ -49,9 +49,6 @@
 						}, {
 							"name": "HAZELCAST_KUBERNETES_SERVICE_DNS_IP_TYPE",
 							"value": "IPV4"
-						}, {
-							"name": "HAZELCAST_TYPE",
-							"value": "${HAZELCAST_TYPE}"
 						}],
 						"ports": [{
 							"containerPort": 5701,
