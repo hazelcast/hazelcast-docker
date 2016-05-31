@@ -31,8 +31,8 @@
       <discovery-strategies>
         <discovery-strategy enabled="true" class="com.noctarius.hazelcast.kubernetes.HazelcastKubernetesDiscoveryStrategy">
           <properties>
-            <property name="service-name">hazelcast-openshift</property>
-            <property name="namespace">default</property>
+              <property name="service-name">${env.HAZELCAST_KUBERNETES_SERVICE_NAME}</property>
+              <property name="namespace">${env.HAZELCAST_KUBERNETES_NAMESPACE}</property>
           </properties>
         </discovery-strategy>
       </discovery-strategies>
