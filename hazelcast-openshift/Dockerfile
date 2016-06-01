@@ -37,6 +37,8 @@ ADD https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.15/snakeyaml-1.15.jar $H
 ADD https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.jar $HZ_HOME
  
 ADD hazelcast.xml /$HZ_HOME/hazelcast.xml
+ADD start.sh /$HZ_HOME/start.sh
+ADD stop.sh /$HZ_HOME/stop.sh
 
 RUN chmod 777 /$HZ_HOME/start.sh
 RUN chmod 777 /$HZ_HOME/stop.sh
