@@ -38,9 +38,9 @@ ADD https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.j
  
 ADD hazelcast.xml /$HZ_HOME/hazelcast.xml
 
-RUN chmod 777 /$HZ_HOME/server.sh
+RUN chmod 777 /$HZ_HOME/start.sh
 RUN chmod 777 /$HZ_HOME/stop.sh
 # Start hazelcast standalone server.
-CMD ./server.sh
+CMD ./start.sh
 EXPOSE 5701
 
