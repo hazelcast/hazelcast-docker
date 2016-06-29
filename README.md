@@ -8,6 +8,7 @@
   * [Custom Configuration](#custom-configuration)
 * [Hazelcast Enterprise](#hazelcast-enterprise)
 * [Hazelcast Management Center](#hazelcast-management-center)
+  * [Hazelcast Member Configuration](#hazelcast-member-configuration)
 * [Hazelcast OpenShift](#hazelcast-openshift)
 
 
@@ -18,7 +19,7 @@ You can deploy your Hazelcast projects using the Docker containers. Hazelcast ha
 * Hazelcast Management Center
 * Hazelcast OpenShift
 
-## Hazelcast
+# Hazelcast
 
 You can pull the Hazelcast Docker image from Docker registry by running the following command:
 
@@ -107,7 +108,7 @@ docker build .
 
 Now you can run your own container with its ID or tag (if you provided `-t` option while building the image) using the `docker run` command.
 
-## Hazelcast Enterprise
+# Hazelcast Enterprise
 
 You can pull the Hazelcast Enterpise Docker image from the Docker registry by running the following command:
 
@@ -121,6 +122,41 @@ After that you should be able to run the Hazelcast Docker image using the follow
 docker run -ti -e HZ_LICENSE_KEY=YOUR_LICENSE_KEY hazelcast/hazelcast-enterprise:latest
 ```
 
+# Hazelcast Management Center
+
+You can pull the Hazelcast Management Center Docker image from the Docker registry by running the following command:
+
+```
+docker pull hazelcast/management-center:latest
+```
+
+After that you can run the Hazelcast Management Center Docker image using the following command:
+
+```
+docker run -ti -p 8080:8080 hazelcast/management-center:latest
+```
+
+Now you can reach Hazelcast Management Center from your browser using the URL `http://localhost:8080/mancenter`. 
+
+If you are running the Docker image in the cloud, you should use a public IP of your machine instead of `localhost`. 
+
+If you are using `docker-machine`, you can learn the Docker host IP using the following command:
+
+```
+docker-machine ls
+```
+
+If you are using `boot2docker`, you can learn the Docker host IP using the following command:
+
+```
+boot2docker ip
+```
+
+Then, you can run Hazelcast Management Center using the URL `http://host-ip:8080/mancenter`.
+
+### Hazelcast Member Configuration
+
+As a prerequisite, Hazelcast Cluster Member Containers should be launched with Management Center Enabled mode. This can be achieved by using a custom `hazelcast.xml` configuration file while launching the Hazelcast Member Container. For more information please refer to the [Using Hazelcast Configuration File](#using-hazelcast-configuration-file) section.
 
 # Description
 
