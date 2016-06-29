@@ -1,6 +1,11 @@
 # Table of Contents
 
 * [Hazelcast](#hazelcast)
+  * [Getting a Specific Hazelcast Version](#getting-a-specific-hazelcast-version)
+  * [Starting and Stopping a Hazelcast Member](#starting-and-stopping-a-hazelcast-member)
+  * [Setting Environment Variables](#setting-environment-variables)
+  * [Using Hazelcast Configuration File](#using-hazelcast-configuration-file)
+  * [Custom Configuration](#custom-configuration)
 * [Hazelcast Enterprise](#hazelcast-enterprise)
 * [Hazelcast Management Center](#hazelcast-management-center)
 * [Hazelcast OpenShift](#hazelcast-openshift)
@@ -37,7 +42,7 @@ An example command to get a specific Hazelcast version is as follows:
 docker run -ti hazelcast/hazelcast:3.6-EA
 ```
 
-### Starting / Stopping a Hazelcast Member
+### Starting and Stopping a Hazelcast Member
 
 When you run the command `docker run -ti hazelcast/hazelcast`, it automatically runs the script `server.sh` and this  creates a new Hazelcast member.
 
@@ -81,7 +86,7 @@ In this case, you need to mount the folder that has the Hazelcast configuration 
 docker run -e JAVA_OPTS="-Dhazelcast.config=./configFolder/hazelcast.xml" -v ./configFolder:./configFolder -ti hazelcast/hazelcast
 ```
 
-### Custom configuration
+### Custom Configuration
 You can use the Docker image to start a Hazelcast member with default configuration. If you like to customize your Hazelcast member, you can extend the Hazelcast base image, provide your own configuration file and customize your initialization process.
 
 You need to create a new `Dockerfile` and build it in order to use it. In the `Dockerfile` example below, we are creating a new image based on the Hazelcast image and adding our own configuration file from our host to the container, which is going to be used with Hazelcast when the container runs.
@@ -101,6 +106,20 @@ docker build .
 ```
 
 Now you can run your own container with its ID or tag (if you provided `-t` option while building the image) using the `docker run` command.
+
+## Hazelcast Enterprise
+
+You can pull the Hazelcast Enterpise Docker image from the Docker registry by running the following command:
+
+```
+docker pull hazelcast/hazelcast-enterprise:latest
+```
+
+After that you should be able to run the Hazelcast Docker image using the following command:
+
+```
+docker run -ti -e HZ_LICENSE_KEY=YOUR_LICENSE_KEY hazelcast/hazelcast-enterprise:latest
+```
 
 
 # Description
