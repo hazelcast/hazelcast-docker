@@ -10,6 +10,7 @@
 * [Hazelcast Management Center](#hazelcast-management-center)
   * [Hazelcast Member Configuration](#hazelcast-member-configuration)
 * [Hazelcast OpenShift](#hazelcast-openshift)
+* [Hazelcast Docker Image Links](#hazelcast-docker-image-links)
 
 
 You can deploy your Hazelcast projects using the Docker containers. Hazelcast has the following images on Docker:
@@ -93,7 +94,7 @@ You can use the Docker image to start a Hazelcast member with default configurat
 You need to create a new `Dockerfile` and build it in order to use it. In the `Dockerfile` example below, we are creating a new image based on the Hazelcast image and adding our own configuration file from our host to the container, which is going to be used with Hazelcast when the container runs.
 
 ```
-FROM hazelcast:latest
+FROM hazelcast:hazelcast/latest
 # Add your custom hazelcast.xml
 ADD hazelcast.xml $HZ_HOME
 # Run hazelcast
@@ -158,15 +159,38 @@ Then, you can run Hazelcast Management Center using the URL `http://host-ip:8080
 
 As a prerequisite, Hazelcast Cluster Member Containers should be launched with Management Center Enabled mode. This can be achieved by using a custom `hazelcast.xml` configuration file while launching the Hazelcast Member Container. For more information please refer to the [Using Hazelcast Configuration File](#using-hazelcast-configuration-file) section.
 
-# Description
+# Hazelcast OpenShift
 
-For full description and usage please visit this page.
+First login to OpenShift using the OpenShift CLI with the following commands:
+
+```
+sudo su
+oc login <your-openshit-login-url>
+```
+
+Then create a new project, e.g., `hazelcast-cluster`, and switch to that newly created using the following commands:
+
+```
+oc new-project hazelcast-cluster
+oc project hazelcast-cluster 
+```
+
+Now download the project template from GitHub and use CLI to register the template under the newly created project using the following commands:
+
+```
+curl -o hazelcast-template.js https://raw.githubusercontent.com/hazelcast/hazelcast-docker/master/hazelcast-openshift/hazelcast-template.js
+oc create -f hazelcast-template.js -n hazelcast-cluster
+```
+
+Finally, login to your OpenShift Web Administration UI. You should see your new Hazelcast template and start creating a Hazelcast cluster by filling the parameters according to your needs.
+
+For detailed information please see our blogpost at http://blog.hazelcast.com/openshift/.
+
+# Hazelcast Docker Image Links
+
+Hazelcast Open Source: https://hub.docker.com/r/hazelcast/hazelcast/
+Hazelcast Enterprise: https://hub.docker.com/r/hazelcast/hazelcast-enterprise/
+Hazelcast Management Center: https://hub.docker.com/r/hazelcast/management-center/
+Hazelcast Openshift : https://hub.docker.com/r/hazelcast/openshift/
 
 
-Open Source: https://hub.docker.com/r/hazelcast/hazelcast/
-
-Management Center: https://hub.docker.com/r/hazelcast/management-center/
-
-Enterprise: https://hub.docker.com/r/hazelcast/hazelcast-enterprise/
-
-Openshift : https://hub.docker.com/r/hazelcast/openshift/
