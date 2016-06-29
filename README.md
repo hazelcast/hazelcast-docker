@@ -1,5 +1,109 @@
+# Table of Contents
 
-## Description
+* [Hazelcast](#hazelcast)
+* [Hazelcast Enterprise](#hazelcast-enterprise)
+* [Hazelcast Management Center](#hazelcast-management-center)
+* [Hazelcast OpenShift](#hazelcast-openshift)
+
+
+You can deploy your Hazelcast projects using the Docker containers. Hazelcast has the following images on Docker:
+
+* Hazelcast
+* Hazelcast Enterprise
+* Hazelcast Management Center
+* Hazelcast OpenShift
+
+## Hazelcast
+
+You can pull the Hazelcast Docker image from Docker registry by running the following command:
+
+```
+docker pull hazelcast/hazelcast
+```
+
+Above command gets the latest stable Hazelcast release by default. After that you should be able to run the Hazelcast Docker image using the following command, which starts a Hazelcast member:
+
+```
+docker run -ti hazelcast/hazelcast
+```
+
+### Getting a Specific Hazelcast Version
+
+You can also get a specific version of Hazelcast by specifying its tags. You can find the full list of Hazelcast tags at [Hazelcast tags](https://hub.docker.com/r/hazelcast/hazelcast/tags/).
+
+An example command to get a specific Hazelcast version is as follows:
+
+```
+docker run -ti hazelcast/hazelcast:3.6-EA
+```
+
+### Starting / Stopping a Hazelcast Member
+
+When you run the command `docker run -ti hazelcast/hazelcast`, it automatically runs the script `server.sh` and this  creates a new Hazelcast member.
+
+You can `stop` the member using the script `stop.sh`. For this purpose, you need to run the following command to the running Docker container:
+
+```
+docker exec -it "id of running container" /opt/hazelcast/stop.sh
+```
+
+You can check the logs thereafter using the following command:
+
+```
+docker logs "id of running container"
+```
+ 
+### Setting Environment Variables
+
+You can give environment variables to the Hazelcast member within your Docker command. Currently we support the variables  `MIN_HEAP_SIZE` and `MAX_HEAP_SIZE` inside our start script. An example command is as follows:
+
+```
+docker run -e MIN_HEAP_SIZE="1g" -ti hazelcast/hazelcast
+```
+
+You can also define your environment varibles inside a file as shown in the following example command:
+
+```
+docker run --env-file <file-path> -ti hazelcast/hazelcast
+```
+
+You can also define more than one VM arguments to your Hazelcast member via `JAVA_OPTS` environment variable. Please see the following example:
+
+```
+docker run -e JAVA_OPTS="-Xms512M -Xmx1024M -ti hazelcast/hazelcast
+```
+
+### Using Hazelcast Configuration File
+
+In this case, you need to mount the folder that has the Hazelcast configuration file, i.e., `hazelcast.xml`. Also while running the Docker image, you need to give the URL of `hazelcast.config` in `JAVA_OPTS` parameter. Please see the following example:
+
+```
+docker run -e JAVA_OPTS="-Dhazelcast.config=./configFolder/hazelcast.xml" -v ./configFolder:./configFolder -ti hazelcast/hazelcast
+```
+
+### Custom configuration
+You can use the Docker image to start a Hazelcast member with default configuration. If you like to customize your Hazelcast member, you can extend the Hazelcast base image, provide your own configuration file and customize your initialization process.
+
+You need to create a new `Dockerfile` and build it in order to use it. In the `Dockerfile` example below, we are creating a new image based on the Hazelcast image and adding our own configuration file from our host to the container, which is going to be used with Hazelcast when the container runs.
+
+```
+FROM hazelcast:latest
+# Add your custom hazelcast.xml
+ADD hazelcast.xml $HZ_HOME
+# Run hazelcast
+CMD ./server.sh
+```
+
+After creating the `Dockerfile` you need to build it by running the command below:
+
+```
+docker build .
+```
+
+Now you can run your own container with its ID or tag (if you provided `-t` option while building the image) using the `docker run` command.
+
+
+# Description
 
 For full description and usage please visit this page.
 
