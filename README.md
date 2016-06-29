@@ -62,13 +62,13 @@ docker logs "id of running container"
  
 ### Setting Environment Variables
 
-You can give environment variables to the Hazelcast member within your Docker command. Currently we support the variables  `MIN_HEAP_SIZE` and `MAX_HEAP_SIZE` inside our start script. An example command is as follows:
+You can give environment variables to the Hazelcast member within your Docker command. Currently, we support the variables  `MIN_HEAP_SIZE` and `MAX_HEAP_SIZE` inside our start script. An example command is as follows:
 
 ```
 docker run -e MIN_HEAP_SIZE="1g" -ti hazelcast/hazelcast
 ```
 
-You can also define your environment varibles inside a file as shown in the following example command:
+You can also define your environment variables inside a file as shown in the following example command:
 
 ```
 docker run --env-file <file-path> -ti hazelcast/hazelcast
@@ -82,7 +82,7 @@ docker run -e JAVA_OPTS="-Xms512M -Xmx1024M -ti hazelcast/hazelcast
 
 ### Using Hazelcast Configuration File
 
-In this case, you need to mount the folder that has the Hazelcast configuration file, i.e., `hazelcast.xml`. Also while running the Docker image, you need to give the URL of `hazelcast.config` in `JAVA_OPTS` parameter. Please see the following example:
+In this case, you need to mount the folder that has the Hazelcast configuration file, i.e., `hazelcast.xml`. Also, while running the Docker image, you need to give the URL of `hazelcast.config` in `JAVA_OPTS` parameter. Please see the following example:
 
 ```
 docker run -e JAVA_OPTS="-Dhazelcast.config=./configFolder/hazelcast.xml" -v ./configFolder:./configFolder -ti hazelcast/hazelcast
@@ -111,7 +111,7 @@ Now you can run your own container with its ID or tag (if you provided `-t` opti
 
 # Hazelcast Enterprise
 
-You can pull the Hazelcast Enterpise Docker image from the Docker registry by running the following command:
+You can pull the Hazelcast Enterprise Docker image from the Docker registry by running the following command:
 
 ```
 docker pull hazelcast/hazelcast-enterprise:latest
@@ -184,7 +184,7 @@ oc create -f hazelcast-template.js -n hazelcast-cluster
 
 Finally, login to your OpenShift Web Administration UI. You should see your new Hazelcast template and start creating a Hazelcast cluster by filling the parameters according to your needs.
 
-For detailed information please see our blogpost at http://blog.hazelcast.com/openshift/.
+For detailed information please see our blog post at http://blog.hazelcast.com/openshift/.
 
 # Hazelcast Docker Image Links
 
