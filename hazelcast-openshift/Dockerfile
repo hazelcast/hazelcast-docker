@@ -12,7 +12,7 @@ ADD https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-data
 ADD https://repo1.maven.org/maven2/com/fasterxml/jackson/module/jackson-module-jaxb-annotations/2.6.3/jackson-module-jaxb-annotations-2.6.3.jar $HZ_HOME
 
 #Discovery Plugin
-ADD https://repo1.maven.org/maven2/com/noctarius/discovery/hazelcast-kubernetes-discovery/0.9.2/hazelcast-kubernetes-discovery-0.9.2.jar $HZ_HOME
+ADD https://repo1.maven.org/maven2/com/noctarius/discovery/hazelcast-kubernetes-discovery/0.9.3/hazelcast-kubernetes-discovery-0.9.3.jar $HZ_HOME
 
 #DNS Java
 ADD https://repo1.maven.org/maven2/dnsjava/dnsjava/2.1.7/dnsjava-2.1.7.jar $HZ_HOME
