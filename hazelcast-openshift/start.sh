@@ -21,7 +21,4 @@ echo "# JAVA_OPTS=$JAVA_OPTS"
 echo "# starting now...."
 echo "########################################"
 
-echo "Process id for hazelcast instance is written to location: " $PID_FILE
-java -server $JAVA_OPTS -Djava.net.preferIPv4Stack=true com.hazelcast.core.server.StartServer &
-echo $! > ${PID_FILE}
-sleep infinity
+java -server $JAVA_OPTS -Djava.net.preferIPv4Stack=true com.hazelcast.core.server.StartServer
