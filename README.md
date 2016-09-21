@@ -78,7 +78,7 @@ docker run --env-file <file-path> -ti hazelcast/hazelcast
 You can also define more than one VM arguments to your Hazelcast member via `JAVA_OPTS` environment variable. Please see the following example:
 
 ```
-docker run -e JAVA_OPTS="-Xms512M -Xmx1024M -ti hazelcast/hazelcast
+docker run -e JAVA_OPTS="-Xms512M -Xmx1024M" -ti hazelcast/hazelcast
 ```
 
 ### Using Hazelcast Configuration File
@@ -95,7 +95,7 @@ You can use the Docker image to start a Hazelcast member with default configurat
 You need to create a new `Dockerfile` and build it in order to use it. In the `Dockerfile` example below, we are creating a new image based on the Hazelcast image and adding our own configuration file from our host to the container, which is going to be used with Hazelcast when the container runs.
 
 ```
-FROM hazelcast:hazelcast/latest
+FROM hazelcast/hazelcast:latest
 # Add your custom hazelcast.xml
 ADD hazelcast.xml $HZ_HOME
 # Run hazelcast
