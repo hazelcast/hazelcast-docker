@@ -10,5 +10,5 @@ ADD stop.sh /$HZ_HOME/stop.sh
 RUN chmod +x /$HZ_HOME/server.sh
 RUN chmod +x /$HZ_HOME/stop.sh
 # Start hazelcast standalone server.
-CMD ./server.sh
+CMD ["./server.sh"]
 EXPOSE 5701
