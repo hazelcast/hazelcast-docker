@@ -1,8 +1,16 @@
-#!/bin/sh
+#!/bin/bash
+
+PID=0
+sigterm_handler() {
+  echo "Hazelcast Term Handler received shutdown signal. Signaling hazelcast instance on PID: ${PID}"
+  if [ ${PID} -ne 0 ]; then
+    kill "${PID}"
+  fi
+}
 
 PRG="$0"
 PRGDIR=`dirname "$PRG"`
-HAZELCAST_HOME=`cd "$PRGDIR/.." >/dev/null; pwd`/
+HAZELCAST_HOME=`cd "$PRGDIR/.." >/dev/null; pwd`/hazelcast
 PID_FILE=$HAZELCAST_HOME/hazelcast_instance.pid
 
 if [ "x$MIN_HEAP_SIZE" != "x" ]; then
@@ -13,15 +21,24 @@ if [ "x$MAX_HEAP_SIZE" != "x" ]; then
 	JAVA_OPTS="$JAVA_OPTS -Xmx${MAX_HEAP_SIZE}"
 fi
 
-export CLASSPATH=$HAZELCAST_HOME/hazelcast-enterprise-$HZ_VERSION/lib/hazelcast-enterprise-all-$HZ_VERSION.jar:$CLASSPATH/*
+# if we receive SIGTERM (from docker stop) or SIGINT (ctrl+c if not running as daemon)
+# trap the signal and delegate to sigterm_handler function, which will notify hazelcast instance process
+trap sigterm_handler SIGTERM SIGINT
 
+export CLASSPATH=$HAZELCAST_HOME/hazelcast-enterprise-$HZ_VERSION/lib/hazelcast-enterprise-all-$HZ_VERSION.jar:$CLASSPATH/*
 echo "########################################"
 echo "# RUN_JAVA=$RUN_JAVA"
 echo "# JAVA_OPTS=$JAVA_OPTS"
 echo "# starting now...."
 echo "########################################"
-echo "Process id for hazelcast instance is written to location: " $PID_FILE
-java -server $JAVA_OPTS -Djava.net.preferIPv4Stack=true -Dhazelcast.enterprise.license.key=$HZ_LICENSE_KEY com.hazelcast.core.server.StartServer &
-echo $! > ${PID_FILE}
 
-sleep infinity
+java -server $JAVA_OPTS -Djava.net.preferIPv4Stack=true -Dhazelcast.enterprise.license.key=$HZ_LICENSE_KEY com.hazelcast.core.server.StartServer &
+PID="$!"
+echo "Process id ${PID} for hazelcast instance is written to location: " $PID_FILE
+echo ${PID} > ${PID_FILE}
+
+# wait on hazelcast instance process
+wait ${PID}
+# if a signal came up, remove previous traps on signals and wait again (noop if process stopped already)
+trap - SIGTERM SIGINT
+wait ${PID}

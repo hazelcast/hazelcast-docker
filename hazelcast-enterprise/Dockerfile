@@ -6,6 +6,9 @@ WORKDIR $HZ_HOME
 # Download hazelcast jars from maven repo.
 ADD http://download.hazelcast.com/enterprise/hazelcast-enterprise-$HZ_VERSION.zip $HZ_HOME/hazelcast.zip
 RUN unzip hazelcast.zip
+ADD server.sh /$HZ_HOME/server.sh
+ADD stop.sh /$HZ_HOME/stop.sh
+RUN chmod +x /$HZ_HOME/server.sh
+RUN chmod +x /$HZ_HOME/stop.sh
 # Start hazelcast standalone server.
-WORKDIR $HZ_HOME/hazelcast-enterprise-$HZ_VERSION
-CMD java -server -Djava.net.preferIPv4Stack=true -Dhazelcast.enterprise.license.key=$HZ_LICENSE_KEY -cp lib/hazelcast-enterprise-all-$HZ_VERSION.jar com.hazelcast.core.server.StartServer
+CMD ["./server.sh"]
