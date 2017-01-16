@@ -3,7 +3,6 @@
 PRG="$0"
 PRGDIR=`dirname "$PRG"`
 HAZELCAST_HOME=`cd "$PRGDIR/.." >/dev/null; pwd`/hazelcast
-PID_FILE=$HAZELCAST_HOME/hazelcast_instance.pid
 
 if [ "x$MIN_HEAP_SIZE" != "x" ]; then
 	JAVA_OPTS="$JAVA_OPTS -Xms${MIN_HEAP_SIZE}"
