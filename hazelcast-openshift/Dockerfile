@@ -42,7 +42,8 @@ ADD https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.j
 ADD hazelcast.xml /$HZ_HOME/hazelcast.xml
 ADD start.sh /$HZ_HOME/start.sh
 
-RUN chmod +x /$HZ_HOME/start.sh
+RUN chmod a+x /$HZ_HOME/start.sh
+RUN chmod a+rw /$HZ_HOME/*
 
 # User default when running
 USER default
