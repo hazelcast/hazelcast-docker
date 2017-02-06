@@ -1,5 +1,5 @@
-FROM hazelcast/hazelcast:3.7.5
-ENV HZ_VERSION 3.7.5
+FROM hazelcast/hazelcast:3.8-RC1
+ENV HZ_VERSION 3.8-RC1
 ENV HZ_HOME /opt/hazelcast/
 RUN mkdir -p $HZ_HOME
 WORKDIR $HZ_HOME
