@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2014 Takari, Inc.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.takari</groupId>
+  <artifactId>takari</artifactId>
+  <version>19</version>
+  <packaging>pom</packaging>
+  <name>Takari</name>
+  <url>http://takari.io</url>
+  <description>Takari: The future of software delivery.</description>
+  <licenses>
+    <license>
+      <name>The Eclipse Public License, Version 1.0</name>
+      <url>http://www.eclipse.org/legal/epl-v10.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>jvanzyl</id>
+      <name>Jason van Zyl</name>
+      <roles>
+        <role>Project Lead</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+    <developer>
+      <id>ifedorenko</id>
+      <name>Igor Fedorenko</name>
+      <email>igor@ifedorenko.com</email>
+      <organization>Sonatype</organization>
+      <roles>
+        <role>Project Lead</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+  </developers>
+
+  <distributionManagement>
+    <repository>
+      <id>takari.releases</id>
+      <name>${releaseName}</name>
+      <url>${releaseUrl}</url>
+    </repository>
+    <snapshotRepository>
+      <id>takari.snapshots</id>
+      <name>${snapshotName}</name>
+      <url>${snapshotUrl}</url>
+    </snapshotRepository>
+  </distributionManagement>
+  <properties>
+    <repoHost>https://otto.takari.io</repoHost>
+    <releaseName>Takari Releases</releaseName>
+    <releaseUrl>${repoHost}/service/local/staging/deploy/maven2</releaseUrl>
+    <snapshotName>Takari Snapshots</snapshotName>
+    <snapshotUrl>${repoHost}/content/repositories/snapshots</snapshotUrl>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <takariLifecycleVersion>1.11.9</takariLifecycleVersion>
+    <javaSourceVersion>1.7</javaSourceVersion>
+  </properties>
+
+  <scm>
+    <connection>scm:git:git@github.com:takari/takari-pom.git</connection>
+    <developerConnection>scm:git:git@github.com:takari/takari-pom.git</developerConnection>
+    <url>http://github.com/takari/takari-pom</url>
+    <tag>takari-19</tag>
+  </scm>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.takari.maven.plugins</groupId>
+        <artifactId>takari-lifecycle-plugin</artifactId>
+        <extensions>true</extensions>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <!-- set versions/configuration of common plugins for reproducibility, ordered alphabetically -->
+        <plugin>
+          <groupId>io.takari.maven.plugins</groupId>
+          <artifactId>takari-lifecycle-plugin</artifactId>
+          <version>${takariLifecycleVersion}</version>
+          <configuration>
+            <!-- compile/testCompile -->
+            <source>${javaSourceVersion}</source>
+            <compilerId>jdt</compilerId>
+            <transitiveDependencyReference>error</transitiveDependencyReference>
+            <privatePackageReference>error</privatePackageReference>
+            <proc>none</proc>
+
+            <!-- jar -->
+            <sourceJar>true</sourceJar>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>1.7</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>2.5.3</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>2.6.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.2</version>
+          <configuration>
+            <!-- disable accidental use, must use takari-lifecycle -->
+            <skip>true</skip>
+            <skipMain>true</skipMain>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8.2</version>
+          <configuration>
+            <!-- disable accidental use, must use takari-lifecycle -->
+            <skip>true</skip>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-docck-plugin</artifactId>
+          <version>1.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>1.3.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>1.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>2.5.2</version>
+          <configuration>
+            <!-- disable accidental use, must use takari-lifecycle -->
+            <skip>true</skip>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>2.5</version>
+          <configuration>
+            <!-- disable accidental use, must use takari-lifecycle -->
+            <skip>true</skip>
+          </configuration>
+        </plugin>
+        <!-- START SNIPPET: release-plugin-configuration -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.5.2</version>
+          <configuration>
+            <localCheckout>true</localCheckout>
+            <pushChanges>false</pushChanges>
+            <useReleaseProfile>false</useReleaseProfile>
+            <autoVersionSubmodules>true</autoVersionSubmodules>
+            <goals>deploy</goals>
+            <arguments>--batch-mode -Ptakari-release</arguments>
+          </configuration>
+        </plugin>
+        <!-- END SNIPPET: release-plugin-configuration -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-remote-resources-plugin</artifactId>
+          <version>1.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>2.7</version>
+          <configuration>
+            <!-- disable accidental use, must use takari-lifecycle -->
+            <skip>true</skip>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-scm-plugin</artifactId>
+          <version>1.9.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.4</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.wagon</groupId>
+              <artifactId>wagon-ssh</artifactId>
+              <version>2.8</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>2.4</version>
+          <configuration>
+            <!-- disable accidental use, must use takari-lifecycle -->
+            <skipSource>true</skipSource>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.18</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>animal-sniffer-maven-plugin</artifactId>
+          <version>1.13</version>
+          <configuration>
+            <signature>
+              <groupId>org.codehaus.mojo.signature</groupId>
+              <artifactId>java17</artifactId>
+              <version>1.0</version>
+            </signature>
+          </configuration>
+          <executions>
+            <execution>
+              <id>check-java-api-usage</id>
+              <phase>test</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>2.6</version>
+          <configuration>
+            <aggregate>true</aggregate>
+            <strictCheck>true</strictCheck>
+            <header>http://takari.io/support/license-header.txt</header>
+            <useDefaultExcludes>false</useDefaultExcludes>
+            <includes>
+              <include>**/pom.xml</include>
+              <include>**/*.xml</include>
+              <include>**/*.xsd</include>
+              <include>**/*.xjb</include>
+              <include>**/*.mdo</include>
+              <include>**/*.properties</include>
+              <include>**/*.java</include>
+              <include>**/*.groovy</include>
+              <include>**/*.scala</include>
+              <include>**/*.aj</include>
+              <include>**/*.js</include>
+              <include>**/*.css</include>
+            </includes>
+            <excludes>
+              <exclude>**/target/**</exclude>
+              <exclude>**/conf/**</exclude>
+              <exclude>**/.*</exclude>
+              <exclude>**/pkg/**</exclude>
+              <exclude>**/.idea/**</exclude>
+              <exclude>**/release.properties</exclude>
+              <exclude>**/pom.xml.releaseBackup</exclude>
+              <exclude>release.sh</exclude>
+              <exclude>**/src/test/**</exclude>
+            </excludes>
+            <mapping>
+              <scala>JAVADOC_STYLE</scala>
+              <xjb>XML_STYLE</xjb>
+              <mdo>XML_STYLE</mdo>
+            </mapping>
+          </configuration>
+        </plugin>   
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>io.tesla.maven.plugins</groupId>
+                    <artifactId>tesla-license-plugin</artifactId>
+                    <versionRange>[1.0.0,)</versionRange>
+                    <goals>
+                      <goal>check</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <profiles>
+    <!-- START SNIPPET: release-profile -->
+    <profile>
+      <id>takari-release</id>
+      <build>
+        <plugins>
+          <!-- We want to sign the artifact, the POM, and all attached artifacts -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <configuration>
+              <passphrase>${gpg.passphrase}</passphrase>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <!-- END SNIPPET: release-profile -->
+
+  </profiles>
+</project>
