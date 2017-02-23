@@ -15,7 +15,7 @@ ADD https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-data
 ADD https://repo1.maven.org/maven2/com/fasterxml/jackson/module/jackson-module-jaxb-annotations/2.6.3/jackson-module-jaxb-annotations-2.6.3.jar $HZ_HOME
 
 # Discovery Plugin
-ADD https://repo1.maven.org/maven2/com/noctarius/discovery/hazelcast-kubernetes-discovery/0.9.3/hazelcast-kubernetes-discovery-0.9.3.jar $HZ_HOME
+ADD https://repo1.maven.org/maven2/com/hazelcast/hazelcast-kubernetes/1.0.0/hazelcast-kubernetes-1.0.0.jar $HZ_HOME
 
 # DNS Java
 ADD https://repo1.maven.org/maven2/dnsjava/dnsjava/2.1.7/dnsjava-2.1.7.jar $HZ_HOME
@@ -42,6 +42,7 @@ ADD https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.j
 ADD hazelcast.xml /$HZ_HOME/hazelcast.xml
 ADD start.sh /$HZ_HOME/start.sh
 
+RUN useradd -ms /bin/bash default
 RUN chmod a+x /$HZ_HOME/start.sh
 RUN chmod a+rw /$HZ_HOME/*
 
