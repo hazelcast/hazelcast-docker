@@ -35,7 +35,7 @@
 				},
 				"spec": {
 					"containers": [{
-						"image": "hazelcast/hazelcast-openshift-rhel",
+						"image": "hazelcast/openshift",
 						"name": "hazelcast-openshift-rhel",
 						"env": [{
 							"name": "HAZELCAST_KUBERNETES_SERVICE_DNS",
@@ -52,30 +52,30 @@
 						}, {
 							"name": "HAZELCAST_KUBERNETES_SERVICE_DOMAIN",
 							"value": "${KUBERNETES_SERVICE_DOMAIN}"
+						}, {
+							"name": "HZ_LICENSE_KEY",
+							"value": "${ENTERPRISE_LICENSE_KEY}"
 						}],
 						"ports": [{
 							"containerPort": 5701,
 							"protocol": "TCP"
-						}]
-					}],
-					"livenessProbe": {
-						"exec": [
-							"/opt/hazelcast/healthcheck.sh"
-						],
-						"initialDelaySeconds": 60,
-						"timeoutSeconds": 10
-					},
-					"readinessProbe": {
-						"exec": [
-							"/opt/hazelcast/healthcheck.sh"
-						],
-						"initialDelaySeconds": 20,
-						"timeoutSeconds": 10
-					}
+						}],
+						"readinessProbe": {
+							"exec": {
+								"command": ["./healthcheck.sh"]
+							},
+							"initialDelaySeconds": 1,
+							"timeoutSeconds": 5
+						},
+						"livenessProbe": {
+							"exec": {
+								"command": ["./healthcheck.sh"]
+							},
+							"initialDelaySeconds": 60,
+							"timeoutSeconds": 5
+						}
+					}]
 				}
-			},
-			"triggers": {
-				"type": "ImageChange"
 			}
 		}
 	}, {
@@ -96,7 +96,6 @@
 			}]
 		}
 	}],
-
 	"parameters": [{
 		"name": "DEPLOYMENT_NAME",
 		"description": "Defines the base name of this deployment unit",
@@ -113,6 +112,10 @@
 		"name": "KUBERNETES_SERVICE_DOMAIN",
 		"description": "Defines the domain part of a kubernetes dns lookup.",
 		"value": "cluster.local",
+		"required": true
+	}, {
+		"name": "ENTERPRISE_LICENSE_KEY",
+		"description": "Defines Hazelcast Enterpise License Key, please enter your License",
 		"required": true
 	}]
 }

@@ -31,4 +31,4 @@ echo "# JAVA_OPTS=$JAVA_OPTS"
 echo "# starting now...."
 echo "########################################"
 
-java -server $JAVA_OPTS -Dhazelcast.http.healthcheck.enabled=true -Djava.net.preferIPv4Stack=true com.hazelcast.core.server.StartServer
+java -server $JAVA_OPTS -Dhazelcast.http.healthcheck.enabled=true -Djava.net.preferIPv4Stack=true -Dhazelcast.enterprise.license.key=$HZ_LICENSE_KEY com.hazelcast.core.server.StartServer
