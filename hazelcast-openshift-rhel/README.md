@@ -37,7 +37,7 @@ Another important note would be that this document assumes familiarity with `oc`
 
 In order to build docker image you will also need Redhat subscription. Please refer to Redhat documentation for subscription and activation for your account.
 
-Run below ```docker``` command under ```hazelcast-openshift-rhel``` directory to build image with your Readhat subscription credentials.
+Run below ```docker``` command under ```hazelcast-openshift-rhel``` directory to build image with your Redhat subscription credentials.
 
 ```
 docker build --build-arg user=<your-user-name> --build-arg password=<your-password> . -t <your-image-name>:<version>

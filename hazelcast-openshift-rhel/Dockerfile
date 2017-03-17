@@ -47,10 +47,11 @@ ADD https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.j
 ADD hazelcast.xml $HZ_HOME/hazelcast.xml
 ADD start.sh $HZ_HOME/start.sh
 ADD stop.sh $HZ_HOME/stop.sh
-ADD healthcheck.sh $HZ_HOME/healthcheck.sh
+ADD liveness.sh $HZ_HOME/liveness.sh
+ADD readiness.sh $HZ_HOME/readiness.sh
 
 ### Atomic Help File
-COPY help.md /tmp/
+COPY README.md /tmp/
 
 ARG user
 ARG password
@@ -71,7 +72,7 @@ RUN yum clean all && \
 ### help markdown to man conversion
 ### Add your package needs to this installation line
     yum -y install --setopt=tsflags=nodocs golang-github-cpuguy83-go-md2man && \
-    go-md2man -in /tmp/help.md -out /help.1 && \
+    go-md2man -in /tmp/README.md -out /help.1 && \
     yum -y remove golang-github-cpuguy83-go-md2man && \
     yum -y clean all
 
@@ -82,7 +83,8 @@ RUN chown -R $USER_UID:0 $HZ_HOME
 RUN chown -R $USER_UID:0 $HZ_CP_MOUNT
 RUN chmod +x $HZ_HOME/start.sh
 RUN chmod +x $HZ_HOME/stop.sh
-RUN chmod +x $HZ_HOME/healthcheck.sh
+RUN chmod +x $HZ_HOME/liveness.sh
+RUN chmod +x $HZ_HOME/readiness.sh
 
 ### Adding maven wrapper, downloading Hazelcast Kubernetes discovery plugin and dependencies and cleaning up
 COPY mvnw $HZ_HOME/mvnw

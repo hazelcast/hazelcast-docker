@@ -62,14 +62,14 @@
 						}],
 						"readinessProbe": {
 							"exec": {
-								"command": ["./healthcheck.sh"]
+								"command": ["./readiness.sh"]
 							},
-							"initialDelaySeconds": 1,
+							"initialDelaySeconds": 30,
 							"timeoutSeconds": 5
 						},
 						"livenessProbe": {
 							"exec": {
-								"command": ["./healthcheck.sh"]
+								"command": ["./liveness.sh"]
 							},
 							"initialDelaySeconds": 60,
 							"timeoutSeconds": 5
