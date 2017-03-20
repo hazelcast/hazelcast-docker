@@ -28,9 +28,6 @@ LABEL name="hazelcast/hazelcast-openshift-rhel" \
       io.openshift.expose-services="5701:tcp" \
       io.openshift.tags="hazelcast,java8,kubernetes,rhel7"
 
-### User root while setup
-USER root
-
 RUN mkdir -p $HZ_HOME
 RUN mkdir -p $HZ_CP_MOUNT
 WORKDIR $HZ_HOME
@@ -63,19 +60,16 @@ RUN yum clean all && \
 ### Add necessary Red Hat repos here
     subscription-manager repos --enable rhel-7-server-rpms && \
     subscription-manager repos --enable rhel-7-server-optional-rpms && \
-### subscription-manager repos --enable rhel-7-server-thirdparty-oracle-java-rpms && \
-    subscription-manager repos --enable rhel-7-server-supplementary-rpms && \
+    subscription-manager repos --enable rhel-7-server-thirdparty-oracle-java-rpms && \
     yum -y update-minimal --security --sec-severity=Important --sec-severity=Critical --setopt=tsflags=nodocs && \
-### Install Oracle Java 8 command will be updated when Redhat replies, currently works on openjdk
-### yum -y install --setopt=tsflags=nodocs java-1.8.0-oracle && \
-    yum -y install java-1.8.0-openjdk-devel && \
+### Install Oracle Java 8
+    yum -y install --setopt=tsflags=nodocs java-1.8.0-oracle-devel && \
 ### help markdown to man conversion
 ### Add your package needs to this installation line
     yum -y install --setopt=tsflags=nodocs golang-github-cpuguy83-go-md2man && \
     go-md2man -in /tmp/README.md -out /help.1 && \
     yum -y remove golang-github-cpuguy83-go-md2man && \
     yum -y clean all
-
 
 ### Configure Hazelcast
 RUN useradd -l -u $USER_UID -r -g 0 -d $HZ_HOME -s /sbin/nologin -c "${USER_UID} application user" $USER_NAME
