@@ -12,7 +12,7 @@ This package consists of the following parts:
 
 * Hazelcast Enterprise and regarding dependencies
 * Red Hat Enterprise Linux (RHEL) 7
-* `OpenJDK Java 8` will be updated with `Oracle Java 8` when Redhat responds
+* Oracle Java 8
 * Health and liveness scripts
 * Start and stop scripts
 
