@@ -35,7 +35,7 @@
 				},
 				"spec": {
 					"containers": [{
-						"image": "hazelcast/hazelcast-openshift-rhel",
+						"image": "hazelcast/openshift",
 						"name": "hazelcast-openshift-rhel",
 						"env": [{
 							"name": "HAZELCAST_KUBERNETES_SERVICE_DNS",
@@ -56,22 +56,22 @@
 						"ports": [{
 							"containerPort": 5701,
 							"protocol": "TCP"
-						}]
-					}],
-					"livenessProbe": {
-						"exec": [
-							"/opt/hazelcast/healthcheck.sh"
-						],
-						"initialDelaySeconds": 60,
-						"timeoutSeconds": 10
-					},
-					"readinessProbe": {
-						"exec": [
-							"/opt/hazelcast/healthcheck.sh"
-						],
-						"initialDelaySeconds": 20,
-						"timeoutSeconds": 10
-					}
+						}],
+						"readinessProbe": {
+							"exec": {
+								"command": ["./healthcheck.sh"]
+							},
+							"initialDelaySeconds": 1,
+							"timeoutSeconds": 5
+						},
+						"livenessProbe": {
+							"exec": {
+								"command": ["./healthcheck.sh"]
+							},
+							"initialDelaySeconds": 60,
+							"timeoutSeconds": 5
+						}
+					}]
 				}
 			},
 			"triggers": {
