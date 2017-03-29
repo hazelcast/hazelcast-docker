@@ -17,7 +17,7 @@ ARG REPOSITORY_URL=https://repository-hazelcast-l337.forge.cloudbees.com
 
 LABEL name="hazelcast/hazelcast-openshift-rhel" \
       vendor="Hazelcast, Inc." \
-      version="${HZ_VERSION}" \
+      version="7.2" \
       architecture="x86_64" \
       release="${HZ_VERSION}" \
       url="http://www.hazelcast.com" \
