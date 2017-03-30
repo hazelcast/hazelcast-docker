@@ -132,8 +132,8 @@ and save the file. Please also notice that `Reclaim Policy` is set as `Retain`. 
   * `HINT:` you may use `scp` or `stfp` to transfer these files.
 
 If you need to redeploy Hazelcast cluster with kubernetes template, you may need to remove logical persistent volume bindings before. Since their creation policy is `RETAIN`. In order to delete please run below commands.
-* `oc delete hz-vc` [hz-vc is the claim name from kubernetes template, you do not need to change its name]
-* `oc delete <your-pv-name>`
+* `oc delete pvc hz-vc` [hz-vc is the claim name from kubernetes template, you do not need to change its name]
+* `oc delete pv <your-pv-name>`
 * `oc create -f <your-pv-yaml>`
 
 Please note that contents of your previous deployment is preserved. If you change claim policy to `RECYCLE`, you have to transfer all custom files to `<your-pv-path>` before each successive deployments.
