@@ -86,12 +86,65 @@ oc get imagestreams
 * Before starting to deploy Hazelcast Enterprise cluster make sure that you have a valid License key for Hazelcast Enterprise version.
   * You may get a trial key from [this link](https://hazelcast.com/hazelcast-enterprise-download/trial/)
 
+### Creating Volume and Loading Custom Configurations
+`This is a prerequisite` step for the next section if you have custom configurations or jars.
+
+In order to share `custom configurations` or `custom domain jars` (for example EntryProcessor implementations) between Hazelcast Pods, you need to add a `persistent volume` in OCP. In `hazelcast-template.js` this directory is named as `/data/hazelcast`, and it should be claimed. Below, you can find how to add persistent volume in OCP. Please notice that it is just an example of persistent volume creation with `NFS`, there are many different ways that you can map volumes in Kubernetes and Openshift Platform. You can find available volumes via [this link](https://docs.openshift.com/container-platform/3.4/rest_api/kubernetes_v1.html#v1-volume)
+
+* Login to your OCP console `oc login <your-ocp-url>` with `admin` user or rights
+* Create a directory in master for the pysical storage.
+```
+mkdir -p <your-pv-path>
+chmod -R 777 <parent-path-to-pv> [may require root permissions]
+# Add to /etc/exports
+<your-pv-path> *(rw,root_squash)
+# Enable the new exports without bouncing the NFS service
+exportfs -a
+```
+`NFS` Security provisioning may be required, therefore you may need to add `nfsnobody` user and group to `<parent-path-to-pv>` for details please refer to [this link](https://docs.openshift.com/container-platform/3.4/install_config/persistent_storage/persistent_storage_nfs.html#install-config-persistent-storage-persistent-storage-nfs)
+
+* Open an text editor and write below deployment YAML for persistent volume
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: <your-pv-name>
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: localhost
+    path: <your-pv-path>
+```
+
+and save the file. Please also notice that `Reclaim Policy` is set as `Retain`. Therefore, Contents of this folder will remain as is, between successive `claims`.
+
+`your-pv-name` is important and you need to input this name to `HAZELCAST_VOLUME_NAME` during deployments with `hazelcast-template.js`.
+
+* Run `oc create -f <your-pv-yaml>` which will create a `PersistentVolume`
+* Run `oc get pv` to verify and you should see `STATUS` as `AVAILABLE`
+* Traverse to `<your-pv-path>` and copy your custom Hazelcast configuration as `hazelcast.xml`. You may also copy or transfer `custom jars` to this directory.
+  * `IMPORTANT:` custom configuration file name must be `hazelcast.xml`
+  * `HINT:` you may use `scp` or `stfp` to transfer these files.
+
+If you need to redeploy Hazelcast cluster with kubernetes template, you may need to remove logical persistent volume bindings before. Since their creation policy is `RETAIN`. In order to delete please run below commands.
+* `oc delete hz-vc` [hz-vc is the claim name from kubernetes template, you do not need to change its name]
+* `oc delete <your-pv-name>`
+* `oc create -f <your-pv-yaml>`
+
+Please note that contents of your previous deployment is preserved. If you change claim policy to `RECYCLE`, you have to transfer all custom files to `<your-pv-path>` before each successive deployments.
+
 ### Deploying on Web Console
 
 * In web browser, navigate to your OCP console page and login.
   * Your login user should have required access right to start docker registry and push images as described in `Build and Deployment to Private Docker Registry` section of this document.
 
 * Create a project with `your-project-name`.
+
   ![create](markdown/images/create-new-project.png)
 
 * Turn back to OCP shell and switch to your new project with `oc project <your-project-name>` command
@@ -103,6 +156,7 @@ oc get imagestreams
   ![registry](markdown/images/registry.png)
 
 * Add route for newly created docker registry, please assign `passthrough` for TLS setting
+
   ![registry-route](markdown/images/route-registry.png)
 
 * Push your Hazelcast Enterprise image to this registry, as described in section `Pushing Image to Private Docker Registry in OCP`.
@@ -112,6 +166,7 @@ oc get imagestreams
 oc get imagestreams
 ```
 You should see `<your-image-name>` under `NAME` column as below. In my case, it is named as `hz-enterprise`.
+
 ![image-stream](markdown/images/image-stream.png)
 
 Another important point would be the `DOCKER REPO` entry for image, in succeeding part we will use this path in `kubernetes-template.js` to pull base image for our Hazelcast cluster.
@@ -122,10 +177,12 @@ Another important point would be the `DOCKER REPO` entry for image, in succeedin
   * This template file contains all the deployment information to setup a Hazelcast cluster from inside Openshift.
   It configures the necessary ReplicationController, healthchecks and image to use. It also offers a set of properties to be requested when creating a new cluster (such as clustername).
 
-* Change `"image": "hazelcast/openshift"` to `"image":"<registry-route>/<your-namespace>/<your-image-name>"`
-
 * Fill out Configuration properties section
-  * `NAMESPACE` value is important and should match with your project namespace.
+  * `NAMESPACE` value is important and should match with your project namespace
+* Change `"image": "hazelcast/hazelcast-openshift-rhel"` to `"image":"<registry-route>/<your-namespace>/<your-image-name>"`
+* Enter your enterprise license key to `ENTERPRISE_LICENSE_KEY` input section.
+* Enter `<your-pv-name>` to `HAZELCAST_VOLUME_NAME` input section.
+  * `If you do not need any custom xml or jar` you can give a `PersistentVolume` name which is already created in OCP. You can get them via `oc get pv` command. Please note that these volumes have `RECYCLE` claim ploicy.
 
 * ...and it is ready to go.
 
