@@ -54,7 +54,7 @@ You should see `<your-image-name>` as a repository.
 In order to push ```hazelcast``` image to docker registry in local OCP installation, you may use ```default``` project in OCP, which has already configured docker registry.
 
 Please also note that you need to login local docker registry before hand.
-Moreover, you may refer to [this document](https://docs.openshift.com/enterprise/3.2/install_config/install/docker_registry.html) for docker registry installation in OCP.
+Moreover, you may refer to [this document](https://docs.openshift.com/container-platform/3.4/install_config/registry/deploy_registry_existing_clusters.html) for docker registry installation in OCP.
 
  ```
  docker login -a <your-ocp-user> -p <your-token> <route-to-registry>
