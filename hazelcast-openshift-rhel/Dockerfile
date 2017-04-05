@@ -9,10 +9,11 @@ ENV LANG en_US.utf8
 ENV USER_NAME=hazelcast
 ENV USER_UID=10001
 
-ARG HZ_VERSION=3.8
+ENV HZ_VERSION=3.8
+
 ARG HZ_KUBE_VERSION=1.0.0
 ARG HZ_MAVEN_DIR=${HZ_VERSION}
-ARG REPOSITORY_URL=https://repo1.maven.org/maven2
+ARG REPOSITORY_URL=https://repository-hazelcast-l337.forge.cloudbees.com
 
 LABEL name="hazelcast/hazelcast-openshift-rhel" \
       vendor="Hazelcast, Inc." \
@@ -27,41 +28,46 @@ LABEL name="hazelcast/hazelcast-openshift-rhel" \
       io.openshift.expose-services="5701:tcp" \
       io.openshift.tags="hazelcast,java8,kubernetes,rhel7"
 
-### User root while setup
-USER root
-
 RUN mkdir -p $HZ_HOME
-RUN mkdir -p $HZ_CP_MOUNT 
+RUN mkdir -p $HZ_CP_MOUNT
 WORKDIR $HZ_HOME
 
-### Adding Hazelcast
-ADD ${REPOSITORY_URL}/com/hazelcast/hazelcast-all/${HZ_MAVEN_DIR}/hazelcast-all-${HZ_VERSION}.jar $HZ_HOME
+### add hazelcast enterprise
+ADD ${REPOSITORY_URL}/release/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/hazelcast-enterprise-all-${HZ_VERSION}.jar $HZ_HOME
 
 ### Adding Logging redirector
 ADD https://repo1.maven.org/maven2/org/slf4j/jul-to-slf4j/1.7.12/jul-to-slf4j-1.7.12.jar $HZ_HOME
 
-### Adding JCache 
+### Adding JCache
 ADD https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.jar $HZ_HOME
- 
+
 ADD hazelcast.xml $HZ_HOME/hazelcast.xml
 ADD start.sh $HZ_HOME/start.sh
 ADD stop.sh $HZ_HOME/stop.sh
-ADD healthcheck.sh $HZ_HOME/healthcheck.sh
+ADD liveness.sh $HZ_HOME/liveness.sh
+ADD readiness.sh $HZ_HOME/readiness.sh
 
 ### Atomic Help File
-COPY help.md /tmp/
+COPY README.md /tmp/
+
+ARG user
+ARG password
+
+RUN subscription-manager register --username $user --password $password --auto-attach
 
 RUN yum clean all && \
     yum-config-manager --disable \* && \
 ### Add necessary Red Hat repos here
-    yum-config-manager --enable rhel-7-server-rpms,rhel-7-server-optional-rpms,rhel-7-server-thirdparty-oracle-java-rpms && \
+    subscription-manager repos --enable rhel-7-server-rpms && \
+    subscription-manager repos --enable rhel-7-server-optional-rpms && \
+    subscription-manager repos --enable rhel-7-server-thirdparty-oracle-java-rpms && \
     yum -y update-minimal --security --sec-severity=Important --sec-severity=Critical --setopt=tsflags=nodocs && \
 ### Install Oracle Java 8
     yum -y install --setopt=tsflags=nodocs java-1.8.0-oracle-devel && \
 ### help markdown to man conversion
 ### Add your package needs to this installation line
     yum -y install --setopt=tsflags=nodocs golang-github-cpuguy83-go-md2man && \
-    go-md2man -in /tmp/help.md -out /help.1 && \
+    go-md2man -in /tmp/README.md -out /help.1 && \
     yum -y remove golang-github-cpuguy83-go-md2man && \
     yum -y clean all
 
@@ -71,7 +77,8 @@ RUN chown -R $USER_UID:0 $HZ_HOME
 RUN chown -R $USER_UID:0 $HZ_CP_MOUNT
 RUN chmod +x $HZ_HOME/start.sh
 RUN chmod +x $HZ_HOME/stop.sh
-RUN chmod +x $HZ_HOME/healthcheck.sh
+RUN chmod +x $HZ_HOME/liveness.sh
+RUN chmod +x $HZ_HOME/readiness.sh
 
 ### Adding maven wrapper, downloading Hazelcast Kubernetes discovery plugin and dependencies and cleaning up
 COPY mvnw $HZ_HOME/mvnw
@@ -90,4 +97,3 @@ EXPOSE 5701
 
 ### Start hazelcast standalone server.
 CMD ["/bin/sh", "-c", "./start.sh"]
-

@@ -18,7 +18,8 @@
 		"apiVersion": "v1",
 		"kind": "ReplicationController",
 		"metadata": {
-			"generateName": "hazelcast-cluster-rc-${DEPLOYMENT_NAME}-"
+			"generateName": "hazelcast-cluster-rc-${DEPLOYMENT_NAME}-",
+			"name": "hz-rc"
 		},
 		"spec": {
 			"replicas": 3,
@@ -34,8 +35,16 @@
 					}
 				},
 				"spec": {
+					"volumes":[
+						{
+							"name":"hazelcast-storage",
+							"persistentVolumeClaim":{
+								"claimName":"hz-vc"
+							}
+						}
+					],
 					"containers": [{
-						"image": "hazelcast/hazelcast-openshift-rhel",
+						"image": "${HAZELCAST_IMAGE}",
 						"name": "hazelcast-openshift-rhel",
 						"env": [{
 							"name": "HAZELCAST_KUBERNETES_SERVICE_DNS",
@@ -52,30 +61,39 @@
 						}, {
 							"name": "HAZELCAST_KUBERNETES_SERVICE_DOMAIN",
 							"value": "${KUBERNETES_SERVICE_DOMAIN}"
+						}, {
+							"name": "HZ_LICENSE_KEY",
+							"value": "${ENTERPRISE_LICENSE_KEY}"
+						},{
+							"name": "HZ_DATA",
+							"value": "/data/hazelcast"
 						}],
 						"ports": [{
 							"containerPort": 5701,
 							"protocol": "TCP"
-						}]
-					}],
-					"livenessProbe": {
-						"exec": [
-							"/opt/hazelcast/healthcheck.sh"
+						}],
+						"volumeMounts":[
+							{
+								"mountPath":"/data/hazelcast",
+								"name":"hazelcast-storage"
+							}
 						],
-						"initialDelaySeconds": 60,
-						"timeoutSeconds": 10
-					},
-					"readinessProbe": {
-						"exec": [
-							"/opt/hazelcast/healthcheck.sh"
-						],
-						"initialDelaySeconds": 20,
-						"timeoutSeconds": 10
-					}
+						"readinessProbe": {
+							"exec": {
+								"command": ["./readiness.sh"]
+							},
+							"initialDelaySeconds": 30,
+							"timeoutSeconds": 5
+						},
+						"livenessProbe": {
+							"exec": {
+								"command": ["./liveness.sh"]
+							},
+							"initialDelaySeconds": 60,
+							"timeoutSeconds": 5
+						}
+					}]
 				}
-			},
-			"triggers": {
-				"type": "ImageChange"
 			}
 		}
 	}, {
@@ -95,9 +113,31 @@
 				"protocol": "TCP"
 			}]
 		}
+	}, {
+		"apiVersion":"v1",
+		"kind":"PersistentVolumeClaim",
+		"metadata":{
+			"name":"hz-vc"
+		},
+		"spec":{
+			"selector": {
+				"name": "hazelcast-vc-${DEPLOYMENT_NAME}"
+			},
+			"accessModes": ["ReadWriteOnce"],
+      "resources": {
+          "requests": {
+              "storage": "1Gi"
+          }
+      },
+			"volumeName":"${HAZELCAST_VOLUME_NAME}"
+		}
 	}],
-
 	"parameters": [{
+		"name": "HAZELCAST_IMAGE",
+		"description": "Defines the location of Hazelcast Enterprise on RHEL 7 image",
+		"value": "hazelcast/hazelcast-openshift-rhel",
+		"required": true
+	}, {
 		"name": "DEPLOYMENT_NAME",
 		"description": "Defines the base name of this deployment unit",
 		"required": true
@@ -113,6 +153,15 @@
 		"name": "KUBERNETES_SERVICE_DOMAIN",
 		"description": "Defines the domain part of a kubernetes dns lookup.",
 		"value": "cluster.local",
+		"required": true
+	}, {
+		"name": "ENTERPRISE_LICENSE_KEY",
+		"description": "Defines Hazelcast Enterpise License Key, please enter your License",
+		"required": true
+	}, {
+		"name": "HAZELCAST_VOLUME_NAME",
+		"description": "Defines volume location where you put your domain classes and custom hazelcast configuration xml file.",
+		"value":"hz-pv",
 		"required": true
 	}]
 }

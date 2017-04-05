@@ -23,12 +23,21 @@ if [ "$HAZELCAST_KUBERNETES_SERVICE_DNS" == "$HAZELCAST_KUBERNETES_SERVICE_NAME.
 fi
 echo "Kubernetes Service DNS: $HAZELCAST_KUBERNETES_SERVICE_DNS"
 
-export CLASSPATH=$HAZELCAST_HOME/*:$HAZELCAST_CP_MOUNT/*:$CLASSPATH/*
+export CLASSPATH=$HZ_DATA/*:$HAZELCAST_HOME/*:$HAZELCAST_CP_MOUNT/*:$CLASSPATH
 
 echo "########################################"
 echo "# RUN_JAVA=$RUN_JAVA"
 echo "# JAVA_OPTS=$JAVA_OPTS"
-echo "# starting now...."
+echo "# CLASSPATH=$CLASSPATH"
 echo "########################################"
 
-java -server $JAVA_OPTS -Dhazelcast.http.healthcheck.enabled=true -Djava.net.preferIPv4Stack=true com.hazelcast.core.server.StartServer
+echo "Checking custom configuration"
+FILE=$HZ_DATA/hazelcast.xml
+if [[ -r "$FILE" ]];
+then
+	echo "custom configuration found: $FILE"
+	java -server $JAVA_OPTS -Dhazelcast.config=$FILE -Dhazelcast.http.healthcheck.enabled=true -Djava.net.preferIPv4Stack=true -Dhazelcast.enterprise.license.key=$HZ_LICENSE_KEY com.hazelcast.core.server.StartServer
+else
+	echo "no custom configuration found"
+	java -server $JAVA_OPTS -Dhazelcast.http.healthcheck.enabled=true -Djava.net.preferIPv4Stack=true -Dhazelcast.enterprise.license.key=$HZ_LICENSE_KEY com.hazelcast.core.server.StartServer
+fi
