@@ -51,11 +51,15 @@ You should see `<your-image-name>` as a repository.
 
 ### Pushing Image to Private Docker Registry in OCP
 
-In order to push ```hazelcast``` image to docker registry in local OCP installation, you may use ```default``` project in OCP, which has already configured docker registry.
+In order to push ```hazelcast``` image to docker registry in local OCP installation, you may use ```default``` project in OCP, which has already configured docker registry and router.
+
+If you choose to start from scratch please install below components:
+* Docker Registry with [this installation guide](https://docs.openshift.com/container-platform/3.4/install_config/registry/deploy_registry_existing_clusters.html)
+* Router for accessing Docker registry from URL with [this installation guide](https://docs.openshift.com/container-platform/3.3/install_config/router/default_haproxy_router.html)
+
+And [create a route](https://docs.openshift.com/container-platform/3.3/dev_guide/routes.html) for private Docker registry. This route will be referred as `<route-to-registry>` from now on.
 
 Please also note that you need to login local docker registry before hand.
-Moreover, you may refer to [this document](https://docs.openshift.com/container-platform/3.4/install_config/registry/deploy_registry_existing_clusters.html) for docker registry installation in OCP.
-
  ```
  docker login -a <your-ocp-user> -p <your-token> <route-to-registry>
  ```
