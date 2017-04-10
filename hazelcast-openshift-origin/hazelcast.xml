@@ -29,7 +29,7 @@
       <tcp-ip enabled="false" />
 
       <discovery-strategies>
-        <discovery-strategy enabled="true" class="com.noctarius.hazelcast.kubernetes.HazelcastKubernetesDiscoveryStrategy">
+        <discovery-strategy enabled="true" class="com.hazelcast.kubernetes.HazelcastKubernetesDiscoveryStrategy">
           <properties>
               <property name="service-name">${env.HAZELCAST_KUBERNETES_SERVICE_NAME}</property>
               <property name="namespace">${env.HAZELCAST_KUBERNETES_NAMESPACE}</property>
