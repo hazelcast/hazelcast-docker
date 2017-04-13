@@ -1,5 +1,5 @@
 FROM java:7-jre
-ENV HZ_VERSION 3.8
+ENV HZ_VERSION 3.8.1
 ENV HZ_HOME /opt/hazelcast/
 RUN mkdir -p $HZ_HOME
 WORKDIR $HZ_HOME
