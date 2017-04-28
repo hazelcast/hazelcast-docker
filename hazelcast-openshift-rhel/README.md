@@ -11,7 +11,7 @@ Red Hat Enterprise Linux based image. It is built on top of RHEL 7.
 This package consists of the following parts:
 
 * Hazelcast Enterprise and regarding dependencies
-* Red Hat Enterprise Linux (RHEL) 7
+* Red Hat Enterprise Linux (RHEL) 7.3
 * Oracle Java 8
 * Health and liveness scripts
 * Start and stop scripts
@@ -22,25 +22,27 @@ This package consists of the following parts:
 
 ### Prerequisites
 
-1) Install Docker Engine on your development/test machine from [Docker Installations](https://docs.docker.com/engine/installation/)
+1) Up and Running Openshift Container Platform (OCP) version 3.4 or 3.5 that you can login as ```system:admin```.
 
-2) Up and Running Openshift Container Platform (OCP) on your premise.
-* Install Openshift Container Development Kit from [Redhat](https://developers.redhat.com/products/cdk/download/), if you need to test on your local machine. Please note that
+* You may install Openshift Container Development Kit from [Redhat](https://developers.redhat.com/products/cdk/download/), if you need to test on your local machine. Please note that
 downloading and installation will require Redhat subscription. Moreover, please follow CDK installation
-[document](https://access.redhat.com/documentation/en-us/red_hat_container_development_kit/2.4/html/installation_guide/)
+[document](https://access.redhat.com/documentation/en-us/red_hat_container_development_kit/2.4/html/installation_guide/).
+After installation of CDK, you will need to have up and running Openshift Container Platform virtual machine.
 
-* After installation of CDK, you will need to have up and running Openshift Container Platform virtual machine.
+2) RHEL 7.3 host with Docker 1.12 installation to build Hazelcast image. Please follow [this solution](https://access.redhat.com/solutions/253273) to register and subscribe.
 
-Another important note would be that this document assumes familiarity with `oc` CLI and OCP  knowledge. Therefore, if you need further information please refer to Redhat OCP documentation.
+* `NOTE:` You may use host machines that comes with OCP installations.
+
+3) Another important note would be that this document assumes familiarity with `oc` CLI, OCP  and Docker knowledge.
 
 ### Building Hazelcast Enterprise Image
 
-In order to build docker image you will also need Redhat subscription. Please refer to Redhat documentation for subscription and activation for your account.
+Hazelcast `Dockerfile` is buildable only RHEL 7.2/7.3 hosts with proper subscription.
 
-Run below ```docker``` command under ```hazelcast-openshift-rhel``` directory to build image with your Redhat subscription credentials.
+Run below ```docker``` command under ```hazelcast-openshift-rhel``` directory to build image on RHEL host.
 
 ```
-docker build --build-arg user=<your-user-name> --build-arg password=<your-password> . -t <your-image-name>:<version>
+docker build . -t <your-image-name>:<version>
 ```
 
 To verify image in Docker please run below command in shell:
@@ -51,9 +53,9 @@ You should see `<your-image-name>` as a repository.
 
 ### Pushing Image to Private Docker Registry in OCP
 
-In order to push ```hazelcast``` image to docker registry in local OCP installation, you may use ```default``` project in OCP, which has already configured docker registry and router.
+In order to push ```hazelcast``` image to docker registry in OCP installation, you may use ```default``` project in OCP, which has already configured docker registry and router.
 
-If you choose to start from scratch please install below components:
+If you choose to start from scratch please install below components under your project:
 * Docker Registry with [this installation guide](https://docs.openshift.com/container-platform/3.4/install_config/registry/deploy_registry_existing_clusters.html)
 * Router for accessing Docker registry from URL with [this installation guide](https://docs.openshift.com/container-platform/3.3/install_config/router/default_haproxy_router.html)
 
@@ -68,9 +70,9 @@ You may get `<your-ocp-user>` from `oc whoami` CLI command on OCP VM, after conn
 
 Please beware that, in order to login registry, and execute push command `<your-ocp-user>` should have proper rights.
 
- During ```login``` you will probably get SSL handshake error, if you do please add your route to docker insecure registry list.
+ During ```login``` you will probably get SSL handshake error, if you do please add your route to docker insecure registry list or read OCP documentation regarding [exposing private registry](https://docs.openshift.com/container-platform/3.5/install_config/registry/securing_and_exposing_registry.html).
 
-After successful, login you may continue with ```taging``` your image with below sample command.
+After successful login, you may continue with ```taging``` your image with below sample command.
  ```
  docker tag <your-image-name>:<version> <route-to-registry>\<your-namespace>\<your-image-name>:<version>
   ```
@@ -93,10 +95,12 @@ oc get imagestreams
 ### Creating Volume and Loading Custom Configurations
 `This is a prerequisite` step for the next section if you have custom configurations or jars.
 
+Moreover, OCP 3.5 installations on cloud providers like AWS, may not contain `Persistent Volumes`(PV) in that case, to deploy Hazelcast cluster with `hazelcast-template.js` it is a `prerequisite` to create a PV.
+
 In order to share `custom configurations` or `custom domain jars` (for example EntryProcessor implementations) between Hazelcast Pods, you need to add a `persistent volume` in OCP. In `hazelcast-template.js` this directory is named as `/data/hazelcast`, and it should be claimed. Below, you can find how to add persistent volume in OCP. Please notice that it is just an example of persistent volume creation with `NFS`, there are many different ways that you can map volumes in Kubernetes and Openshift Platform. You can find available volumes via [this link](https://docs.openshift.com/container-platform/3.4/rest_api/kubernetes_v1.html#v1-volume)
 
-* Login to your OCP console `oc login <your-ocp-url>` with `admin` user or rights
-* Create a directory in master for the pysical storage.
+* Login to your OCP console `oc login <your-ocp-url>` with `system:admin` user or rights
+* Create a directory in master for the physical storage.
 ```
 mkdir -p <your-pv-path>
 chmod -R 777 <parent-path-to-pv> [may require root permissions]
@@ -135,14 +139,16 @@ and save the file. Please also notice that `Reclaim Policy` is set as `Retain`. 
   * `IMPORTANT:` custom configuration file name must be `hazelcast.xml`
   * `HINT:` you may use `scp` or `stfp` to transfer these files.
 
-If you need to redeploy Hazelcast cluster with kubernetes template, you may need to remove logical persistent volume bindings before. Since their creation policy is `RETAIN`. In order to delete please run below commands.
-* `oc delete pvc hz-vc` [hz-vc is the claim name from kubernetes template, you do not need to change its name]
+If you need to redeploy Hazelcast cluster with `hazelcast-template.js`, you may need to remove logical persistent volume bindings before. Since their creation policy is `RETAIN`. In order to delete or tear down, please run below commands.
+* `oc delete pvc hz-vc` [hz-vc is the claim name from Kubernetes template, you do not need to change its name]
 * `oc delete pv <your-pv-name>`
 * `oc create -f <your-pv-yaml>`
 
 Please note that contents of your previous deployment is preserved. If you change claim policy to `RECYCLE`, you have to transfer all custom files to `<your-pv-path>` before each successive deployments.
 
 ### Deploying on Web Console
+
+Before deploying, please check Security Context Constraints (SCC) on OCP as defined [in this link](https://docs.openshift.org/latest/admin_guide/manage_scc.html). Since, `Dockerfile` user is `hazelcast`, rather than `root`. You may need to enable [Images to Run with USER in the Dockerfile](https://docs.openshift.org/latest/admin_guide/manage_scc.html#enable-images-to-run-with-user-in-the-dockerfile)
 
 * In web browser, navigate to your OCP console page and login.
   * Your login user should have required access right to start docker registry and push images as described in `Build and Deployment to Private Docker Registry` section of this document.
@@ -179,14 +185,14 @@ Another important point would be the `DOCKER REPO` entry for image, in succeedin
 
 * Copy and Paste the contents of `kubernetes-template.js` on to editor, or browse and upload it.
   * This template file contains all the deployment information to setup a Hazelcast cluster from inside Openshift.
-  It configures the necessary ReplicationController, healthchecks and image to use. It also offers a set of properties to be requested when creating a new cluster (such as clustername).
+  It configures the necessary ReplicationController, health checks and image to use. It also offers a set of properties to be requested when creating a new cluster (such as clustername).
 
 * Fill out Configuration properties section
   * `NAMESPACE` value is important and should match with your project namespace
 * Change `"image": "hazelcast/hazelcast-openshift-rhel"` to `"image":"<registry-route>/<your-namespace>/<your-image-name>"`
 * Enter your enterprise license key to `ENTERPRISE_LICENSE_KEY` input section.
 * Enter `<your-pv-name>` to `HAZELCAST_VOLUME_NAME` input section.
-  * `If you do not need any custom xml or jar` you can give a `PersistentVolume` name which is already created in OCP. You can get them via `oc get pv` command. Please note that these volumes have `RECYCLE` claim ploicy.
+  * `If you do not need any custom xml or jar` you can give a `PersistentVolume` name which may already created in OCP. You can get them via `oc get pv` command. Please note that these volumes have `RECYCLE` claim ploicy, also installations on cloud providers may not have these volumes.
 
 * ...and it is ready to go.
 
