@@ -50,17 +50,12 @@ ADD readiness.sh $HZ_HOME/readiness.sh
 ### Atomic Help File
 COPY README.md /tmp/
 
-ARG user
-ARG password
-
-RUN subscription-manager register --username $user --password $password --auto-attach
-
 RUN yum clean all && \
     yum-config-manager --disable \* && \
 ### Add necessary Red Hat repos here
-    subscription-manager repos --enable rhel-7-server-rpms && \
-    subscription-manager repos --enable rhel-7-server-optional-rpms && \
-    subscription-manager repos --enable rhel-7-server-thirdparty-oracle-java-rpms && \
+    yum-config-manager repos --enable rhel-7-server-rpms && \
+    yum-config-manager repos --enable rhel-7-server-optional-rpms && \
+    yum-config-manager repos --enable rhel-7-server-thirdparty-oracle-java-rpms && \
     yum -y update-minimal --security --sec-severity=Important --sec-severity=Critical --setopt=tsflags=nodocs && \
 ### Install Oracle Java 8
     yum -y install --setopt=tsflags=nodocs java-1.8.0-oracle-devel && \
