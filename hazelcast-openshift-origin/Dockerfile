@@ -1,5 +1,5 @@
-FROM hazelcast/hazelcast:3.8
-ENV HZ_VERSION 3.8
+FROM hazelcast/hazelcast:3.8.1
+ENV HZ_VERSION 3.8.1
 ENV HZ_HOME /opt/hazelcast/
 RUN mkdir -p $HZ_HOME
 WORKDIR $HZ_HOME
@@ -36,9 +36,9 @@ ADD https://repo1.maven.org/maven2/org/slf4j/jul-to-slf4j/1.7.12/jul-to-slf4j-1.
 ADD https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.12/slf4j-api-1.7.12.jar $HZ_HOME
 ADD https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.15/snakeyaml-1.15.jar $HZ_HOME
 
-# JCache 
+# JCache
 ADD https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.jar $HZ_HOME
- 
+
 ADD hazelcast.xml /$HZ_HOME/hazelcast.xml
 ADD start.sh /$HZ_HOME/start.sh
 
@@ -54,4 +54,3 @@ CMD ./start.sh
 
 # Expose port
 EXPOSE 5701
-
