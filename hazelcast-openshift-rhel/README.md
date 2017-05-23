@@ -148,8 +148,6 @@ Please note that contents of your previous deployment is preserved. If you chang
 
 ### Deploying on Web Console
 
-Before deploying, please check Security Context Constraints (SCC) on OCP as defined [in this link](https://docs.openshift.org/latest/admin_guide/manage_scc.html). Since, `Dockerfile` user is `hazelcast`, rather than `root`. You may need to enable [Images to Run with USER in the Dockerfile](https://docs.openshift.org/latest/admin_guide/manage_scc.html#enable-images-to-run-with-user-in-the-dockerfile)
-
 * In web browser, navigate to your OCP console page and login.
   * Your login user should have required access right to start docker registry and push images as described in `Build and Deployment to Private Docker Registry` section of this document.
 
