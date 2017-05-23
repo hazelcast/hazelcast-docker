@@ -35,7 +35,7 @@
 				},
 				"spec": {
 					"containers": [{
-						"image": "hazelcast/openshift:${HAZELCAST_VERSION}",
+						"image": "hazelcast/hazelcast-openshift-origin:${HAZELCAST_VERSION}",
 						"name": "hazelcast-openshift",
 						"env": [{
 							"name": "HAZELCAST_KUBERNETES_SERVICE_DNS",
