@@ -1,5 +1,5 @@
 FROM java:7-jre
-ENV HZ_VERSION 3.7.7
+ENV HZ_VERSION 3.7.8
 ENV HZ_HOME /opt/hazelcast/
 # Persistent VOLUME definitions
 ENV MANCENTER_DATA /data
