@@ -1,4 +1,4 @@
-FROM hazelcast/hazelcast:3.8.2
+FROM java:openjdk-8-jre
 ENV HZ_VERSION 3.8.2
 ENV HZ_HOME /opt/hazelcast/
 RUN mkdir -p $HZ_HOME
@@ -6,6 +6,9 @@ WORKDIR $HZ_HOME
 
 # User root while setup
 USER root
+
+# Download hazelcast jars from maven repo.
+ADD https://repo1.maven.org/maven2/com/hazelcast/hazelcast-all/$HZ_VERSION/hazelcast-all-$HZ_VERSION.jar $HZ_HOME
 
 # Jackson Dependencies
 ADD https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.6.0/jackson-annotations-2.6.0.jar $HZ_HOME
