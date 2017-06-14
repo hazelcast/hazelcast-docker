@@ -24,7 +24,7 @@ fi
 # trap the signal and delegate to sigterm_handler function, which will notify jet instance process
 trap sigterm_handler SIGTERM SIGINT
 
-export CLASSPATH=$JET_HOME/hazelcast-all-$HZ_VERSION.jar:$JET_HOME/hazelcast-jet-$JET_VERSION.jar:$CLASSPATH/*
+export CLASSPATH=$JET_HOME/hazelcast-jet-$JET_VERSION.jar:$CLASSPATH/*
 
 echo "########################################"
 echo "# RUN_JAVA=$RUN_JAVA"
