@@ -1,0 +1,29 @@
+{
+    "title": "Hazelcast Enterprise Image for OCP",
+    "tagline": "Hazelcast Enterprise Image for OCP",
+    "author": "Hazelcast",
+    "image": "IMDG_orange_logo_full_RGB-light_200px",
+    "ignore": {
+            "files": ["Work_In_Progress.md"],
+            "folders": ["99_Not_Ready"]
+    },
+    "live": {
+        "clean_urls": true
+    },
+    "html": {
+        "theme": "daux-blue",
+        "breadcrumbs": true,
+        "breadcrumb_separator": "Chevrons",
+        "toggle_code": true,
+        "date_modified": false,
+        "float": false,
+        "inherit_index": true,
+        "auto_landing": false,
+        "auto_toc": false,
+
+        "repo": "hazelcast/hazelcast",
+        "google_analytics": "UA-12653604-10",
+        "links": {
+        }
+    }
+}
