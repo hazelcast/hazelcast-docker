@@ -1,2 +1,0 @@
-
-Hazelcast, Inc.
