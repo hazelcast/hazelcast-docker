@@ -9,7 +9,6 @@
 * [Hazelcast Enterprise](#hazelcast-enterprise)
 * [Hazelcast Management Center](#hazelcast-management-center)
   * [Hazelcast Member Configuration](#hazelcast-member-configuration)
-* [Hazelcast OpenShift](#hazelcast-openshift)
 * [Hazelcast Docker Image Links](#hazelcast-docker-image-links)
 * [Hazelcast Docker Files](#hazelcast-docker-files)
 
@@ -19,7 +18,6 @@ You can deploy your Hazelcast projects using the Docker containers. Hazelcast ha
 * Hazelcast
 * Hazelcast Enterprise
 * Hazelcast Management Center
-* Hazelcast OpenShift
 
 # Hazelcast
 
@@ -160,32 +158,6 @@ Then, you can run Hazelcast Management Center using the URL `http://host-ip:8080
 
 As a prerequisite, Hazelcast Cluster Member Containers should be launched with Management Center Enabled mode. This can be achieved by using a custom `hazelcast.xml` configuration file while launching the Hazelcast Member Container. For more information please refer to the [Using Hazelcast Configuration File](#using-hazelcast-configuration-file) section.
 
-# Hazelcast OpenShift
-
-First login to OpenShift using the OpenShift CLI with the following commands:
-
-```
-sudo su
-oc login <your-openshit-login-url>
-```
-
-Then create a new project, e.g., `hazelcast-cluster`, and switch to that newly created using the following commands:
-
-```
-oc new-project hazelcast-cluster
-oc project hazelcast-cluster 
-```
-
-Now download the project template from GitHub and use CLI to register the template under the newly created project using the following commands:
-
-```
-curl -o hazelcast-template.js https://raw.githubusercontent.com/hazelcast/hazelcast-docker/master/hazelcast-openshift/hazelcast-template.js
-oc create -f hazelcast-template.js -n hazelcast-cluster
-```
-
-Finally, login to your OpenShift Web Administration UI. You should see your new Hazelcast template and start creating a Hazelcast cluster by filling the parameters according to your needs.
-
-For detailed information please see our blog post at http://blog.hazelcast.com/openshift/.
 
 # Hazelcast Docker Image Links
 
@@ -194,8 +166,6 @@ Hazelcast Open Source: https://hub.docker.com/r/hazelcast/hazelcast/
 Hazelcast Enterprise: https://hub.docker.com/r/hazelcast/hazelcast-enterprise/
 
 Hazelcast Management Center: https://hub.docker.com/r/hazelcast/management-center/
-
-Hazelcast Openshift : https://hub.docker.com/r/hazelcast/openshift/
 
 # Hazelcast Docker Files
 
