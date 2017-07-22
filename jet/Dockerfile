@@ -1,4 +1,4 @@
-FROM java:openjdk-8-jre
+FROM openjdk:8-jre
 ENV JET_VERSION 0.4
 ENV JET_HOME /opt/hazelcast-jet/
 RUN mkdir -p $JET_HOME
