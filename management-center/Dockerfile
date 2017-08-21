@@ -3,9 +3,11 @@ ENV HZ_VERSION 3.8.2
 ENV HZ_HOME /opt/hazelcast/
 # Persistent VOLUME definitions
 ENV MANCENTER_DATA /data
+ENV CLASSPATH_ARG /opt/lib
 VOLUME ["/data"]
 
 RUN mkdir -p $HZ_HOME
+RUN mkdir -p $CLASSPATH_ARG
 WORKDIR $HZ_HOME
 
 # Download Hazelcast distribution
