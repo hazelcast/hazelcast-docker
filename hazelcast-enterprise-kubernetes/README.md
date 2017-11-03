@@ -11,3 +11,15 @@ Edit `hz-ee-config.yaml` configuration file and install it:
 Deploy Hazelcast EE:
 
     $ kubectl apply -f hazelcast-ee-service.yaml
+
+##### Optional
+
+Readiness probe:
+
+    readinessProbe:
+      exec:
+        command:
+        - "./readiness.sh"
+      initialDelaySeconds: 35
+      timeoutSeconds: 5
+      periodSeconds: 10

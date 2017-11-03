@@ -13,7 +13,7 @@ ENV HZ_VERSION 3.9
 
 ARG HZ_KUBE_VERSION=1.0.0
 ARG HZ_MAVEN_DIR=${HZ_VERSION}
-ARG REPOSITORY_URL=https://repository-hazelcast-l337.forge.cloudbees.com/release
+ARG REPOSITORY_URL=https://repo1.maven.org/maven2
 
 RUN mkdir -p $HZ_HOME
 RUN mkdir -p $HZ_CP_MOUNT
@@ -33,7 +33,7 @@ yum clean all
 ENV JAVA_HOME /etc/alternatives/jre
 
 ### add hazelcast enterprise
-ADD ${REPOSITORY_URL}/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/hazelcast-enterprise-all-${HZ_VERSION}.jar $HZ_HOME
+ADD ${REPOSITORY_URL}/com/hazelcast/hazelcast-all/${HZ_VERSION}/hazelcast-all-${HZ_VERSION}.jar $HZ_HOME
 
 ### Adding Logging redirector
 ADD https://repo1.maven.org/maven2/org/slf4j/jul-to-slf4j/1.7.12/jul-to-slf4j-1.7.12.jar $HZ_HOME
