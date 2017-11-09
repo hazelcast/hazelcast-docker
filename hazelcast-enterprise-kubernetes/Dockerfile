@@ -42,6 +42,11 @@ ADD https://repo1.maven.org/maven2/org/slf4j/jul-to-slf4j/1.7.12/jul-to-slf4j-1.
 ADD https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.jar $HZ_HOME
 
 ### Adding maven wrapper, downloading Hazelcast Kubernetes discovery plugin and dependencies and cleaning up
+ADD https://github.com/takari/maven-wrapper/archive/maven-wrapper-0.3.0.tar.gz $HZ_HOME
+RUN cd $HZ_HOME && \
+    tar zxf maven-wrapper*.tar.gz && \
+    rm -fr maven-wrapper*.tar.gz && \
+    mv maven-wrapper* mvnw
 COPY mvnw $HZ_HOME/mvnw
 
 ### Configure Hazelcast
