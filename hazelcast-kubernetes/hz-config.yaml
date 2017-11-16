@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hz-config
+  namespace: default
+data:
+  HAZELCAST_KUBERNETES_NAMESPACE: default
+  HAZELCAST_KUBERNETES_SERVICE_NAME: hazelcast
