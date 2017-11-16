@@ -58,6 +58,7 @@ RUN chmod +x $HZ_HOME/*.sh
 USER $USER_UID
 RUN cd mvnw && \
     chmod +x mvnw && \
+    sync && \
     ./mvnw -f dependency-copy.xml -Dhazelcast-kubernetes-version=${HZ_KUBE_VERSION} dependency:copy-dependencies && \
     cd .. && \
     rm -rf $HZ_HOME/mvnw && \
