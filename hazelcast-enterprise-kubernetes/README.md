@@ -15,7 +15,7 @@ Centos 7 based image.
 
 This package consists of the following parts:
 
-* Hazelcast Enterprise and related dependencies, including the `hazelcast-kubernetes` discovery plugin
+* Hazelcast Enterprise and related dependencies, including the [`hazelcast-kubernetes`](https://github.com/hazelcast/hazelcast-kubernetes) discovery plugin
 * Centos 7
 * OpenJDK 8
 * Health and liveness scripts
