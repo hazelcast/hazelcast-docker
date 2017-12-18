@@ -99,3 +99,15 @@ docker logs "id of running container"
 
 You can find docker files by going corresponding hazelcast-docker repo tag.
 See the full list here: https://github.com/hazelcast/hazelcast-docker/releases
+
+# Hazelcast Kubernetes
+
+Hazelcast maintains two Docker Images for Kubernetes Environment. Below are the links to their README files.
+
+* [hazelcast-kubernetes](https://github.com/hazelcast/hazelcast-docker/blob/master/hazelcast-kubernetes/README.md)
+* [hazelcast-enterprise-kubernetes](https://github.com/hazelcast/hazelcast-docker/blob/master/hazelcast-enterprise-kubernetes/README.md)
+
+
+# Hazelcast Openshift
+
+please see [Hazelcast Openshift Repository](https://github.com/hazelcast/hazelcast-openshift) for Dockerfile definitions and have a look available images on [Docker Hub](https://store.docker.com/profiles/hazelcast) page.
