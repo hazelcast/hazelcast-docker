@@ -8,6 +8,9 @@
 * [Extending Hazelcast Base Image](#extending-hazelcast-base-image)
 * [Stopping a Hazelcast Member](#stopping-a-hazelcast-member)
 * [Hazelcast Docker Files](#hazelcast-docker-files)
+* [Hazelcast Kubernetes](#hazelcast-kubernetes)
+* [Hazelcast Openshift](#hazelcast-openshift)
+
 
 # Hazelcast Quick Start
 You can launch Hazelcast Docker Container by running the following command. You can find the full list of Hazelcast versions to replace $HAZELCAST_VERSION at [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast/tags).
