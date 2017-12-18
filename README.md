@@ -54,7 +54,7 @@ docker run -e JAVA_OPTS="-Xms512M -Xmx1024M" -ti hazelcast/hazelcast
 
 # Using Custom Hazelcast Configuration File
 
-If you need to configure with your own `hazelcast.xml` or jar files with your own domain classes, you need to mount the folder that has those files. Also, while running the Docker image, you need to give the URL of `hazelcast.config` in `JAVA_OPTS` parameter. Please see the following example:
+If you need to configure with your own `hazelcast.xml` or jar files with your own domain classes, you need to mount the folder that has those files. Also, while running the Docker image, you need to pass the `hazelcast.xml` file path to `hazelcast.config` in `JAVA_OPTS` parameter. Please see the following example:
 
 ```
 docker run -e JAVA_OPTS="-Dhazelcast.config=/opt/hazelcast/config_ext/hazelcast.xml" -v PATH_TO_LOCAL_CONFIG_FOLDER:/opt/hazelcast/config_ext -ti hazelcast/hazelcast
