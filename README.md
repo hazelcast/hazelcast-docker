@@ -7,9 +7,10 @@
 * [Using Custom Hazelcast Configuration File](#using-custom-hazelcast-configuration-file)
 * [Extending Hazelcast Base Image](#extending-hazelcast-base-image)
 * [Stopping a Hazelcast Member](#stopping-a-hazelcast-member)
-* [Hazelcast Docker Files](#hazelcast-docker-files)
+* [Mamagement Center](#management-center)
 * [Hazelcast Kubernetes](#hazelcast-kubernetes)
 * [Hazelcast Openshift](#hazelcast-openshift)
+* [Hazelcast Docker Files](#hazelcast-docker-files)
 
 
 # Hazelcast Quick Start
@@ -98,19 +99,23 @@ You can check the logs thereafter using the following command:
 docker logs "id of running container"
 ```
 
-# Hazelcast Docker Files
+# Management Center
 
-You can find docker files by going corresponding hazelcast-docker repo tag.
-See the full list here: https://github.com/hazelcast/hazelcast-docker/releases
+please see [Management Center Repository](https://github.com/hazelcast/management-center-docker) for Dockerfile definitions and have a look available images on [Docker Hub](https://store.docker.com/profiles/hazelcast) page.
+
 
 # Hazelcast Kubernetes
 
-Hazelcast maintains two Docker Images for Kubernetes Environment. Below are the links to their README files.
+Hazelcast maintains two Docker Images for Kubernetes Environment. Below are the links to their README files. You can also find Docker Images on [Docker Hub](https://store.docker.com/profiles/hazelcast) page.
 
 * [hazelcast-kubernetes](https://github.com/hazelcast/hazelcast-docker/blob/master/hazelcast-kubernetes/README.md)
 * [hazelcast-enterprise-kubernetes](https://github.com/hazelcast/hazelcast-docker/blob/master/hazelcast-enterprise-kubernetes/README.md)
 
-
 # Hazelcast Openshift
 
 please see [Hazelcast Openshift Repository](https://github.com/hazelcast/hazelcast-openshift) for Dockerfile definitions and have a look available images on [Docker Hub](https://store.docker.com/profiles/hazelcast) page.
+
+# Hazelcast Docker Files
+
+You can find docker files by going corresponding hazelcast-docker repo tag.
+See the full list here: https://github.com/hazelcast/hazelcast-docker/releases
