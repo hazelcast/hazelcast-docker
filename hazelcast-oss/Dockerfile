@@ -1,4 +1,4 @@
-FROM openjdk:8-jre
+FROM openjdk:8u151-jre-alpine
 ENV HZ_VERSION 3.9
 ENV HZ_HOME /opt/hazelcast/
 RUN mkdir -p $HZ_HOME
