@@ -1,6 +1,10 @@
 FROM openjdk:8u151-jre-alpine
 ENV HZ_VERSION 3.9.1
 ENV HZ_HOME /opt/hazelcast/
+# provide bash
+RUN apk update
+RUN apk upgrade
+RUN apk add bash
 RUN mkdir -p $HZ_HOME
 WORKDIR $HZ_HOME
 # Download hazelcast jars from maven repo.
