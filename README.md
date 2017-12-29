@@ -7,13 +7,14 @@
 * [Using Custom Hazelcast Configuration File](#using-custom-hazelcast-configuration-file)
 * [Extending Hazelcast Base Image](#extending-hazelcast-base-image)
 * [Stopping a Hazelcast Member](#stopping-a-hazelcast-member)
-* [Mamagement Center](#management-center)
+* [Management Center](#management-center)
 * [Hazelcast Kubernetes](#hazelcast-kubernetes)
 * [Hazelcast Openshift](#hazelcast-openshift)
 * [Hazelcast Docker Files](#hazelcast-docker-files)
 
 
 # Hazelcast Quick Start
+
 You can launch Hazelcast Docker Container by running the following command. You can find the full list of Hazelcast versions to replace $HAZELCAST_VERSION at [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast/tags).
 
 ```
@@ -35,6 +36,8 @@ docker run -ti -e HZ_LICENSE_KEY=YOUR_LICENSE_KEY hazelcast/hazelcast-enterprise
 
 You can find all Hazelcast Docker Images on Docker Store Hazelcast Page.
 https://store.docker.com/profiles/hazelcast
+
+N.B. Hazelcast Docker Images (Enterprise Edition and Open Source) are based on Alpine Linux.
 
 # Hazelcast Defined Environment Variables
 
@@ -65,9 +68,10 @@ docker run -e JAVA_OPTS="-Dhazelcast.config=/opt/hazelcast/config_ext/hazelcast.
 ```
 
 # Extending Hazelcast Base Image
-You can use Hazelcast Docker Image to start a new Hazelcast member with default configuration. If you like to customize your Hazelcast member, you can extend the Hazelcast base image, provide your own configuration file and customize your initialization process. In order to do that, you need to create a new `Dockerfile` and build it with `docker build` command. 
 
- In the `Dockerfile` example below, we are creating a new image based on the Hazelcast image and adding our own configuration file from our host to the container, which is going to be used with Hazelcast when the container runs.
+You can use Hazelcast Docker Image to start a new Hazelcast member with default configuration. If you'd like to customize your Hazelcast member, you can extend the Hazelcast base image, provide your own configuration file and customize your initialization process. In order to do that, you need to create a new `Dockerfile` and build it with `docker build` command. 
+
+In the `Dockerfile` example below, we are creating a new image based on the Hazelcast image and adding our own configuration file from our host to the container, which is going to be used with Hazelcast when the container runs.
 
 ```
 FROM hazelcast/hazelcast:$HAZELCAST_VERSION
@@ -85,7 +89,7 @@ docker build .
 
 Now you can run your own container with its ID or tag (if you provided `-t` option while building the image) using the `docker run` command.
 
-### Stopping a Hazelcast Member
+## Stopping a Hazelcast Member
 
 You can `stop` the member using the script `stop.sh`. For this purpose, you need to run the following command to the running Docker container:
 
@@ -101,8 +105,7 @@ docker logs "id of running container"
 
 # Management Center
 
-please see [Management Center Repository](https://github.com/hazelcast/management-center-docker) for Dockerfile definitions and have a look available images on [Docker Hub](https://store.docker.com/profiles/hazelcast) page.
-
+Please see [Management Center Repository](https://github.com/hazelcast/management-center-docker) for Dockerfile definitions and have a look at available images on [Docker Hub](https://store.docker.com/profiles/hazelcast) page.
 
 # Hazelcast Kubernetes
 
@@ -117,5 +120,5 @@ please see [Hazelcast Openshift Repository](https://github.com/hazelcast/hazelca
 
 # Hazelcast Docker Files
 
-You can find docker files by going corresponding hazelcast-docker repo tag.
+You can find Docker files by going to corresponding `hazelcast-docker` repo tag.
 See the full list here: https://github.com/hazelcast/hazelcast-docker/releases
