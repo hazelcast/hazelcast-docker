@@ -15,7 +15,7 @@ Centos 7 based image.
 
 This package consists of the following parts:
 
-* Hazelcast and related dependencies, including the [`hazelcast-kubernetes`](https://github.com/hazelcast/hazelcast-kubernetes) discovery plugin
+* Hazelcast and related dependencies, including the [`hazelcast-kubernetes`](https://github.com/hazelcast/hazelcast-kubernetes:3.9.2
 * Centos 7
 * OpenJDK 8
 * Health and liveness scripts
@@ -154,7 +154,7 @@ spec:
     spec:
       containers:
       - name: hazelcast-node
-        image: hazelcast/hazelcast-kubernetes:3.9.1
+        image: hazelcast/hazelcast-kubernetes:3.9.2
         ports:
         - containerPort: 5701
         livenessProbe:
