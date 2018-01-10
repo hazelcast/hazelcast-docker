@@ -10,6 +10,8 @@ WORKDIR $HZ_HOME
 # Download hazelcast jars from maven repo.
 ADD http://download.hazelcast.com/enterprise/hazelcast-enterprise-$HZ_VERSION.zip $HZ_HOME/hazelcast.zip
 RUN unzip hazelcast.zip
+# Adding JCache
+ADD https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.jar $HZ_HOME
 ADD server.sh /$HZ_HOME/server.sh
 ADD stop.sh /$HZ_HOME/stop.sh
 RUN chmod +x /$HZ_HOME/server.sh

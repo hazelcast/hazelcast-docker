@@ -24,11 +24,12 @@ fi
 # trap the signal and delegate to sigterm_handler function, which will notify hazelcast instance process
 trap sigterm_handler SIGTERM SIGINT
 
-export CLASSPATH=$HAZELCAST_HOME/hazelcast-all-$HZ_VERSION.jar:$CLASSPATH/*
+export CLASSPATH=$HAZELCAST_HOME/hazelcast-all-$HZ_VERSION.jar:$HAZELCAST_HOME/cache-api-1.0.0.jar:$CLASSPATH/*
 
 echo "########################################"
 echo "# RUN_JAVA=$RUN_JAVA"
 echo "# JAVA_OPTS=$JAVA_OPTS"
+echo "# CLASSPATH=$CLASSPATH"
 echo "# starting now...."
 echo "########################################"
 
