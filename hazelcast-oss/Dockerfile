@@ -1,5 +1,5 @@
 FROM openjdk:8u151-jre-alpine
-ENV HZ_VERSION 3.9.3
+ENV HZ_VERSION 3.10-BETA-1
 ENV HZ_HOME /opt/hazelcast/
 # provide bash
 RUN apk update
