@@ -1,8 +1,9 @@
 # Table of Contents
 
-* [ Hazelcast Quick Start](#hazelcast-quick-start)
-* [ Hazelcast Enterprise Quick Start](#hazelcast-enterprise-quick-start)
-* [ Hazelcast Docker Repositories](#hazelcast-docker-repositories)
+* [Hazelcast Quick Start](#hazelcast-quick-start)
+* [Hazelcast Hello World](#hazelcast-hello-world)
+* [Hazelcast Enterprise Quick Start](#hazelcast-enterprise-quick-start)
+* [Hazelcast Docker Repositories](#hazelcast-docker-repositories)
 * [Hazelcast Defined Environment Variables](#setting-environment-variables)
 * [Using Custom Hazelcast Configuration File](#using-custom-hazelcast-configuration-file)
 * [Extending Hazelcast Base Image](#extending-hazelcast-base-image)
@@ -21,6 +22,21 @@ You can launch Hazelcast Docker Container by running the following command. You 
 docker run -ti hazelcast/hazelcast:$HAZELCAST_VERSION
 ```
 This command will pull Hazelcast Docker image and run server.sh to start a new Hazelcast Instance.
+
+# Hazelcast Hello World
+
+For the simplest end-to-end scenario, you can create a Hazelcast cluster with two Docker containers and access it from the client application.
+
+```
+docker run -it -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5701" -p 5701:5701 hazelcast/hazelcast
+docker run -it -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" -p 5702:5701 hazelcast/hazelcast 
+```
+
+Note that:
+* each container must publish the `5701` port under a different host machine port (`5701` and `5702` in the example)
+* `<host_ip>` needs to be the host machine address that will be used for the Hazelcast communication
+
+After setting up the cluster, you can start the [client](https://github.com/hazelcast/hazelcast-code-samples/tree/master/clients/basic) application to check it works correctly.
 
 # Hazelcast Enterprise Quick Start
 
