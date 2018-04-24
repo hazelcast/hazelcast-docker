@@ -154,7 +154,7 @@ spec:
     spec:
       containers:
       - name: hazelcast-node
-        image: hazelcast/hazelcast-kubernetes:3.9.4
+        image: hazelcast/hazelcast-kubernetes:3.10
         ports:
         - containerPort: 5701
         livenessProbe:
