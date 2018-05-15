@@ -4,7 +4,11 @@ in Kubernetes.
 
 - [Introduction](#introduction)
 - [Deploying](#deploying)
-- [Labels](#labels)
+  - [Prerequisites](#prerequisites)
+  - [Starting Hazelcast Cluster](#starting-hazelcast-cluster)
+  - [Custom Configuration](#custom-configuration)
+    - [Persistent Volume](#persistent-volume)
+    - [Config Map](#config-map)
 - [Security Implications](#security-implications)
 
 
@@ -56,7 +60,11 @@ Finally, deploy the Hazelcast cluster:
     $ kubectl apply -f hazelcast-service.yaml
 
 
-### Custom Configurations
+## Custom Configuration
+
+There are two ways to use custom Hazelcast configuration: Persistent Volume or Config Map. Only the first one works if you want to use custom domain JARs.
+
+### Persistent Volume
 
 This is a **prerequisite** step if you have custom configurations or JARs.
 
@@ -171,12 +179,76 @@ spec:
         - name: HZ_DATA
           value: /data/hazelcast
         volumeMounts:
-          - name: hz-persistent-storage
+          - name: hazelcast-storage
             mountPath: /data/hazelcast
       volumes:
-        - name: hz-persistent-storage
+        - name: hazelcast-storage
           persistentVolumeClaim:
             claimName: hz-vc
+```
+
+### Config Map
+
+The Hazelcast configuration can be stored as ConfigMap and used by the Hazelcast node.
+
+In order to do it, copy `hazelcast.xml` into the `hazelcast-configuration` directory. Then, create a `ConfigMap`.
+
+    $ kubectl create configmap hazelcast-configuration --from-file hazelcast-configuration
+
+Finally, mount ConfigMap into `/data/hazelcast` the same way it was done in case of Persistent Volume. The `hazelcast-service.yaml` file can look as follows:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hazelcast
+  labels:
+    app: hazelcast
+spec:
+  type: NodePort
+  selector:
+    app: hazelcast
+  ports:
+  - protocol: TCP
+    port: 5701
+    name: hzport
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: hazelcast
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: hazelcast
+    spec:
+      containers:
+      - name: hazelcast-node
+        image: hazelcast/hazelcast-kubernetes:3.10
+        ports:
+        - containerPort: 5701
+        livenessProbe:
+          exec:
+            command:
+            - "./liveness.sh"
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 10
+        envFrom:
+        - configMapRef:
+            name: hz-config
+        env:
+        - name: HZ_DATA
+          value: /data/hazelcast
+        volumeMounts:
+          - name: hazelcast-storage
+            mountPath: /data/hazelcast
+      volumes:
+        - name: hazelcast-storage
+          configMap:
+            name: hazelcast-configuration
 ```
 
 # Security Implications
