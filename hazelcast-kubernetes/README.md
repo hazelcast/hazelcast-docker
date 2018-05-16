@@ -166,9 +166,9 @@ spec:
         ports:
         - containerPort: 5701
         livenessProbe:
-          exec:
-            command:
-            - "./liveness.sh"
+          httpGet:
+            path: /hazelcast/health/node-state
+            port: 5701
           initialDelaySeconds: 30
           timeoutSeconds: 5
           periodSeconds: 10
