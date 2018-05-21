@@ -1,20 +1,53 @@
 FROM openjdk:8u151-jre-alpine
+
 ENV HZ_VERSION 3.10
-ENV HZ_HOME /opt/hazelcast/
-# provide bash
-RUN apk update
-RUN apk upgrade
-RUN apk add bash
-RUN mkdir -p $HZ_HOME
-WORKDIR $HZ_HOME
-# Download hazelcast jars from maven repo.
-ADD https://repo1.maven.org/maven2/com/hazelcast/hazelcast-all/$HZ_VERSION/hazelcast-all-$HZ_VERSION.jar $HZ_HOME
-# Adding JCache
-ADD https://repo1.maven.org/maven2/javax/cache/cache-api/1.0.0/cache-api-1.0.0.jar $HZ_HOME
-ADD server.sh /$HZ_HOME/server.sh
-ADD stop.sh /$HZ_HOME/stop.sh
-RUN chmod +x /$HZ_HOME/server.sh
-RUN chmod +x /$HZ_HOME/stop.sh
-# Start hazelcast standalone server.
-CMD ["./server.sh"]
-EXPOSE 5701
+ENV HZ_HOME /opt/hazelcast
+ENV HZ_JAR "hazelcast-all-${HZ_VERSION}.jar"
+
+ENV CACHE_API_VERSION 1.0.0
+ENV CACHE_API_JAR "cache-api-${CACHE_API_VERSION}.jar"
+
+# Update alpine, and, install bash & curl
+RUN apk update \
+ && apk upgrade \
+ && apk add --update \
+      bash \
+      curl \
+ && rm -rf /var/cache/apk/*
+
+RUN mkdir -p ${HZ_HOME}
+WORKDIR ${HZ_HOME}
+
+# Download & install Hazelcast
+RUN curl -svf -o ${HZ_HOME}/${HZ_JAR} \
+         -L https://repo1.maven.org/maven2/com/hazelcast/hazelcast-all/${HZ_VERSION}/${HZ_JAR}
+
+# Download & install JCache
+RUN curl -svf -o ${HZ_HOME}/${CACHE_API_JAR} \
+         -L https://repo1.maven.org/maven2/javax/cache/cache-api/${CACHE_API_VERSION}/${CACHE_API_JAR}
+
+# Runtime environment variables
+ENV CLASSPATH_DEFAULT "${HZ_HOME}/${HZ_JAR}:${HZ_HOME}/${CACHE_API_JAR}"
+ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true"
+
+ENV MIN_HEAP_SIZE ""
+ENV MAX_HEAP_SIZE ""
+ENV HZ_LICENSE_KEY ""
+
+ENV CLASSPATH ""
+ENV JAVA_OPTS ""
+
+# Start Hazelcast server
+CMD ["bash", "-c", "set -euo pipefail \
+      && if [[ \"x${CLASSPATH}\" != \"x\" ]]; then export CLASSPATH=\"${CLASSPATH_DEFAULT}:${CLASSPATH}\"; else export CLASSPATH=\"${CLASSPATH_DEFAULT}\"; fi \
+      && if [[ \"x${JAVA_OPTS}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS_DEFAULT} ${JAVA_OPTS}\"; else export JAVA_OPTS=\"${JAVA_OPTS_DEFAULT}\"; fi \
+      && if [[ \"x${MIN_HEAP_SIZE}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Xms${MIN_HEAP_SIZE}\"; fi \
+      && if [[ \"x${MAX_HEAP_SIZE}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Xms${MAX_HEAP_SIZE}\"; fi \
+      && echo \"########################################\" \
+      && echo \"# JAVA_OPTS=${JAVA_OPTS}\" \
+      && echo \"# CLASSPATH=${CLASSPATH}\" \
+      && echo \"# starting now....\" \
+      && echo \"########################################\" \
+      && set -x \
+      && exec java -server ${JAVA_OPTS} com.hazelcast.core.server.StartServer \
+     "]

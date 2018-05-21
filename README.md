@@ -91,10 +91,10 @@ In the `Dockerfile` example below, we are creating a new image based on the Haze
 
 ```
 FROM hazelcast/hazelcast:$HAZELCAST_VERSION
-# Add your custom hazelcast.xml
-ADD hazelcast.xml $HZ_HOME
-# Run hazelcast
-CMD ./server.sh
+
+# Adding custom hazelcast.xml
+ADD hazelcast.xml ${HZ_HOME}
+ENV JAVA_OPTS -Dhazelcast.config=${HZ_HOME}/hazelcast.xml
 ```
 
 After creating the `Dockerfile` you need to build it by running the command below:
@@ -107,17 +107,17 @@ Now you can run your own container with its ID or tag (if you provided `-t` opti
 
 ## Stopping a Hazelcast Member
 
-You can `stop` the member using the script `stop.sh`. For this purpose, you need to run the following command to the running Docker container:
+You can `stop` the member using the docker command: `docker stop <containerid>`.
 
-```
-docker exec -it "id of running container" /opt/hazelcast/stop.sh
-```
+By default Hazelcast is configured to `TERMINATE` on receiving the SIGTERM signal from Docker.
 
-You can check the logs thereafter using the following command:
+If you prefer a graceful exit, then add & configure these system properties to your `JAVA_OPTS` environment variable:
 
-```
-docker logs "id of running container"
-```
+- `hazelcast.shutdownhook.enabled=true`
+- `hazelcast.shutdownhook.policy=GRACEFUL`
+- `hazelcast.graceful.shutdown.max.wait=<seconds>`
+
+If your cluster requires more than 10 seconds to shutdown, then you can make docker wait longer than the default 10 seconds before sending SIGKILL, by using the `--time` argument to the `docker stop` command.
 
 # Management Center
 
