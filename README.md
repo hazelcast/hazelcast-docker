@@ -21,7 +21,7 @@ You can launch Hazelcast Docker Container by running the following command. You 
 ```
 docker run -ti hazelcast/hazelcast:$HAZELCAST_VERSION
 ```
-This command will pull Hazelcast Docker image and run server.sh to start a new Hazelcast Instance.
+This command will pull Hazelcast Docker image and run a new Hazelcast Instance.
 
 # Hazelcast Hello World
 
