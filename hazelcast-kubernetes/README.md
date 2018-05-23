@@ -43,6 +43,10 @@ The sample YAML files are sufficient for the basic use case. See below if you ne
 
 In order to run with the default configuration, just take the following steps.
 
+First, you may need to grant authorization to connect to Kubernetes API from within the pod.
+
+    $ kubectl apply -f hazelcast-rbac.yaml
+
 Edit the Service and the ReplicationController 
 in the sample `hazelcast-service.yaml` config file to suit your needs.
   - You may specify a custom service name or cluster size.
