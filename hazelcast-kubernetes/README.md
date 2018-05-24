@@ -257,3 +257,49 @@ This image exposes port 5701 as the external port for cluster communication (mem
 Hazelcast clients and cluster (client-server).
 
 The port is reachable from the Kubernetes environment only and is not registered to be publicly reachable.
+
+# Troubleshooting
+
+If after the deployment you see the pods failing all the time:
+
+    $ kubectl get pods --selector app=hazelcast
+
+```
+NAME              READY     STATUS             RESTARTS   AGE
+hazelcast-46ndm   0/1       Error              4          3m
+hazelcast-547j4   0/1       Error              4          3m
+hazelcast-7m5dn   0/1       CrashLoopBackOff   4          3m
+```
+
+and in the logs 
+
+    $ kubectl logs POD
+
+you can see a line like this one:
+
+`SEVERE: [172.17.0.8]:5701 [dev] [3.10.1] Failure executing: GET at: https://kubernetes.default.svc/api/v1/namespaces/default/endpoints/hazelcast. Message: Forbidden!Configured service account doesn't have access. Service account may have been revoked. endpoints "hazelcast" is forbidden: User "system:serviceaccount:default:default" cannot get endpoints in the namespace "default".
+`
+
+Then you have to grant authorization, so the pods can connect Kubernetes' API. Create a new file _hazelcast-rbac.yaml_ with this content:
+
+```
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: hazelcast-rbac
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+```
+
+and then apply the changes:
+
+    $ kubectl apply -f hazelcast-rbac.yaml
+
+after a few seconds you'll see the pods up and running and you'll able to use your new Hazelcast cluster.
+
