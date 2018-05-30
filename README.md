@@ -109,15 +109,18 @@ Now you can run your own container with its ID or tag (if you provided `-t` opti
 
 You can `stop` the member using the docker command: `docker stop <containerid>`.
 
-By default Hazelcast is configured to `TERMINATE` on receiving the SIGTERM signal from Docker.
+By default, Hazelcast is configured to `TERMINATE` on receiving the SIGTERM signal from Docker, which means that a container stops quickly, but the cluster's data safety relies on the backup stored by other Hazelcast members.
 
-If you prefer a graceful exit, then add & configure these system properties to your `JAVA_OPTS` environment variable:
+The other option is to use the `GRACEFUL` shutdown, which triggers the partition migration before shutting down the Hazelcast member. Note that it may take some time depending on your data size. To use that approach, configure the following properties:
 
-- `hazelcast.shutdownhook.enabled=true`
-- `hazelcast.shutdownhook.policy=GRACEFUL`
-- `hazelcast.graceful.shutdown.max.wait=<seconds>`
-
-If your cluster requires more than 10 seconds to shutdown, then you can make docker wait longer than the default 10 seconds before sending SIGKILL, by using the `--time` argument to the `docker stop` command.
+* Add `hazelcast.shutdownhook.policy=GRACEFUL` to your `JAVA_OPTS` environment variable
+* Add `hazelcast.graceful.shutdown.max.wait=<seconds>` to your `JAVA_OPTS` environment variable
+	* Default value is 600 seconds
+* Stop the container using `docker stop --time <seconds>`
+	* It defines how much time Docker waits before sending SIGKILL
+	* Default value is 10 seconds
+	* Value should be greater or equal `hazelcast.graceful.shutdown.max.wait`
+	* Alternatively, you can configure the Docker timeout upfront by `docker run --stop-timeout <seconds>`
 
 # Management Center
 
