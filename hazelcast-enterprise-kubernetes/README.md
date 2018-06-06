@@ -165,7 +165,7 @@ spec:
     spec:
       containers:
       - name: hazelcast-ee-node
-        image: hazelcast/hazelcast-enterprise-kubernetes:3.10.1
+        image: hazelcast/hazelcast-enterprise-kubernetes:3.10.2
         ports:
         - containerPort: 5701
         livenessProbe:
@@ -234,7 +234,7 @@ spec:
     spec:
       containers:
       - name: hazelcast-ee-node
-        image: hazelcast/hazelcast-enterprise-kubernetes:3.10.1
+        image: hazelcast/hazelcast-enterprise-kubernetes:3.10.2
         ports:
         - containerPort: 5701
         livenessProbe:

@@ -1,6 +1,6 @@
 FROM openjdk:8u151-jre-alpine
 
-ENV HZ_VERSION 3.10.1
+ENV HZ_VERSION 3.10.2
 ENV HZ_HOME /opt/hazelcast
 
 ENV HZ_INSTALL_NAME "hazelcast-enterprise-${HZ_VERSION}"
