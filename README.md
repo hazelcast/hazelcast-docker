@@ -58,9 +58,11 @@ $ docker run -p 5701:5701 -e HZ_LICENSE_KEY=<your_license_key> -e MANCENTER_URL=
 $ docker run -p 5702:5701 -e HZ_LICENSE_KEY=<your_license_key> -e MANCENTER_URL="http://mancenter:8080/hazelcast-mancenter" -e JAVA_OPTS="-Dhazelcast.local.publicAddress=192.168.1.1:5702" --link mancenter hazelcast/hazelcast-enterprise
 ```
 
+Note that the `MANCENTER_URL` environment variable defines the address of the Management Center application. In this case, it is available at `http://mancenter:8080/hazelcast-mancenter`.
+
 Now, if you open a browser at [http://localhost:8080/hazelcast-mancenter](http://localhost:8080/hazelcast-mancenter), you should see your cluster with 2 nodes. You can start the [client](https://github.com/hazelcast/hazelcast-code-samples/tree/master/clients/basic) and observe in Management Center that the map data has been added.
 
-Read more about Management Center image [here](https://github.com/hazelcast/management-center-docker).
+Read more about the Management Center image [here](https://github.com/hazelcast/management-center-docker).
 
 # Hazelcast Docker Repositories
 
@@ -71,22 +73,36 @@ N.B. Hazelcast Docker Images (Enterprise Edition and Open Source) are based on A
 
 # Hazelcast Defined Environment Variables
 
+### MAX_HEAP_SIZE
+
 You can give environment variables to the Hazelcast member within your Docker command. Currently, we support the variables  `MIN_HEAP_SIZE` and `MAX_HEAP_SIZE` inside our start script. An example command is as follows:
 
 ```
-docker run -e MIN_HEAP_SIZE="1g" hazelcast/hazelcast
+$ docker run -e MIN_HEAP_SIZE="1g" hazelcast/hazelcast
 ```
 
-You can also define your environment variables inside a file as shown in the following example command:
-
-```
-docker run --env-file <file-path> hazelcast/hazelcast
-```
+### JAVA_OPTS
 
 As shown below, you can use `JAVA_OPTS` environment variable if you need to pass multiple VM arguments to your Hazelcast member.
 
 ```
-docker run -e JAVA_OPTS="-Xms512M -Xmx1024M" hazelcast/hazelcast
+$ docker run -e JAVA_OPTS="-Xms512M -Xmx1024M" hazelcast/hazelcast
+```
+
+### HZ_LICENSE_KEY (Hazelcast Enterprise Only)
+
+The license key for Hazelcast Enterprise can be defined using the `HZ_LICENSE_KEY` variable
+
+```
+$ docker run -e HZ_LICENSE_KEY=<your_license_key> hazelcast/hazelcast-enterprise
+```
+
+### MANCENTER_URL (Hazelcast Enterprise Only)
+
+The address to the Management Center application can be defined using the `MANCENTER_URL` variable.
+
+```
+$ docker run -e MANCENTER_URL=<mancenter_url> hazelcast/hazelcast-enterprise
 ```
 
 # Using Custom Hazelcast Configuration File
@@ -94,7 +110,7 @@ docker run -e JAVA_OPTS="-Xms512M -Xmx1024M" hazelcast/hazelcast
 If you need to configure with your own `hazelcast.xml` or jar files with your own domain classes, you need to mount the folder that has those files. Also, while running the Docker image, you need to pass the `hazelcast.xml` file path to `hazelcast.config` in `JAVA_OPTS` parameter. Please see the following example:
 
 ```
-docker run -e JAVA_OPTS="-Dhazelcast.config=/opt/hazelcast/config_ext/hazelcast.xml" -v PATH_TO_LOCAL_CONFIG_FOLDER:/opt/hazelcast/config_ext hazelcast/hazelcast
+$ docker run -e JAVA_OPTS="-Dhazelcast.config=/opt/hazelcast/config_ext/hazelcast.xml" -v PATH_TO_LOCAL_CONFIG_FOLDER:/opt/hazelcast/config_ext hazelcast/hazelcast
 ```
 
 # Extending Hazelcast Base Image
@@ -114,7 +130,7 @@ ENV JAVA_OPTS -Dhazelcast.config=${HZ_HOME}/hazelcast.xml
 After creating the `Dockerfile` you need to build it by running the command below:
 
 ```
-docker build .
+$ docker build .
 ```
 
 Now you can run your own container with its ID or tag (if you provided `-t` option while building the image) using the `docker run` command.
