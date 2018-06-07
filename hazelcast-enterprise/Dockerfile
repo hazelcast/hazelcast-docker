@@ -35,13 +35,16 @@ RUN curl -svf -o ${HZ_HOME}/${HZ_INSTALL_ZIP} \
 RUN curl -svf -o ${HZ_HOME}/${CACHE_API_JAR} \
          -L https://repo1.maven.org/maven2/javax/cache/cache-api/${CACHE_API_VERSION}/${CACHE_API_JAR}
 
+ADD hazelcast.xml $HZ_HOME/hazelcast.xml
+
 # Runtime environment variables
 ENV CLASSPATH_DEFAULT "${HZ_INSTALL_DIR}/lib/${HZ_INSTALL_JAR}:${HZ_HOME}/${CACHE_API_JAR}"
-ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true"
+ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true -Dhazelcast.mancenter.enabled=false"
 
 ENV MIN_HEAP_SIZE ""
 ENV MAX_HEAP_SIZE ""
 ENV HZ_LICENSE_KEY ""
+ENV MANCENTER_URL ""
 
 ENV CLASSPATH ""
 ENV JAVA_OPTS ""
@@ -53,6 +56,7 @@ CMD ["bash", "-c", "set -euo pipefail \
       && if [[ \"x${MIN_HEAP_SIZE}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Xms${MIN_HEAP_SIZE}\"; fi \
       && if [[ \"x${MAX_HEAP_SIZE}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Xms${MAX_HEAP_SIZE}\"; fi \
       && if [[ \"x${HZ_LICENSE_KEY}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Dhazelcast.enterprise.license.key=${HZ_LICENSE_KEY}\"; fi \
+      && if [[ \"x${MANCENTER_URL}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Dhazelcast.mancenter.enabled=true -Dhazelcast.mancenter.url=${MANCENTER_URL}\"; fi \
       && echo \"########################################\" \
       && echo \"# JAVA_OPTS=${JAVA_OPTS}\" \
       && echo \"# CLASSPATH=${CLASSPATH}\" \
