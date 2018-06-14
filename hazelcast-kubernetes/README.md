@@ -280,7 +280,7 @@ you can see a line like this one:
 `SEVERE: [172.17.0.8]:5701 [dev] [3.10.1] Failure executing: GET at: https://kubernetes.default.svc/api/v1/namespaces/default/endpoints/hazelcast. Message: Forbidden!Configured service account doesn't have access. Service account may have been revoked. endpoints "hazelcast" is forbidden: User "system:serviceaccount:default:default" cannot get endpoints in the namespace "default".
 `
 
-Then you have to grant authorization, so the pods can connect Kubernetes' API. Create a new file _hazelcast-rbac.yaml_ with this content:
+Then you have to grant authorization, so the pods can connect Kubernetes' API. Create a new file _hazelcast-rbac.yaml_ with the following content (please adapt this example to your needs in production):
 
 ```
 apiVersion: rbac.authorization.k8s.io/v1
