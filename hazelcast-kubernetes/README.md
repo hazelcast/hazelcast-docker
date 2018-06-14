@@ -283,18 +283,18 @@ you can see a line like this one:
 Then you have to grant authorization, so the pods can connect Kubernetes' API. Create a new file _hazelcast-rbac.yaml_ with this content:
 
 ```
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: hazelcast-rbac
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: default
+  name: default-cluster
 roleRef:
-  kind: ClusterRole
-  name: cluster-admin
   apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
 ```
 
 and then apply the changes:
