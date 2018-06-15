@@ -15,10 +15,10 @@ ARG HZ_INSTALL_ZIP="hazelcast-enterprise-${HZ_VERSION}.zip"
 ARG HZ_INSTALL_DIR="${HZ_HOME}/${HZ_INSTALL_NAME}"
 
 # Update alpine, and, install bash & curl
-RUN apk update && \
-    apk upgrade && \
-    apk add --update bash curl && \
-    rm -rf /var/cache/apk/*
+RUN apk update \
+ && apk upgrade \
+ && apk add --update bash curl \
+ && rm -rf /var/cache/apk/*
 
 # Set up build directory
 RUN mkdir -p ${HZ_HOME}
@@ -26,12 +26,12 @@ WORKDIR ${HZ_HOME}
 
 # Download & install Hazelcast
 RUN curl -svf -o ${HZ_HOME}/${HZ_INSTALL_ZIP} \
-         -L https://download.hazelcast.com/enterprise/${HZ_INSTALL_ZIP} && \
-    unzip ${HZ_INSTALL_ZIP} \
+         -L https://download.hazelcast.com/enterprise/${HZ_INSTALL_ZIP} \
+ && unzip ${HZ_INSTALL_ZIP} \
          -x ${HZ_INSTALL_NAME}/code-samples/* \
          -x ${HZ_INSTALL_NAME}/demo/* \
-         -x ${HZ_INSTALL_NAME}/docs/* && \
-    rm -rf ${HZ_INSTALL_ZIP}
+         -x ${HZ_INSTALL_NAME}/docs/* \
+ && rm -rf ${HZ_INSTALL_ZIP}
 
 # Download & install JCache
 RUN curl -svf -o ${HZ_HOME}/${CACHE_API_JAR} \
@@ -40,22 +40,22 @@ RUN curl -svf -o ${HZ_HOME}/${CACHE_API_JAR} \
 # Download and install Hazelcast plugins (hazelcast-kubernetes and hazelcast-eureka) with dependencies
 # Use Maven Wrapper to fetch dependencies specified in mvnw/dependency-copy.xml
 RUN curl -svf -o ${HZ_HOME}/maven-wrapper.tar.gz \
-         -L https://github.com/takari/maven-wrapper/archive/maven-wrapper-0.3.0.tar.gz && \
-    tar zxf maven-wrapper.tar.gz && \
-    rm -fr maven-wrapper.tar.gz && \
-    mv maven-wrapper* mvnw
+         -L https://github.com/takari/maven-wrapper/archive/maven-wrapper-0.3.0.tar.gz \
+ && tar zxf maven-wrapper.tar.gz \
+ && rm -fr maven-wrapper.tar.gz \
+ && mv maven-wrapper* mvnw
 COPY mvnw ${HZ_HOME}/mvnw
-RUN cd mvnw && \
-    chmod +x mvnw && \
-    sync && \
-    ./mvnw -f dependency-copy.xml \
+RUN cd mvnw \
+ && chmod +x mvnw \
+ && sync \
+ && ./mvnw -f dependency-copy.xml \
            -Dhazelcast-kubernetes-version=${HZ_KUBE_VERSION} \
            -Dhazelcast-eureka-version=${HZ_EUREKA_VERSION} \
-           dependency:copy-dependencies && \
-    cd .. && \
-    rm -rf $HZ_HOME/mvnw && \
-    rm -rf ~/.m2 && \
-    chmod -R +r $HZ_HOME
+           dependency:copy-dependencies \
+ && cd .. \
+ && rm -rf $HZ_HOME/mvnw \
+ && rm -rf ~/.m2 \
+ && chmod -R +r $HZ_HOME
 
 ADD hazelcast.xml $HZ_HOME/hazelcast.xml
 
@@ -73,18 +73,18 @@ ENV CLASSPATH ""
 ENV JAVA_OPTS ""
 
 # Start Hazelcast server
-CMD ["bash", "-c", "set -euo pipefail && \
-      if [[ \"x${CLASSPATH}\" != \"x\" ]]; then export CLASSPATH=\"${CLASSPATH_DEFAULT}:${CLASSPATH}\"; else export CLASSPATH=\"${CLASSPATH_DEFAULT}\"; fi && \
-      if [[ \"x${JAVA_OPTS}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS_DEFAULT} ${JAVA_OPTS}\"; else export JAVA_OPTS=\"${JAVA_OPTS_DEFAULT}\"; fi && \
-      if [[ \"x${MIN_HEAP_SIZE}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Xms${MIN_HEAP_SIZE}\"; fi && \
-      if [[ \"x${MAX_HEAP_SIZE}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Xms${MAX_HEAP_SIZE}\"; fi && \
-      if [[ \"x${HZ_LICENSE_KEY}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Dhazelcast.enterprise.license.key=${HZ_LICENSE_KEY}\"; fi && \
-      if [[ \"x${MANCENTER_URL}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Dhazelcast.mancenter.enabled=true -Dhazelcast.mancenter.url=${MANCENTER_URL}\"; fi && \
-      echo \"########################################\" && \
-      echo \"# JAVA_OPTS=${JAVA_OPTS}\" && \
-      echo \"# CLASSPATH=${CLASSPATH}\" && \
-      echo \"# starting now....\" && \
-      echo \"########################################\" && \
-      set -x && \
-      exec java -server ${JAVA_OPTS} com.hazelcast.core.server.StartServer \
+CMD ["bash", "-c", "set -euo pipefail \
+      && if [[ \"x${CLASSPATH}\" != \"x\" ]]; then export CLASSPATH=\"${CLASSPATH_DEFAULT}:${CLASSPATH}\"; else export CLASSPATH=\"${CLASSPATH_DEFAULT}\"; fi \
+      && if [[ \"x${JAVA_OPTS}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS_DEFAULT} ${JAVA_OPTS}\"; else export JAVA_OPTS=\"${JAVA_OPTS_DEFAULT}\"; fi \
+      && if [[ \"x${MIN_HEAP_SIZE}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Xms${MIN_HEAP_SIZE}\"; fi \
+      && if [[ \"x${MAX_HEAP_SIZE}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Xms${MAX_HEAP_SIZE}\"; fi \
+      && if [[ \"x${HZ_LICENSE_KEY}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Dhazelcast.enterprise.license.key=${HZ_LICENSE_KEY}\"; fi \
+      && if [[ \"x${MANCENTER_URL}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Dhazelcast.mancenter.enabled=true -Dhazelcast.mancenter.url=${MANCENTER_URL}\"; fi \
+      && echo \"########################################\" \
+      && echo \"# JAVA_OPTS=${JAVA_OPTS}\" \
+      && echo \"# CLASSPATH=${CLASSPATH}\" \
+      && echo \"# starting now....\" \
+      && echo \"########################################\" \
+      && set -x \
+      && exec java -server ${JAVA_OPTS} com.hazelcast.core.server.StartServer \
      "]
