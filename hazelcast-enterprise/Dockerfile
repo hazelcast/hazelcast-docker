@@ -1,24 +1,26 @@
 FROM openjdk:8u151-jre-alpine
 
-ENV HZ_VERSION 3.10.2
-ENV HZ_HOME /opt/hazelcast
+# Versions of Hazelcast and Hazelcast plugins
+ARG HZ_VERSION=3.10.2
+ARG CACHE_API_VERSION=1.0.0
+ARG HZ_KUBE_VERSION=1.1.0
+ARG HZ_EUREKA_VERSION=1.0.2
 
-ENV HZ_INSTALL_NAME "hazelcast-enterprise-${HZ_VERSION}"
-ENV HZ_INSTALL_ZIP "hazelcast-enterprise-${HZ_VERSION}.zip"
-ENV HZ_INSTALL_DIR "${HZ_HOME}/${HZ_INSTALL_NAME}"
-ENV HZ_INSTALL_JAR "hazelcast-enterprise-all-${HZ_VERSION}.jar"
-
-ENV CACHE_API_VERSION 1.0.0
-ENV CACHE_API_JAR "cache-api-${CACHE_API_VERSION}.jar"
+# Build constants
+ARG HZ_HOME="/opt/hazelcast"
+ARG HZ_JAR="hazelcast-enterprise-all-${HZ_VERSION}.jar"
+ARG CACHE_API_JAR="cache-api-${CACHE_API_VERSION}.jar"
+ARG HZ_INSTALL_NAME="hazelcast-enterprise-${HZ_VERSION}"
+ARG HZ_INSTALL_ZIP="hazelcast-enterprise-${HZ_VERSION}.zip"
+ARG HZ_INSTALL_DIR="${HZ_HOME}/${HZ_INSTALL_NAME}"
 
 # Update alpine, and, install bash & curl
 RUN apk update \
  && apk upgrade \
- && apk add --update \
-      bash \
-      curl \
+ && apk add --update bash curl \
  && rm -rf /var/cache/apk/*
 
+# Set up build directory
 RUN mkdir -p ${HZ_HOME}
 WORKDIR ${HZ_HOME}
 
@@ -26,21 +28,42 @@ WORKDIR ${HZ_HOME}
 RUN curl -svf -o ${HZ_HOME}/${HZ_INSTALL_ZIP} \
          -L https://download.hazelcast.com/enterprise/${HZ_INSTALL_ZIP} \
  && unzip ${HZ_INSTALL_ZIP} \
-      -x ${HZ_INSTALL_NAME}/code-samples/* \
-      -x ${HZ_INSTALL_NAME}/demo/* \
-      -x ${HZ_INSTALL_NAME}/docs/* \
+         -x ${HZ_INSTALL_NAME}/code-samples/* \
+         -x ${HZ_INSTALL_NAME}/demo/* \
+         -x ${HZ_INSTALL_NAME}/docs/* \
  && rm -rf ${HZ_INSTALL_ZIP}
 
 # Download & install JCache
 RUN curl -svf -o ${HZ_HOME}/${CACHE_API_JAR} \
          -L https://repo1.maven.org/maven2/javax/cache/cache-api/${CACHE_API_VERSION}/${CACHE_API_JAR}
 
+# Download and install Hazelcast plugins (hazelcast-kubernetes and hazelcast-eureka) with dependencies
+# Use Maven Wrapper to fetch dependencies specified in mvnw/dependency-copy.xml
+RUN curl -svf -o ${HZ_HOME}/maven-wrapper.tar.gz \
+         -L https://github.com/takari/maven-wrapper/archive/maven-wrapper-0.3.0.tar.gz \
+ && tar zxf maven-wrapper.tar.gz \
+ && rm -fr maven-wrapper.tar.gz \
+ && mv maven-wrapper* mvnw
+COPY mvnw ${HZ_HOME}/mvnw
+RUN cd mvnw \
+ && chmod +x mvnw \
+ && sync \
+ && ./mvnw -f dependency-copy.xml \
+           -Dhazelcast-kubernetes-version=${HZ_KUBE_VERSION} \
+           -Dhazelcast-eureka-version=${HZ_EUREKA_VERSION} \
+           dependency:copy-dependencies \
+ && cd .. \
+ && rm -rf $HZ_HOME/mvnw \
+ && rm -rf ~/.m2 \
+ && chmod -R +r $HZ_HOME
+
 ADD hazelcast.xml $HZ_HOME/hazelcast.xml
 
-# Runtime environment variables
-ENV CLASSPATH_DEFAULT "${HZ_INSTALL_DIR}/lib/${HZ_INSTALL_JAR}:${HZ_HOME}/${CACHE_API_JAR}"
+# Runtime constants
+ENV CLASSPATH_DEFAULT "${HZ_INSTALL_DIR}/lib/${HZ_JAR}:${HZ_HOME}/*"
 ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true -Dhazelcast.mancenter.enabled=false"
 
+# Runtime environment variables
 ENV MIN_HEAP_SIZE ""
 ENV MAX_HEAP_SIZE ""
 ENV HZ_LICENSE_KEY ""
