@@ -54,8 +54,8 @@ To run two Hazelcast nodes with Management Center, use the following commands.
 
 ```
 $ docker run -p 8080:8080 --name mancenter hazelcast/management-center
-$ docker run -p 5701:5701 -e HZ_LICENSE_KEY=<your_license_key> -e MANCENTER_URL="http://mancenter:8080/hazelcast-mancenter" -e JAVA_OPTS="-Dhazelcast.local.publicAddress=192.168.1.1:5701" --link mancenter hazelcast/hazelcast-enterprise
-$ docker run -p 5702:5701 -e HZ_LICENSE_KEY=<your_license_key> -e MANCENTER_URL="http://mancenter:8080/hazelcast-mancenter" -e JAVA_OPTS="-Dhazelcast.local.publicAddress=192.168.1.1:5702" --link mancenter hazelcast/hazelcast-enterprise
+$ docker run -p 5701:5701 -e HZ_LICENSE_KEY=<your_license_key> -e MANCENTER_URL="http://mancenter:8080/hazelcast-mancenter" -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5701" --link mancenter hazelcast/hazelcast-enterprise
+$ docker run -p 5702:5701 -e HZ_LICENSE_KEY=<your_license_key> -e MANCENTER_URL="http://mancenter:8080/hazelcast-mancenter" -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" --link mancenter hazelcast/hazelcast-enterprise
 ```
 
 Note that the `MANCENTER_URL` environment variable defines the address of the Management Center application. In this case, it is available at `http://mancenter:8080/hazelcast-mancenter`.
