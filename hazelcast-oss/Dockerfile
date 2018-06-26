@@ -1,4 +1,4 @@
-FROM openjdk:8u151-jre-alpine
+FROM openjdk:8u171-jre-alpine
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=3.10.2
@@ -11,10 +11,8 @@ ARG HZ_HOME="/opt/hazelcast"
 ARG HZ_JAR="hazelcast-all-${HZ_VERSION}.jar"
 ARG CACHE_API_JAR="cache-api-${CACHE_API_VERSION}.jar"
 
-# Update alpine, and, install bash & curl
-RUN apk update \
- && apk upgrade \
- && apk add --update bash curl \
+# Install bash & curl
+RUN apk add --no-cache bash curl \
  && rm -rf /var/cache/apk/*
 
 # Set up build directory
