@@ -1,4 +1,4 @@
-FROM openjdk:8u151-jre-alpine
+FROM openjdk:8u171-jre-alpine
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=3.10.2
