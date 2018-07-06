@@ -47,8 +47,11 @@ RUN cd mvnw \
  && rm -rf ~/.m2 \
  && chmod -R +r $HZ_HOME
 
+# Set Pardot ID to 'docker'
+RUN echo 'hazelcastDownloadId=docker' > hazelcast-download.properties
+
 # Runtime constants
-ENV CLASSPATH_DEFAULT "${HZ_HOME}/*"
+ENV CLASSPATH_DEFAULT "${HZ_HOME}:${HZ_HOME}/*"
 ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true"
 
 # Runtime environment variables
@@ -56,6 +59,9 @@ ENV MIN_HEAP_SIZE ""
 ENV MAX_HEAP_SIZE ""
 ENV CLASSPATH ""
 ENV JAVA_OPTS ""
+
+### Expose port
+EXPOSE 5701
 
 # Start Hazelcast server
 CMD ["bash", "-c", "set -euo pipefail \
