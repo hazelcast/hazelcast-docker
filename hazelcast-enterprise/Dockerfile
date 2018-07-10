@@ -57,8 +57,11 @@ RUN cd mvnw \
 
 ADD hazelcast.xml $HZ_HOME/hazelcast.xml
 
+# Set Pardot ID to 'docker'
+RUN echo 'hazelcastDownloadId=docker' > hazelcast-download.properties
+
 # Runtime constants
-ENV CLASSPATH_DEFAULT "${HZ_INSTALL_DIR}/lib/${HZ_JAR}:${HZ_HOME}/*"
+ENV CLASSPATH_DEFAULT "${HZ_HOME}:${HZ_INSTALL_DIR}/lib/${HZ_JAR}:${HZ_HOME}/*"
 ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true -Dhazelcast.mancenter.enabled=false"
 
 # Runtime environment variables
@@ -69,6 +72,9 @@ ENV MANCENTER_URL ""
 
 ENV CLASSPATH ""
 ENV JAVA_OPTS ""
+
+### Expose port
+EXPOSE 5701
 
 # Start Hazelcast server
 CMD ["bash", "-c", "set -euo pipefail \

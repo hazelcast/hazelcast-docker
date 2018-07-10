@@ -47,6 +47,9 @@ RUN cd $HZ_HOME && \
     mv maven-wrapper* mvnw
 COPY mvnw $HZ_HOME/mvnw
 
+# Set Pardot ID to 'docker'
+RUN echo 'hazelcastDownloadId=docker' > hazelcast-download.properties
+
 ### Configure Hazelcast
 RUN useradd -l -u $USER_UID -r -g 0 -d $HZ_HOME -s /sbin/nologin -c "${USER_UID} application user" $USER_NAME
 RUN chown -R $USER_UID:0 $HZ_HOME $HZ_CP_MOUNT
