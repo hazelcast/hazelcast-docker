@@ -161,8 +161,9 @@ Please see [Management Center Repository](https://github.com/hazelcast/managemen
 Hazelcast is prepared to work in the Kubernetes environment. For details, please check:
 
 * Hazelcast Helm Charts:
-  * [Hazelcast OSS Helm Chart](https://github.com/hazelcast/charts/tree/master/stable/hazelcast)
-  * [Hazelcast Enterprise Helm Chart](https://github.com/hazelcast/charts/tree/master/stable/hazelcast-enterprise)
+  * [Hazelcast IMDG](https://github.com/helm/charts/tree/master/stable/hazelcast)
+  * [Hazelcast IMDG + Management Center](https://github.com/hazelcast/charts/tree/master/stable/hazelcast)
+  * [Hazelcast IMDG Enterprise + Management Center](https://github.com/hazelcast/charts/tree/master/stable/hazelcast-enterprise)
 * [Hazelcast Kubernetes Code Sample](https://github.com/hazelcast/hazelcast-code-samples/tree/master/hazelcast-integration/kubernetes)
 * [Hazelcast SPI Kubernetes Plugin](https://github.com/hazelcast/hazelcast-kubernetes)
 
