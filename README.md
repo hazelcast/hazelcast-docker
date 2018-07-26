@@ -158,14 +158,20 @@ Please see [Management Center Repository](https://github.com/hazelcast/managemen
 
 # Hazelcast Kubernetes
 
-Hazelcast maintains two Docker Images for Kubernetes Environment. Below are the links to their README files. You can also find Docker Images on [Docker Hub](https://store.docker.com/profiles/hazelcast) page.
+Hazelcast is prepared to work in the Kubernetes environment. For details, please check:
 
-* [hazelcast-kubernetes](https://github.com/hazelcast/hazelcast-docker/blob/master/hazelcast-kubernetes/README.md)
-* [hazelcast-enterprise-kubernetes](https://github.com/hazelcast/hazelcast-docker/blob/master/hazelcast-enterprise-kubernetes/README.md)
+* Hazelcast Helm Charts:
+  * [Hazelcast IMDG](https://github.com/helm/charts/tree/master/stable/hazelcast)
+  * [Hazelcast IMDG + Management Center](https://github.com/hazelcast/charts/tree/master/stable/hazelcast)
+  * [Hazelcast IMDG Enterprise + Management Center](https://github.com/hazelcast/charts/tree/master/stable/hazelcast-enterprise)
+* [Hazelcast Kubernetes Code Sample](https://github.com/hazelcast/hazelcast-code-samples/tree/master/hazelcast-integration/kubernetes)
+* [Hazelcast SPI Kubernetes Plugin](https://github.com/hazelcast/hazelcast-kubernetes)
 
 # Hazelcast Openshift
 
-please see [Hazelcast Openshift Repository](https://github.com/hazelcast/hazelcast-openshift) for Dockerfile definitions and have a look available images on [Docker Hub](https://store.docker.com/profiles/hazelcast) page.
+Hazelcast is prepared to work in the OpenShift environment. For details, please check:
+* [Hazelcast OpenShift Quick Start](https://github.com/hazelcast/hazelcast-openshift)
+* [Hazelcast OpenShift Code Sample](https://github.com/hazelcast/hazelcast-code-samples/tree/master/hazelcast-integration/openshift)
 
 # Hazelcast Docker Files
 
