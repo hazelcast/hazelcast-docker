@@ -1,7 +1,7 @@
 FROM openjdk:8u171-jre-alpine
 
 # Versions of Hazelcast and Hazelcast plugins
-ARG HZ_VERSION=3.10.4
+ARG HZ_VERSION=3.11-BETA-1
 ARG CACHE_API_VERSION=1.0.0
 ARG HZ_KUBE_VERSION=1.1.0
 ARG HZ_EUREKA_VERSION=1.0.2
