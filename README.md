@@ -107,10 +107,18 @@ $ docker run -e MANCENTER_URL=<mancenter_url> hazelcast/hazelcast-enterprise
 
 # Using Custom Hazelcast Configuration File
 
-If you need to configure with your own `hazelcast.xml` or jar files with your own domain classes, you need to mount the folder that has those files. Also, while running the Docker image, you need to pass the `hazelcast.xml` file path to `hazelcast.config` in `JAVA_OPTS` parameter. Please see the following example:
+If you need to configure Hazelcast with your own `hazelcast.xml`, you need to mount the folder that has hazelcast.xml. You also need to pass the `hazelcast.xml` file path to `hazelcast.config` in `JAVA_OPTS` parameter. Please see the following example:
 
 ```
 $ docker run -e JAVA_OPTS="-Dhazelcast.config=/opt/hazelcast/config_ext/hazelcast.xml" -v PATH_TO_LOCAL_CONFIG_FOLDER:/opt/hazelcast/config_ext hazelcast/hazelcast
+```
+
+# Extending CLASSPATH with new jars or files
+
+Hazelcast has several extension points i.e MapStore API where you can provide your own implementation to add specific functionality into Hazelcast Cluster. If you have a custom jars or files to put into classpath of docker container, you can simply use `CLASSPATH` environment variable and pass it via `docker run` command. Please see the following example:
+
+```
+$ docker run -e CLASSPATH="/opt/hazelcast/CLASSPATH_EXT/" -v PATH_TO_LOCAL_CONFIG_FOLDER:/opt/hazelcast/CLASSPATH_EXT hazelcast/hazelcast
 ```
 
 # Extending Hazelcast Base Image
