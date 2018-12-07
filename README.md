@@ -1,20 +1,10 @@
-# Table of Contents
+# Hazelcast Docker
 
-* [Hazelcast Quick Start](#hazelcast-quick-start)
-* [Hazelcast Hello World](#hazelcast-hello-world)
-* [Hazelcast Enterprise Quick Start](#hazelcast-enterprise-quick-start)
-* [Hazelcast Docker Repositories](#hazelcast-docker-repositories)
-* [Hazelcast Defined Environment Variables](#setting-environment-variables)
-* [Using Custom Hazelcast Configuration File](#using-custom-hazelcast-configuration-file)
-* [Extending Hazelcast Base Image](#extending-hazelcast-base-image)
-* [Stopping a Hazelcast Member](#stopping-a-hazelcast-member)
-* [Management Center](#management-center)
-* [Hazelcast Kubernetes](#hazelcast-kubernetes)
-* [Hazelcast Openshift](#hazelcast-openshift)
-* [Hazelcast Docker Files](#hazelcast-docker-files)
+This repository contains Dockerfiles for the official Hazelcast Docker images.
 
+## Quick Start
 
-# Hazelcast Quick Start
+### Hazelcast
 
 You can launch Hazelcast Docker Container by running the following command. You can find the full list of Hazelcast versions to replace $HAZELCAST_VERSION at [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast/tags).
 
@@ -23,7 +13,7 @@ $ docker run hazelcast/hazelcast:$HAZELCAST_VERSION
 ```
 This command will pull Hazelcast Docker image and run a new Hazelcast Instance.
 
-# Hazelcast Hello World
+### Hazelcast Hello World
 
 For the simplest end-to-end scenario, you can create a Hazelcast cluster with two Docker containers and access it from the client application.
 
@@ -38,7 +28,7 @@ Note that:
 
 After setting up the cluster, you can start the [client](https://github.com/hazelcast/hazelcast-code-samples/tree/master/clients/basic) application to check it works correctly.
 
-# Hazelcast Enterprise Quick Start
+### Hazelcast Enterprise
 
 You can launch Hazelcast Enterprise Docker Container by running the following command. You can find the full list of Hazelcast Enterprise versions to replace $HAZELCAST_VERSION at [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast-enterprise/tags).
 
@@ -48,7 +38,7 @@ Please request trial license [here](https://hazelcast.com/hazelcast-enterprise-d
 $ docker run -e HZ_LICENSE_KEY=<your_license_key> hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
 ```
 
-# Hazelcast Enterprise Hello World
+### Hazelcast Enterprise Hello World
 
 To run two Hazelcast nodes with Management Center, use the following commands.
 
@@ -64,14 +54,7 @@ Now, if you open a browser at [http://localhost:8080/hazelcast-mancenter](http:/
 
 Read more about the Management Center image [here](https://github.com/hazelcast/management-center-docker).
 
-# Hazelcast Docker Repositories
-
-You can find all Hazelcast Docker Images on Docker Store Hazelcast Page.
-https://store.docker.com/profiles/hazelcast
-
-N.B. Hazelcast Docker Images (Enterprise Edition and Open Source) are based on Alpine Linux.
-
-# Hazelcast Defined Environment Variables
+## Hazelcast Defined Environment Variables
 
 ### MAX_HEAP_SIZE
 
@@ -89,6 +72,14 @@ As shown below, you can use `JAVA_OPTS` environment variable if you need to pass
 $ docker run -e JAVA_OPTS="-Xms512M -Xmx1024M" hazelcast/hazelcast
 ```
 
+### MANCENTER_URL
+
+The address to the Management Center application can be defined using the `MANCENTER_URL` variable.
+
+```
+$ docker run -e MANCENTER_URL=<mancenter_url> hazelcast/hazelcast-enterprise
+```
+
 ### HZ_LICENSE_KEY (Hazelcast Enterprise Only)
 
 The license key for Hazelcast Enterprise can be defined using the `HZ_LICENSE_KEY` variable
@@ -97,15 +88,9 @@ The license key for Hazelcast Enterprise can be defined using the `HZ_LICENSE_KE
 $ docker run -e HZ_LICENSE_KEY=<your_license_key> hazelcast/hazelcast-enterprise
 ```
 
-### MANCENTER_URL (Hazelcast Enterprise Only)
+## Customizing Hazelcast
 
-The address to the Management Center application can be defined using the `MANCENTER_URL` variable.
-
-```
-$ docker run -e MANCENTER_URL=<mancenter_url> hazelcast/hazelcast-enterprise
-```
-
-# Using Custom Hazelcast Configuration File
+### Using Custom Hazelcast Configuration File
 
 If you need to configure Hazelcast with your own `hazelcast.xml`, you need to mount the folder that has hazelcast.xml. You also need to pass the `hazelcast.xml` file path to `hazelcast.config` in `JAVA_OPTS` parameter. Please see the following example:
 
@@ -113,7 +98,7 @@ If you need to configure Hazelcast with your own `hazelcast.xml`, you need to mo
 $ docker run -e JAVA_OPTS="-Dhazelcast.config=/opt/hazelcast/config_ext/hazelcast.xml" -v PATH_TO_LOCAL_CONFIG_FOLDER:/opt/hazelcast/config_ext hazelcast/hazelcast
 ```
 
-# Extending CLASSPATH with new jars or files
+### Extending CLASSPATH with new jars or files
 
 Hazelcast has several extension points i.e MapStore API where you can provide your own implementation to add specific functionality into Hazelcast Cluster. If you have custom jars or files to put into classpath of docker container, you can simply use `CLASSPATH` environment variable and pass it via `docker run` command. Please see the following example:
 
@@ -121,7 +106,7 @@ Hazelcast has several extension points i.e MapStore API where you can provide yo
 $ docker run -e CLASSPATH="/opt/hazelcast/CLASSPATH_EXT/" -v PATH_TO_LOCAL_CONFIG_FOLDER:/opt/hazelcast/CLASSPATH_EXT hazelcast/hazelcast
 ```
 
-# Extending Hazelcast Base Image
+### Extending Hazelcast Base Image
 
 You can use Hazelcast Docker Image to start a new Hazelcast member with default configuration. If you'd like to customize your Hazelcast member, you can extend the Hazelcast base image, provide your own configuration file and customize your initialization process. In order to do that, you need to create a new `Dockerfile` and build it with `docker build` command. 
 
@@ -143,7 +128,7 @@ $ docker build .
 
 Now you can run your own container with its ID or tag (if you provided `-t` option while building the image) using the `docker run` command.
 
-## Stopping a Hazelcast Member
+## Graceful Shutdown
 
 You can `stop` the member using the docker command: `docker stop <containerid>`.
 
@@ -160,11 +145,45 @@ The other option is to use the `GRACEFUL` shutdown, which triggers the partition
 	* Value should be greater or equal `hazelcast.graceful.shutdown.max.wait`
 	* Alternatively, you can configure the Docker timeout upfront by `docker run --stop-timeout <seconds>`
 
-# Management Center
+## Debugging, Managing, and Monitoring
+
+You can debug and monitor Hazelcast instance running inside Docker container.
+
+### Debugging
+
+To debug your Hazelcast with the standard Java Tools support, use the following command to start Hazelcast container:
+
+```
+$ docker run -p 5005:5005 -e JAVA_TOOL_OPTIONS='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005' hazelcast/hazelcast
+```
+
+Now you can connect with your remote debugger using the address: `localhost:5005`.
+
+### Managing and Monitoring
+
+You can use the standard JMX protocol to monitor your Hazelcast instance. Start Hazelcast container with the following parameters.
+
+```
+$ docker run -p 9999:9999 -e JAVA_OPTS='-Dhazelcast.jmx=true -Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false' hazelcast/hazelcast
+```
+
+Now you can connect using the address: `localhost:9999`.
+
+## Docker Images Usages
+
+### Hazelcast Docker Repositories
+
+You can find all Hazelcast Docker Images on Docker Store Hazelcast Page.
+https://store.docker.com/profiles/hazelcast
+
+You can find Docker files by going to corresponding `hazelcast-docker` repo tag.
+See the full list here: https://github.com/hazelcast/hazelcast-docker/releases
+
+### Management Center
 
 Please see [Management Center Repository](https://github.com/hazelcast/management-center-docker) for Dockerfile definitions and have a look at available images on [Docker Hub](https://store.docker.com/profiles/hazelcast) page.
 
-# Hazelcast Kubernetes
+### Hazelcast Kubernetes
 
 Hazelcast is prepared to work in the Kubernetes environment. For details, please check:
 
@@ -175,13 +194,8 @@ Hazelcast is prepared to work in the Kubernetes environment. For details, please
 * [Hazelcast Kubernetes Code Sample](https://github.com/hazelcast/hazelcast-code-samples/tree/master/hazelcast-integration/kubernetes)
 * [Hazelcast SPI Kubernetes Plugin](https://github.com/hazelcast/hazelcast-kubernetes)
 
-# Hazelcast Openshift
+### Hazelcast Openshift
 
 Hazelcast is prepared to work in the OpenShift environment. For details, please check:
 * [Hazelcast OpenShift Quick Start](https://github.com/hazelcast/hazelcast-openshift)
 * [Hazelcast OpenShift Code Sample](https://github.com/hazelcast/hazelcast-code-samples/tree/master/hazelcast-integration/openshift)
-
-# Hazelcast Docker Files
-
-You can find Docker files by going to corresponding `hazelcast-docker` repo tag.
-See the full list here: https://github.com/hazelcast/hazelcast-docker/releases
