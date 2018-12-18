@@ -1,0 +1,24 @@
+language: minimal
+
+services:
+  - docker
+
+env:
+  - HAZELCAST_IMAGE=hazelcast-enterprise
+  - HAZELCAST_IMAGE=hazelcast-oss
+
+install:
+  - docker build -t $HAZELCAST_IMAGE $HAZELCAST_IMAGE
+
+script:
+  - docker images
+  - |
+    if [ "$HAZELCAST_IMAGE" = "hazelcast-oss" -o -n "$HZ_LICENSE_KEY" ]; then
+      docker run --name ${HAZELCAST_IMAGE}-container -e HZ_LICENSE_KEY=$HZ_LICENSE_KEY -d --rm $HAZELCAST_IMAGE
+      sleep 10
+      HZ_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${HAZELCAST_IMAGE}-container)
+      nc -z $HZ_IP 5701
+    else
+      # license key is not available in PRs (to avoid leaking the secret value), lets just check we really run the EE
+      docker run --name ${HAZELCAST_IMAGE}-container --rm $HAZELCAST_IMAGE 2>&1 | grep -q "Hazelcast Enterprise"
+    fi
