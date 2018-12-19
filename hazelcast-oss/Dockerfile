@@ -47,16 +47,20 @@ RUN cd mvnw \
  && rm -rf ~/.m2 \
  && chmod -R +r $HZ_HOME
 
+ADD hazelcast.xml $HZ_HOME/hazelcast.xml
+
 # Set Pardot ID to 'docker'
 RUN echo 'hazelcastDownloadId=docker' > hazelcast-download.properties
 
 # Runtime constants
 ENV CLASSPATH_DEFAULT "${HZ_HOME}:${HZ_HOME}/*"
-ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true"
+ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true -Dhazelcast.mancenter.enabled=false"
 
 # Runtime environment variables
 ENV MIN_HEAP_SIZE ""
 ENV MAX_HEAP_SIZE ""
+ENV MANCENTER_URL ""
+
 ENV CLASSPATH ""
 ENV JAVA_OPTS ""
 
@@ -71,6 +75,7 @@ CMD ["bash", "-c", "set -euo pipefail \
       && if [[ \"x${JAVA_OPTS}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS_DEFAULT} ${JAVA_OPTS}\"; else export JAVA_OPTS=\"${JAVA_OPTS_DEFAULT}\"; fi \
       && if [[ \"x${MIN_HEAP_SIZE}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Xms${MIN_HEAP_SIZE}\"; fi \
       && if [[ \"x${MAX_HEAP_SIZE}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Xmx${MAX_HEAP_SIZE}\"; fi \
+      && if [[ \"x${MANCENTER_URL}\" != \"x\" ]]; then export JAVA_OPTS=\"${JAVA_OPTS} -Dhazelcast.mancenter.enabled=true -Dhazelcast.mancenter.url=${MANCENTER_URL}\"; fi \
       && echo \"########################################\" \
       && echo \"# JAVA_OPTS=${JAVA_OPTS}\" \
       && echo \"# CLASSPATH=${CLASSPATH}\" \
