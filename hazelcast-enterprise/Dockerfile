@@ -37,7 +37,7 @@ RUN echo "Updating Alpine system" \
     && cd "${HZ_HOME}" \
     && mkdir lib \
     && curl -sf -o ${HZ_HOME}/lib/${HZ_JAR} \
-         -L https://repository-hazelcast-l337.forge.cloudbees.com/release/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/${HZ_JAR} \
+         -L https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/${HZ_JAR} \
    && echo "Installing JCache" \
    && curl -sf -o "${HZ_HOME}/lib/${CACHE_API_JAR}" \
          -L "https://repo1.maven.org/maven2/javax/cache/cache-api/${CACHE_API_VERSION}/${CACHE_API_JAR}" \
