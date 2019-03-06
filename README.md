@@ -80,6 +80,10 @@ The address to the Management Center application can be defined using the `MANCE
 $ docker run -e MANCENTER_URL=<mancenter_url> hazelcast/hazelcast-enterprise
 ```
 
+### PROMETHEUS_PORT
+
+The port of the JMX Prometheus agent. For example, if you set `PROMETHEUS_PORT=8080`, then you can access metrics at: `http://<hostname>:8080/metrics`. You can also use `PROMETHEUS_CONFIG` to set a path to the custom configuration.
+
 ### HZ_LICENSE_KEY (Hazelcast Enterprise Only)
 
 The license key for Hazelcast Enterprise can be defined using the `HZ_LICENSE_KEY` variable
@@ -161,6 +165,10 @@ Now you can connect with your remote debugger using the address: `localhost:5005
 
 ### Managing and Monitoring
 
+You can use JMX or Prometheus for the application monitoring.
+
+#### JMX
+
 You can use the standard JMX protocol to monitor your Hazelcast instance. Start Hazelcast container with the following parameters.
 
 ```
@@ -168,6 +176,16 @@ $ docker run -p 9999:9999 -e JAVA_OPTS='-Dhazelcast.jmx=true -Dcom.sun.managemen
 ```
 
 Now you can connect using the address: `localhost:9999`.
+
+#### Prometheus
+
+You can use JMX Prometheus agent and expose JVM and JMX Hazelcast metrics.
+
+```
+$ docker run -p 8080:8080 -e PROMETHEUS_PORT=8080
+```
+
+Then, the metrics are available at: `http://localhost:8080/metrics`. Note that you can add also `-e JAVA_OPTS='-Dhazelcast.jmx=true'` to expose JMX Hazelcast application metrics.
 
 ## Docker Images Usages
 
