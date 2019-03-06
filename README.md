@@ -185,7 +185,7 @@ You can use JMX Prometheus agent and expose JVM and JMX Hazelcast metrics.
 $ docker run -p 8080:8080 -e PROMETHEUS_PORT=8080
 ```
 
-Then, the metrics are available at: `http://localhost:8080/metrics`. Note that you can add also `-e JAVA_OPTS='-Dhazelcast.jmx=true'` to expose JMX Hazelcast application metrics.
+Then, the metrics are available at: `http://localhost:8080/metrics`. Note that you can add also `-e JAVA_OPTS='-Dhazelcast.jmx=true'` to expose JMX via Prometheus (otherwise just JVM metrics are visible).
 
 ## Docker Images Usages
 
