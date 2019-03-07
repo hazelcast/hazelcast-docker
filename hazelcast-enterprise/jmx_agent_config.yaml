@@ -16,3 +16,11 @@ rules:
     type: $3
   help: "Hazelcast metric instance=$1 name=$2 type=$3 attribute=$4"
   attrNameSnakeCase: false
+- pattern: '<name=(\w+), instance=(\w+), type=(\w+.*)'
+  name: hazelcast_$1_$3
+  labels:
+    instance: $2
+    name: $1
+    type: $3
+  help: "Hazelcast metric instance=$1 name=$2 type=$3"
+  attrNameSnakeCase: false
