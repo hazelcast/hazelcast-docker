@@ -31,6 +31,12 @@ else
   export JAVA_OPTS="${JAVA_OPTS} -Dhazelcast.mancenter.enabled=false"
 fi
 
+if [ -n "${PROMETHEUS_PORT}" ]; then
+  export JAVA_OPTS="${JAVA_OPTS} -javaagent:${HZ_HOME}/lib/jmx_prometheus_javaagent.jar=${PROMETHEUS_PORT}:${PROMETHEUS_CONFIG}"
+else
+  export JAVA_OPTS="${JAVA_OPTS}"
+fi
+
 echo "########################################"
 echo "# JAVA_OPTS=${JAVA_OPTS}"
 echo "# CLASSPATH=${CLASSPATH}"

@@ -5,6 +5,7 @@ ARG HZ_VERSION=3.11.2
 ARG CACHE_API_VERSION=1.1.0
 ARG HZ_KUBE_VERSION=1.3.1
 ARG HZ_EUREKA_VERSION=1.0.2
+ARG JMX_PROMETHEUS_AGENT_VERSION=0.11.0
 ARG NETTY_VERSION=4.1.32.Final
 ARG NETTY_TCNATIVE_VERSION=2.0.20.Final
 
@@ -14,19 +15,22 @@ ARG HZ_JAR="hazelcast-enterprise-all-${HZ_VERSION}.jar"
 ARG CACHE_API_JAR="cache-api-${CACHE_API_VERSION}.jar"
 
 # Runtime constants / variables
-ENV CLASSPATH_DEFAULT="${HZ_HOME}/lib/*" \
+ENV HZ_HOME="${HZ_HOME}" \
+    CLASSPATH_DEFAULT="${HZ_HOME}/lib/*" \
     JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true" \
     MIN_HEAP_SIZE="" \
     MAX_HEAP_SIZE="" \
     HZ_LICENSE_KEY="" \
     MANCENTER_URL="" \
+    PROMETHEUS_PORT="" \
+    PROMETHEUS_CONFIG="${HZ_HOME}/jmx_agent_config.yaml" \
     CLASSPATH="" \
     JAVA_OPTS=""
 
 # Expose port
 EXPOSE 5701
 
-COPY *.xml *.sh ${HZ_HOME}/
+COPY *.xml *.sh *.yaml ${HZ_HOME}/
 
 # Install
 RUN echo "Updating Alpine system" \
@@ -38,26 +42,29 @@ RUN echo "Updating Alpine system" \
     && mkdir lib \
     && curl -sf -o ${HZ_HOME}/lib/${HZ_JAR} \
          -L https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/${HZ_JAR} \
-   && echo "Installing JCache" \
-   && curl -sf -o "${HZ_HOME}/lib/${CACHE_API_JAR}" \
+    && echo "Installing JCache" \
+    && curl -sf -o "${HZ_HOME}/lib/${CACHE_API_JAR}" \
          -L "https://repo1.maven.org/maven2/javax/cache/cache-api/${CACHE_API_VERSION}/${CACHE_API_JAR}" \
-   && echo "Installing Hazelcast plugins" \
-   && mvn -f dependency-copy.xml \
+    && echo "Installing Hazelcast plugins" \
+    && mvn -f dependency-copy.xml \
            -Dhazelcast-kubernetes-version=${HZ_KUBE_VERSION} \
            -Dhazelcast-eureka-version=${HZ_EUREKA_VERSION} \
            -Dnetty.version=${NETTY_VERSION} \
            -Dnetty-tcnative.version=${NETTY_TCNATIVE_VERSION} \
            dependency:copy-dependencies \
-   && echo "Maven clean-up" \
-   && apk del maven \
-   && rm -rf ~/.m2 \
-   && rm -f dependency-copy.xml \
-   && echo "Granting read permission to ${HZ_HOME}" \
-   && chmod -R +r $HZ_HOME \
-   && echo "Setting Pardot ID to 'docker'" \
-   && echo 'hazelcastDownloadId=docker' > hazelcast-download.properties \
-   && echo "Cleaning APK packages" \
-   && rm -rf /var/cache/apk/*
+    && echo "Maven clean-up" \
+    && apk del maven \
+    && rm -rf ~/.m2 \
+    && rm -f dependency-copy.xml \
+    && echo "Installing JMX Prometheus Agent" \
+    && curl -sf -o "${HZ_HOME}/lib/jmx_prometheus_javaagent.jar" \
+         -L "https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/${JMX_PROMETHEUS_AGENT_VERSION}/jmx_prometheus_javaagent-${JMX_PROMETHEUS_AGENT_VERSION}.jar" \
+    && echo "Granting read permission to ${HZ_HOME}" \
+    && chmod -R +r $HZ_HOME \
+    && echo "Setting Pardot ID to 'docker'" \
+    && echo 'hazelcastDownloadId=docker' > hazelcast-download.properties \
+    && echo "Cleaning APK packages" \
+    && rm -rf /var/cache/apk/*
 
 WORKDIR ${HZ_HOME}
 
