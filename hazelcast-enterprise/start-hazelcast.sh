@@ -18,19 +18,21 @@ else
 fi
 
 if [ -n "${MIN_HEAP_SIZE}" ]; then
-  export JAVA_OPTS="${JAVA_OPTS} -Xms${MIN_HEAP_SIZE}"
+  export JAVA_OPTS="-Xms${MIN_HEAP_SIZE} ${JAVA_OPTS}"
 fi
 
 if [ -n "${MAX_HEAP_SIZE}" ]; then
-  export JAVA_OPTS="${JAVA_OPTS} -Xmx${MAX_HEAP_SIZE}"
+  export JAVA_OPTS="-Xmx${MAX_HEAP_SIZE} ${JAVA_OPTS}"
 fi
 
 if [ -n "${MANCENTER_URL}" ]; then
-  export JAVA_OPTS="${JAVA_OPTS} -Dhazelcast.mancenter.enabled=true -Dhazelcast.mancenter.url=${MANCENTER_URL}"
+  export JAVA_OPTS="-Dhazelcast.mancenter.enabled=true -Dhazelcast.mancenter.url=${MANCENTER_URL} ${JAVA_OPTS}"
+else
+  export JAVA_OPTS="-Dhazelcast.mancenter.enabled=false ${JAVA_OPTS}"
 fi
 
 if [ -n "${PROMETHEUS_PORT}" ]; then
-  export JAVA_OPTS="${JAVA_OPTS} -javaagent:${HZ_HOME}/lib/jmx_prometheus_javaagent.jar=${PROMETHEUS_PORT}:${PROMETHEUS_CONFIG}"
+  export JAVA_OPTS="-javaagent:${HZ_HOME}/lib/jmx_prometheus_javaagent.jar=${PROMETHEUS_PORT}:${PROMETHEUS_CONFIG} ${JAVA_OPTS}"
 fi
 
 if [ -n "${HZ_LICENSE_KEY}" ]; then
