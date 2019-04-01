@@ -36,8 +36,8 @@ if [ -n "${PROMETHEUS_PORT}" ]; then
 fi
 
 if [ -n "${LOGGING_LEVEL}" ]; then
-  echo "java.util.logging.ConsoleHandler.level = ${LOGGING_LEVEL}" >> "${HZ_HOME}/logging.properties"
-  echo ".level= ${LOGGING_LEVEL}" >> "${HZ_HOME}/logging.properties"
+  sed -i "s/java.util.logging.ConsoleHandler.level = INFO/java.util.logging.ConsoleHandler.level = ${LOGGING_LEVEL}/g" logging.properties
+  sed -i "s/.level= INFO/.level= ${LOGGING_LEVEL}/g" logging.properties
 fi
 
 if [ -n "${HZ_LICENSE_KEY}" ]; then

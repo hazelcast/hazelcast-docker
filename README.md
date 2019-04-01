@@ -92,6 +92,8 @@ The logging level can be changed using the `LOGGING_LEVEL` variable, for example
 $ docker run -e LOGGING_LEVEL=FINEST hazelcast/hazelcast
 ```
 
+Available logging levels are (from highest to lowest): `SEVERE`, `WARNING`, `INFO`, `CONFIG`, `FINE`, `FINER`, and `FINEST`. The default logging level is `INFO`.
+
 Note that if you need some more custom logging configuration, you can configure the `logging.properties` file and build your own Hazelcast image.
 
 ### HZ_LICENSE_KEY (Hazelcast Enterprise Only)
