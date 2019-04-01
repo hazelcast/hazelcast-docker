@@ -84,6 +84,16 @@ $ docker run -e MANCENTER_URL=<mancenter_url> hazelcast/hazelcast-enterprise
 
 The port of the JMX Prometheus agent. For example, if you set `PROMETHEUS_PORT=8080`, then you can access metrics at: `http://<hostname>:8080/metrics`. You can also use `PROMETHEUS_CONFIG` to set a path to the custom configuration.
 
+### LOGGING_LEVEL
+
+The logging level can be changed using the `LOGGING_LEVEL` variable, for example, to see the `FINEST` logs.
+
+```
+$ docker run -e LOGGING_LEVEL=FINEST hazelcast/hazelcast
+```
+
+Note that if you need some more custom logging configuration, you can configure the `logging.properties` file and build your own Hazelcast image.
+
 ### HZ_LICENSE_KEY (Hazelcast Enterprise Only)
 
 The license key for Hazelcast Enterprise can be defined using the `HZ_LICENSE_KEY` variable
@@ -149,25 +159,13 @@ The other option is to use the `GRACEFUL` shutdown, which triggers the partition
 	* Value should be greater or equal `hazelcast.graceful.shutdown.max.wait`
 	* Alternatively, you can configure the Docker timeout upfront by `docker run --stop-timeout <seconds>`
 
-## Debugging, Managing, and Monitoring
-
 You can debug and monitor Hazelcast instance running inside Docker container.
 
-### Debugging
-
-To debug your Hazelcast with the standard Java Tools support, use the following command to start Hazelcast container:
-
-```
-$ docker run -p 5005:5005 -e JAVA_TOOL_OPTIONS='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005' hazelcast/hazelcast
-```
-
-Now you can connect with your remote debugger using the address: `localhost:5005`.
-
-### Managing and Monitoring
+## Managing and Monitoring
 
 You can use JMX or Prometheus for the application monitoring.
 
-#### JMX
+### JMX
 
 You can use the standard JMX protocol to monitor your Hazelcast instance. Start Hazelcast container with the following parameters.
 
@@ -177,7 +175,7 @@ $ docker run -p 9999:9999 -e JAVA_OPTS='-Dhazelcast.jmx=true -Dcom.sun.managemen
 
 Now you can connect using the address: `localhost:9999`.
 
-#### Prometheus
+### Prometheus
 
 You can use JMX Prometheus agent and expose JVM and JMX Hazelcast metrics.
 
@@ -186,6 +184,33 @@ $ docker run -p 8080:8080 -e PROMETHEUS_PORT=8080
 ```
 
 Then, the metrics are available at: `http://localhost:8080/metrics`. Note that you can add also `-e JAVA_OPTS='-Dhazelcast.jmx=true'` to expose JMX via Prometheus (otherwise just JVM metrics are visible).
+
+## Debugging
+
+### Remote Debugger
+
+To debug your Hazelcast with the standard Java Tools support, use the following command to start Hazelcast container:
+
+```
+$ docker run -p 5005:5005 -e JAVA_TOOL_OPTIONS='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005' hazelcast/hazelcast
+```
+
+Now you can connect with your remote debugger using the address: `localhost:5005`.
+
+### Building Your Own Hazelcast Image
+
+You may want to build your own Hazelcast Docker image with some custom JARs. For example, if you want to test if your change in the Hazelcast Root repository works fine in the Kubernetes environment or you just need to use an entry processor JAR. To do it, place the your JARs into the current directory, build the image, and push it into Docker registry.
+
+Taking our first example, imagine you did some change in the Hazelcast Root repository and would like to test it on Kubernetes. You need to build `hazelcast-SNAPSHOT.jar` and then do the following.
+
+```
+$ cd hazelcast-oss
+$ cp <path-to-hazelcast-jar> ./
+$ docker build -t <username>/hazelcast:test .
+$ docker push <username>/hazelcast:test
+```
+
+Then, use the image `<username>/hazelcast:test` in your Kubernetes environment to test your change.
 
 ## Docker Images Usages
 

@@ -35,6 +35,11 @@ if [ -n "${PROMETHEUS_PORT}" ]; then
   export JAVA_OPTS="-javaagent:${HZ_HOME}/lib/jmx_prometheus_javaagent.jar=${PROMETHEUS_PORT}:${PROMETHEUS_CONFIG} ${JAVA_OPTS}"
 fi
 
+if [ -n "${LOGGING_LEVEL}" ]; then
+  echo "java.util.logging.ConsoleHandler.level = ${LOGGING_LEVEL}" >> "${HZ_HOME}/logging.properties"
+  echo ".level= ${LOGGING_LEVEL}" >> "${HZ_HOME}/logging.properties"
+fi
+
 echo "########################################"
 echo "# JAVA_OPTS=${JAVA_OPTS}"
 echo "# CLASSPATH=${CLASSPATH}"
