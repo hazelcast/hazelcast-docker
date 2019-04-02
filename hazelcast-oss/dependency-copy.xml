@@ -10,17 +10,6 @@
   <dependencies>
     <dependency>
       <groupId>com.hazelcast</groupId>
-      <artifactId>hazelcast-kubernetes</artifactId>
-      <version>${hazelcast-kubernetes-version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.hazelcast</groupId>
-          <artifactId>hazelcast</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.hazelcast</groupId>
       <artifactId>hazelcast-eureka-one</artifactId>
       <version>${hazelcast-eureka-version}</version>
       <exclusions>
