@@ -1,10 +1,9 @@
 FROM alpine:3.8
 
 # Versions of Hazelcast and Hazelcast plugins
-ARG HZ_VERSION=3.11.2
+ARG HZ_VERSION=3.12
 ARG CACHE_API_VERSION=1.1.0
-ARG HZ_KUBE_VERSION=1.3.1
-ARG HZ_EUREKA_VERSION=1.0.2
+ARG HZ_EUREKA_VERSION=1.1.1
 ARG JMX_PROMETHEUS_AGENT_VERSION=0.11.0
 
 # Build constants
@@ -45,7 +44,6 @@ RUN echo "Updating Alpine system" \
          -L "https://repo1.maven.org/maven2/javax/cache/cache-api/${CACHE_API_VERSION}/${CACHE_API_JAR}" \
     && echo "Installing Hazelcast plugins" \
     && mvn -f dependency-copy.xml \
-           -Dhazelcast-kubernetes-version=${HZ_KUBE_VERSION} \
            -Dhazelcast-eureka-version=${HZ_EUREKA_VERSION} \
            dependency:copy-dependencies \
     && echo "Maven clean-up" \
