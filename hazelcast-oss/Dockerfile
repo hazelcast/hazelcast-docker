@@ -14,26 +14,27 @@ ARG CACHE_API_JAR="cache-api-${CACHE_API_VERSION}.jar"
 
 # Runtime constants / variables
 ENV HZ_HOME="${HZ_HOME}" \
-    CLASSPATH_DEFAULT="${HZ_HOME}/lib/*" \
-    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true" \
+    CLASSPATH_DEFAULT="${HZ_HOME}/*:${HZ_HOME}/lib/*" \
+    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Djava.util.logging.config.file=${HZ_HOME}/logging.properties" \
     MIN_HEAP_SIZE="" \
     MAX_HEAP_SIZE="" \
     MANCENTER_URL="" \
     PROMETHEUS_PORT="" \
     PROMETHEUS_CONFIG="${HZ_HOME}/jmx_agent_config.yaml" \
+    LOGGING_LEVEL="" \
     CLASSPATH="" \
     JAVA_OPTS=""
 
 # Expose port
 EXPOSE 5701
 
-COPY *.xml *.sh *.yaml ${HZ_HOME}/
+COPY *.xml *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 
 # Install
 RUN echo "Updating Alpine system" \
     && apk upgrade --update-cache --available \
     && echo "Installing new APK packages" \
-    && apk add openjdk8-jre maven bash curl procps \
+    && apk add openjdk8-jre maven bash curl procps nss \
     && echo "Installing Hazelcast" \
     && cd "${HZ_HOME}" \
     && mkdir lib \
