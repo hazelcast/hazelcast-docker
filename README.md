@@ -48,7 +48,9 @@ $ docker run -p 5701:5701 -e HZ_LICENSE_KEY=<your_license_key> -e MANCENTER_URL=
 $ docker run -p 5702:5701 -e HZ_LICENSE_KEY=<your_license_key> -e MANCENTER_URL="http://<host_ip>:8080/hazelcast-mancenter" -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" hazelcast/hazelcast-enterprise
 ```
 
-Note that the `MANCENTER_URL` environment variable defines the address of the Management Center application. In this case, it is available at `http://<host_ip>:8080/hazelcast-mancenter`.
+Note that:
+* The `MANCENTER_URL` environment variable defines the address of the Management Center application. In this case, it is available at `http://<host_ip>:8080/hazelcast-mancenter`.
+* This example uses an unencrypted channel for access to the Management Center web interface. Refer to [this readme section](https://github.com/hazelcast/management-center-docker#enabling-tlsssl) for instructions on enabling TLS/SSL for the Management Center image.
 
 Now, if you open a browser at [http://localhost:8080/hazelcast-mancenter](http://localhost:8080/hazelcast-mancenter), you should see your cluster with 2 nodes. You can start the [client](https://github.com/hazelcast/hazelcast-code-samples/tree/master/clients/basic) and observe in Management Center that the map data has been added.
 
