@@ -106,7 +106,7 @@ $ docker run -e HZ_LICENSE_KEY=<your_license_key> hazelcast/hazelcast-enterprise
 
 ### TLS_ENABLED (Hazelcast Enterprise Only)
 
-The `TLS_ENABLED` environment variable can be used to enable TLS for the communication. The key material folder should be mounted and properly referenced by using `JAVA_OPTS` variable
+The `TLS_ENABLED` environment variable can be used to enable TLS for the communication. The key material folder should be mounted and properly referenced by using `JAVA_OPTS` variable.
 
 ```bash
 # generate a sample key material to the current folder (self-signed certificate)
