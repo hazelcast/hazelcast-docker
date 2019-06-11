@@ -21,4 +21,7 @@
 
   <management-center enabled="${hazelcast.mancenter.enabled}">${hazelcast.mancenter.url}</management-center>
 
+  <network>
+    <ssl enabled="${hazelcast.tls.enabled}" />
+  </network>
 </hazelcast>

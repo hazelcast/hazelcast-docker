@@ -104,6 +104,24 @@ The license key for Hazelcast Enterprise can be defined using the `HZ_LICENSE_KE
 $ docker run -e HZ_LICENSE_KEY=<your_license_key> hazelcast/hazelcast-enterprise
 ```
 
+### TLS_ENABLED (Hazelcast Enterprise Only)
+
+The `TLS_ENABLED` environment variable can be used to enable TLS for the communication. The key material folder should be mounted and properly referenced by using `JAVA_OPTS` variable.
+
+```bash
+# generate a sample key material to the current folder (self-signed certificate)
+keytool -validity 365 -genkeypair -alias server -keyalg EC -keystore server.keystore -storepass 123456 -keypass 123456 -dname CN=localhost
+keytool -export -alias server -keystore server.keystore -storepass 123456 -file server.crt
+keytool -import -noprompt -alias server -keystore server.truststore -storepass 123456 -file server.crt
+
+# run Hazelcast Enterprise with TLS enabled
+docker run -v `pwd`:/keystore -e HZ_LICENSE_KEY=<your_license_key> \
+    -e TLS_ENABLED=true \
+    -e "JAVA_OPTS=-Djavax.net.ssl.keyStore=/keystore/server.keystore -Djavax.net.ssl.keyStorePassword=123456 -Djavax.net.ssl.trustStore=/keystore/server.truststore -Djavax.net.ssl.trustStorePassword=123456" \
+    hazelcast/hazelcast-enterprise
+```
+
+
 ## Customizing Hazelcast
 
 ### Using Custom Hazelcast Configuration File

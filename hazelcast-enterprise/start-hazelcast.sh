@@ -48,6 +48,8 @@ else
   set -u 
 fi
 
+export JAVA_OPTS="${JAVA_OPTS} -Dhazelcast.tls.enabled=${TLS_ENABLED:-false}"
+
 echo "########################################"
 echo "# JAVA_OPTS=${JAVA_OPTS}"
 echo "# CLASSPATH=${CLASSPATH}"
