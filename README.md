@@ -59,14 +59,6 @@ Read more about the Management Center image [here](https://github.com/hazelcast/
 
 ## Hazelcast Defined Environment Variables
 
-### MAX_HEAP_SIZE
-
-You can give environment variables to the Hazelcast member within your Docker command. Currently, we support the variables  `MIN_HEAP_SIZE` and `MAX_HEAP_SIZE` inside our start script. An example command is as follows:
-
-```
-$ docker run -e MIN_HEAP_SIZE="1g" hazelcast/hazelcast
-```
-
 ### JAVA_OPTS
 
 As shown below, you can use `JAVA_OPTS` environment variable if you need to pass multiple VM arguments to your Hazelcast member.
