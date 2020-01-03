@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM alpine:3.11
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=3.12.5
@@ -14,7 +14,7 @@ ARG CACHE_API_JAR="cache-api-${CACHE_API_VERSION}.jar"
 # Runtime constants / variables
 ENV HZ_HOME="${HZ_HOME}" \
     CLASSPATH_DEFAULT="${HZ_HOME}/*:${HZ_HOME}/lib/*" \
-    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Djava.util.logging.config.file=${HZ_HOME}/logging.properties -XX:MaxRAMPercentage=80.0" \
+    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Djava.util.logging.config.file=${HZ_HOME}/logging.properties -XX:MaxRAMPercentage=80.0 --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED" \
     MIN_HEAP_SIZE="" \
     MAX_HEAP_SIZE="" \
     MANCENTER_URL="" \
@@ -33,7 +33,7 @@ COPY *.xml *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 RUN echo "Updating Alpine system" \
     && apk upgrade --update-cache --available \
     && echo "Installing new APK packages" \
-    && apk add openjdk8-jre maven bash curl procps nss \
+    && apk add openjdk11-jre maven bash curl procps nss \
     && echo "Installing Hazelcast" \
     && cd "${HZ_HOME}" \
     && mkdir lib \
