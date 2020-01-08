@@ -48,4 +48,4 @@ echo "# CLASSPATH=${CLASSPATH}"
 echo "# starting now...."
 echo "########################################"
 set -x
-exec java -server ${JAVA_OPTS} com.hazelcast.core.server.StartServer
+exec java -server ${JAVA_OPTS} com.hazelcast.core.server.HazelcastMemberStarter

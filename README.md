@@ -116,8 +116,17 @@ docker run -v `pwd`:/keystore -e HZ_LICENSE_KEY=<your_license_key> \
     hazelcast/hazelcast-enterprise
 ```
 
-
 ## Customizing Hazelcast
+
+### Memory
+
+Hazelcast Docker image respects the container memory limits, so you can specify it with the `-m` parameter.
+
+```
+$ docker run -m 512M hazelcast/hazelcast:$HAZELCAST_VERSION
+```
+
+Note that by default Hazelcast uses up to 80% of the container memory limit, but you can configure it by adding `-XX:MaxRAMPercentage` to the `JAVA_OPTS` variable.
 
 ### Using Custom Hazelcast Configuration File
 
