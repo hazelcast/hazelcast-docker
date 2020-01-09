@@ -1,9 +1,6 @@
 name: Docker Image CI
 
-on:
-  pull_request:
-    paths-ignore:
-      - '**.md'
+on: [push, pull_request]
 
 jobs:
   build:
