@@ -1,6 +1,6 @@
 name: build-oss
 on:
-  push:
+  pull_request:
     paths-ignore:
       - '**.md'
 
