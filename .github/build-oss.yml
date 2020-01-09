@@ -1,0 +1,34 @@
+name: build-oss
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup JDK
+        uses: actions/setup-java@v1
+               
+      - name: Build the Docker Image
+        run: docker build -t hazelcast-oss hazelcast-oss
+
+      - name: Verify
+          run: |
+            docker run --name ${HAZELCAST_IMAGE}-container
+
+            attempts=0
+            max_attempts=10
+            while ! nc -z $(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${HAZELCAST_IMAGE}-container) 5701; do
+              if [ ${attempts} -eq ${max_attempts} ];then
+                  echo "Container did not start in $max_attempts seconds"
+                  exit 1
+              fi
+              printf '.'
+              attempts=$(($attempts+1))
+              sleep 1
+            done
