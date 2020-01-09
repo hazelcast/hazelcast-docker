@@ -1,7 +1,7 @@
 FROM alpine:3.11
 
 # Versions of Hazelcast and Hazelcast plugins
-ARG HZ_VERSION=3.12.5
+ARG HZ_VERSION=4.0-BETA-2
 ARG CACHE_API_VERSION=1.1.0
 ARG HZ_EUREKA_VERSION=1.1.1
 ARG JMX_PROMETHEUS_AGENT_VERSION=0.11.0
@@ -15,8 +15,6 @@ ARG CACHE_API_JAR="cache-api-${CACHE_API_VERSION}.jar"
 ENV HZ_HOME="${HZ_HOME}" \
     CLASSPATH_DEFAULT="${HZ_HOME}/*:${HZ_HOME}/lib/*" \
     JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Djava.util.logging.config.file=${HZ_HOME}/logging.properties -XX:MaxRAMPercentage=80.0 -XX:+UseParallelGC --add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED" \
-    MIN_HEAP_SIZE="" \
-    MAX_HEAP_SIZE="" \
     MANCENTER_URL="" \
     PROMETHEUS_PORT="" \
     PROMETHEUS_CONFIG="${HZ_HOME}/jmx_agent_config.yaml" \
