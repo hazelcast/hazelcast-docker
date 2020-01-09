@@ -1,12 +1,12 @@
-FROM alpine:3.8
+FROM alpine:3.11
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=4.0
 ARG CACHE_API_VERSION=1.1.0
 ARG HZ_EUREKA_VERSION=1.1.1
 ARG JMX_PROMETHEUS_AGENT_VERSION=0.11.0
-ARG NETTY_VERSION=4.1.32.Final
-ARG NETTY_TCNATIVE_VERSION=2.0.20.Final
+ARG NETTY_VERSION=4.1.44.Final
+ARG NETTY_TCNATIVE_VERSION=2.0.28.Final
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
@@ -16,7 +16,7 @@ ARG CACHE_API_JAR="cache-api-${CACHE_API_VERSION}.jar"
 # Runtime constants / variables
 ENV HZ_HOME="${HZ_HOME}" \
     CLASSPATH_DEFAULT="${HZ_HOME}/*:${HZ_HOME}/lib/*" \
-    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Djava.util.logging.config.file=${HZ_HOME}/logging.properties -XX:MaxRAMPercentage=80.0" \
+    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Djava.util.logging.config.file=${HZ_HOME}/logging.properties -XX:MaxRAMPercentage=80.0 -XX:+UseParallelGC --add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED" \
     HZ_LICENSE_KEY="" \
     MANCENTER_URL="" \
     PROMETHEUS_PORT="" \
@@ -34,7 +34,9 @@ COPY *.xml *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 RUN echo "Updating Alpine system" \
     && apk upgrade --update-cache --available \
     && echo "Installing new APK packages" \
-    && apk add openjdk8-jre maven bash apr openssl curl procps nss \
+    && apk add openjdk11-jre maven bash apr curl procps nss \
+    && echo "Installing old OpenSSL 1.0 from Alpine 3.8" \
+    && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.8/main/ openssl=1.0.2u-r0 \
     && echo "Installing Hazelcast" \
     && cd "${HZ_HOME}" \
     && mkdir lib \
