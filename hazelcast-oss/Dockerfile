@@ -15,8 +15,6 @@ ARG CACHE_API_JAR="cache-api-${CACHE_API_VERSION}.jar"
 ENV HZ_HOME="${HZ_HOME}" \
     CLASSPATH_DEFAULT="${HZ_HOME}/*:${HZ_HOME}/lib/*" \
     JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Djava.util.logging.config.file=${HZ_HOME}/logging.properties -XX:MaxRAMPercentage=80.0" \
-    MIN_HEAP_SIZE="" \
-    MAX_HEAP_SIZE="" \
     MANCENTER_URL="" \
     PROMETHEUS_PORT="" \
     PROMETHEUS_CONFIG="${HZ_HOME}/jmx_agent_config.yaml" \
