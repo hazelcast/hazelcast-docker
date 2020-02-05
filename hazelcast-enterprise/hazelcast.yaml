@@ -1,0 +1,4 @@
+hazelcast:
+  network:
+    ssl:
+      enabled: ${hazelcast.tls.enabled}
