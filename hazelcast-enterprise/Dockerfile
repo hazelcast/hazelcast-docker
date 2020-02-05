@@ -52,7 +52,7 @@ RUN echo "Updating Alpine system" \
            -Dnetty-tcnative.version=${NETTY_TCNATIVE_VERSION} \
            dependency:copy-dependencies \
     && echo "Maven clean-up" \
-    && apk del maven \
+    && apk del \
     && rm -rf ~/.m2 \
     && rm -f dependency-copy.xml \
     && echo "Installing JMX Prometheus Agent" \
