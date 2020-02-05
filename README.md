@@ -40,22 +40,17 @@ $ docker run -e HZ_LICENSE_KEY=<your_license_key> hazelcast/hazelcast-enterprise
 
 ### Hazelcast Enterprise Hello World
 
-To run two Hazelcast nodes with Management Center, use the following commands.
+To run two Hazelcast nodes, use the following commands.
 
 ```
-$ docker run -p 8080:8080 hazelcast/management-center
-$ docker run -p 5701:5701 -e HZ_LICENSE_KEY=<your_license_key> -e MANCENTER_URL="http://<host_ip>:8080/hazelcast-mancenter" -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5701" hazelcast/hazelcast-enterprise
-$ docker run -p 5702:5701 -e HZ_LICENSE_KEY=<your_license_key> -e MANCENTER_URL="http://<host_ip>:8080/hazelcast-mancenter" -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" hazelcast/hazelcast-enterprise
+$ docker run -p 5701:5701 -e HZ_LICENSE_KEY=<your_license_key> -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5701" hazelcast/hazelcast-enterprise
+$ docker run -p 5702:5701 -e HZ_LICENSE_KEY=<your_license_key> -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" hazelcast/hazelcast-enterprise
 ```
 
 Note that:
-* The `MANCENTER_URL` environment variable defines the address of the Management Center application. In this case, it is available at `http://<host_ip>:8080/hazelcast-mancenter`.
-* This example uses an unencrypted channel for access to the Management Center web interface. Refer to [this readme section](https://github.com/hazelcast/management-center-docker#enabling-tlsssl) for instructions on enabling TLS/SSL for the Management Center image.
-* This example also assumes unencrypted communication channels for IMDG members and clients. Hazelcast allows you to encrypt socket level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](https://github.com/hazelcast/hazelcast-docker#tls_enabled-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
+* This example assumes unencrypted communication channels for IMDG members and clients. Hazelcast allows you to encrypt socket level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](https://github.com/hazelcast/hazelcast-docker#tls_enabled-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
 
-Now, if you open a browser at [http://localhost:8080/hazelcast-mancenter](http://localhost:8080/hazelcast-mancenter), you should see your cluster with 2 nodes. You can start the [client](https://github.com/hazelcast/hazelcast-code-samples/tree/master/clients/basic) and observe in Management Center that the map data has been added.
-
-Read more about the Management Center image [here](https://github.com/hazelcast/management-center-docker).
+If you want to use Management Center with Hazelcast, read more [here](https://github.com/hazelcast/management-center-docker).
 
 ## Hazelcast Defined Environment Variables
 
@@ -65,14 +60,6 @@ As shown below, you can use `JAVA_OPTS` environment variable if you need to pass
 
 ```
 $ docker run -e JAVA_OPTS="-Xms512M -Xmx1024M" hazelcast/hazelcast
-```
-
-### MANCENTER_URL
-
-The address to the Management Center application can be defined using the `MANCENTER_URL` variable.
-
-```
-$ docker run -e MANCENTER_URL=<mancenter_url> hazelcast/hazelcast-enterprise
 ```
 
 ### PROMETHEUS_PORT
