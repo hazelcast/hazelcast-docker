@@ -30,7 +30,7 @@ COPY *.xml *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 # Install
 RUN echo "Updating Alpine system" \
     && apk upgrade --update-cache --available \
-    && echo "Installing new APK packages" \
+    && echo "Installing new test APK packages" \
     && apk add openjdk11-jre maven bash curl procps nss \
     && echo "Installing Hazelcast" \
     && cd "${HZ_HOME}" \

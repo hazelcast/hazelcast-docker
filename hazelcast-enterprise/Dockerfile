@@ -33,7 +33,7 @@ COPY *.xml *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 # Install
 RUN echo "Updating Alpine system" \
     && apk upgrade --update-cache --available \
-    && echo "Installing new APK packages" \
+    && echo "Installing new test APK packages" \
     && apk add openjdk11-jre maven bash apr curl procps nss \
     && echo "Installing old OpenSSL 1.0 from Alpine 3.8" \
     && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.8/main/ openssl=1.0.2u-r0 \
