@@ -18,8 +18,8 @@ This command will pull Hazelcast Docker image and run a new Hazelcast Instance.
 For the simplest end-to-end scenario, you can create a Hazelcast cluster with two Docker containers and access it from the client application.
 
 ```
-$ docker run -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5701" -p 5701:5701 hazelcast/hazelcast
-$ docker run -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" -p 5702:5701 hazelcast/hazelcast 
+$ docker run -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5701" -p 5701:5701 hazelcast/hazelcast:$HAZELCAST_VERSION
+$ docker run -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" -p 5702:5701 hazelcast/hazelcast:$HAZELCAST_VERSION
 ```
 
 Note that:
@@ -43,14 +43,26 @@ $ docker run -e HZ_LICENSE_KEY=<your_license_key> hazelcast/hazelcast-enterprise
 To run two Hazelcast nodes, use the following commands.
 
 ```
-$ docker run -p 5701:5701 -e HZ_LICENSE_KEY=<your_license_key> -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5701" hazelcast/hazelcast-enterprise
-$ docker run -p 5702:5701 -e HZ_LICENSE_KEY=<your_license_key> -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" hazelcast/hazelcast-enterprise
+$ docker run -p 5701:5701 -e HZ_LICENSE_KEY=<your_license_key> -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5701" hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
+$ docker run -p 5702:5701 -e HZ_LICENSE_KEY=<your_license_key> -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
 ```
 
 Note that:
 * This example assumes unencrypted communication channels for IMDG members and clients. Hazelcast allows you to encrypt socket level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](https://github.com/hazelcast/hazelcast-docker#tls_enabled-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
 
-If you want to use Management Center with Hazelcast, read more [here](https://github.com/hazelcast/management-center-docker).
+### Management Center Hello World
+
+No matter if you started Hazelcast or Hazelcast Enterprise cluster, you can use the Management Center application to monitor and manage your cluster.
+
+```
+docker run \
+  -e MC_INIT_CMD="./mc-conf.sh cluster add -H=/data -ma <host_ip>:5701 -cn dev" \
+  -p 8080:8080 hazelcast/management-center:$MANAGEMENT_CENTER_VERSION
+```
+
+Now, you can access Management Center from your browser using the following URL: `https://localhost:8080`. You can read more about the Management Center Docker image [here](https://github.com/hazelcast/management-center-docker).
+
+Note that the way Management Center is started changed since Hazelcast 4.0. If you use Hazelcast 3.x, please find the instructions [here](https://github.com/hazelcast/hazelcast-docker/tree/3.12.z).
 
 ## Hazelcast Defined Environment Variables
 
