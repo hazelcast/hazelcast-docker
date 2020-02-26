@@ -21,6 +21,8 @@ ENV HZ_HOME="${HZ_HOME}" \
     PROMETHEUS_PORT="" \
     PROMETHEUS_CONFIG="${HZ_HOME}/jmx_agent_config.yaml" \
     LOGGING_LEVEL="" \
+    LOGGING_FORMATTER="" \
+    LOGGING_FORMAT="" \
     CLASSPATH="" \
     JAVA_OPTS=""
 

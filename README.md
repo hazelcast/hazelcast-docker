@@ -97,6 +97,24 @@ $ docker run -e LOGGING_LEVEL=FINEST hazelcast/hazelcast
 
 Available logging levels are (from highest to lowest): `SEVERE`, `WARNING`, `INFO`, `CONFIG`, `FINE`, `FINER`, and `FINEST`. The default logging level is `INFO`.
 
+### LOGGING_FORMAT
+The logging output format can be changed using `LOGGING_FORMAT` variable. For example:
+
+```
+$ docker run -e LOGGING_FORMAT="%4\$s: %5\$s [%1\$tc]%n" hazelcast/hazelcast
+```
+
+Note that if you use special characters, you should escape them, e.g. $ should be escaped to \\$
+
+### LOGGING_FORMATTER
+The logging formatter class can be changed using `LOGGING_FORMATTER` variable, for example, to have console output in xml format:
+
+```
+$ docker run -e LOGGING_FORMATTER="java.util.logging.XMLFormatter" hazelcast/hazelcast
+```
+
+By default, available formatters are: `java.util.logging.SimpleFormatter` and `java.util.logging.XMLFormatter`.
+
 Note that if you need some more custom logging configuration, you can configure the `logging.properties` file and build your own Hazelcast image.
 
 ### HZ_LICENSE_KEY (Hazelcast Enterprise Only)

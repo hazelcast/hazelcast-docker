@@ -39,6 +39,12 @@ if [ -n "${LOGGING_LEVEL}" ]; then
   sed -i "s/java.util.logging.ConsoleHandler.level = INFO/java.util.logging.ConsoleHandler.level = ${LOGGING_LEVEL}/g" logging.properties
   sed -i "s/.level= INFO/.level= ${LOGGING_LEVEL}/g" logging.properties
 fi
+if [ -n "${LOGGING_FORMATTER}" ]; then
+  sed -i -E "s/(java.util.logging.ConsoleHandler.formatter) = (.+)/\1 = ${LOGGING_FORMATTER}/g" logging.properties
+fi
+if [ -n "${LOGGING_FORMAT}" ]; then
+  sed -i -E "s/(# )*(java.util.logging.SimpleFormatter.format)=(.+)/${LOGGING_FORMATTER:-java.util.logging.SimpleFormatter}.format=${LOGGING_FORMAT}/g" logging.properties
+fi
 
 echo "########################################"
 echo "# JAVA_OPTS=${JAVA_OPTS}"
