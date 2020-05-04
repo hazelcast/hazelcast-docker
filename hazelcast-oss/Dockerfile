@@ -35,7 +35,7 @@ COPY *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 RUN echo "Updating Alpine system" \
     && apk upgrade --update-cache --available \
     && echo "Installing new APK packages" \
-    && apk add openjdk11-jre maven bash curl procps nss \
+    && apk add openjdk11-jre bash curl procps nss \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
     && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${EUREKA_PLUGIN_URLS}; do curl -sf -O -L ${JAR_URL}; done \
