@@ -10,8 +10,6 @@ ARG NETTY_TCNATIVE_CLASSIFIER=linux-x86_64
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
-ARG HZ_JAR="hazelcast-enterprise-all-${HZ_VERSION}.jar"
-ARG CACHE_API_JAR="cache-api-${CACHE_API_VERSION}.jar"
 
 # JARs to download
 ARG HAZELCAST_ALL_URL="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/hazelcast-enterprise-all-${HZ_VERSION}.jar"
