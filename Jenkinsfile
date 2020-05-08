@@ -22,7 +22,7 @@ pipeline {
             steps {
                 dir("./hazelcast-oss") {
                     script {
-                        sh "docker buildx build -t leszko/hazelcast:${HAZELCAST_DOCKER_TAG} --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x . --push"
+                        sh "docker buildx build -t hazelcast/hazelcast:${HAZELCAST_DOCKER_TAG} --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x . --push"
                     }
 
                 }
@@ -32,7 +32,7 @@ pipeline {
             steps {
                 dir("./hazelcast-enterprise") {
                     script {
-                        sh "docker buildx build -t leszko/hazelcast-enterprise:${HAZELCAST_DOCKER_TAG} --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x . --push"
+                        sh "docker buildx build -t hazelcast/hazelcast-enterprise:${HAZELCAST_DOCKER_TAG} --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x . --push"
                     }
 
                 }
