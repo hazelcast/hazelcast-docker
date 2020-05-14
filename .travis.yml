@@ -22,3 +22,12 @@ script:
       # license key is not available in PRs (to avoid leaking the secret value), lets just check we really run the EE
       docker run --name ${HAZELCAST_IMAGE}-container --rm $HAZELCAST_IMAGE 2>&1 | grep -q "Hazelcast Enterprise"
     fi
+ 
+notifications:
+  email:
+    recipients:
+      - rafal@hazelcast.com
+      - mesut@hazelcast.com
+      - hasan@hazelast.com
+    on_success: never
+    on_failure: always
