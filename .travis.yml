@@ -17,7 +17,7 @@ script:
       docker run --name ${HAZELCAST_IMAGE}-container -e HZ_LICENSE_KEY=$HZ_LICENSE_KEY -d --rm $HAZELCAST_IMAGE
       sleep 10
       HZ_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${HAZELCAST_IMAGE}-container)
-      nc -z $HZ_IP 5707
+      nc -z $HZ_IP 5701
     else
       # license key is not available in PRs (to avoid leaking the secret value), lets just check we really run the EE
       docker run --name ${HAZELCAST_IMAGE}-container --rm $HAZELCAST_IMAGE 2>&1 | grep -q "Hazelcast Enterprise"
@@ -27,5 +27,7 @@ notifications:
   email:
     recipients:
       - rafal@hazelcast.com
+      - mesut@hazelcast.com
+      - hasan@hazelast.com
     on_success: never
     on_failure: always
