@@ -26,8 +26,6 @@ script:
 notifications:
   email:
     recipients:
-      - rafal@hazelcast.com
-      - mesut@hazelcast.com
-      - hasan@hazelcast.com
+      - integration@hazelcast.com
     on_success: never
     on_failure: always
