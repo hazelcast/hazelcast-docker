@@ -32,10 +32,10 @@ jobs:
       - name: Build/Push OSS image
         run: |
           docker buildx build --push \
-            --tag hasancelik/hazelcast:${{ env.RELEASE_VERSION }} \
+            --tag hazelcast/hazelcast:${{ env.RELEASE_VERSION }} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
       - name: Build/Push EE image
         run: |
           docker buildx build --push \
-            --tag hasancelik/hazelcast-enterprise:${{ env.RELEASE_VERSION }} \
+            --tag hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise

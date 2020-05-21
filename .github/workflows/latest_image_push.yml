@@ -2,7 +2,7 @@ name: Build latest OS and EE image
 
 on:
   push:
-    branches: enhancement/github-actions
+    branches: master
 
 jobs:
   build:
@@ -24,10 +24,10 @@ jobs:
       - name: Build/Push OSS image
         run: |
           docker buildx build --push \
-            --tag hasancelik/hazelcast:latest \
+            --tag hazelcast/hazelcast:latest \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
       - name: Build/Push EE image
         run: |
           docker buildx build --push \
-            --tag hasancelik/hazelcast-enterprise:latest \
+            --tag hazelcast/hazelcast-enterprise:latest \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
