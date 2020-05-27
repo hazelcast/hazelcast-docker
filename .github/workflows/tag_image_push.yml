@@ -16,15 +16,14 @@ jobs:
         run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:11}
       - name: Print Release Version
         run: |
-          echo $RELEASE_VERSION
           echo ${{ env.RELEASE_VERSION }}
 
       - name: Set up Docker Buildx
         id: buildx
         uses: crazy-max/ghaction-docker-buildx@v1
         with:
-          buildx-version: latest
-          qemu-version: latest
+          buildx-version: v0.4.1
+          qemu-version: 4.2.0-7
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
