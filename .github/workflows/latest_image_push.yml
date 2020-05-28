@@ -1,0 +1,33 @@
+name: Build latest OS and EE image
+
+on:
+  push:
+    branches: master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v1
+        with:
+          buildx-version: v0.4.1
+          qemu-version: 4.2.0-7
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build/Push OSS image
+        run: |
+          docker buildx build --push \
+            --tag hazelcast/hazelcast:latest \
+            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
+      - name: Build/Push EE image
+        run: |
+          docker buildx build --push \
+            --tag hazelcast/hazelcast-enterprise:latest \
+            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
