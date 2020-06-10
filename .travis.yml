@@ -12,9 +12,8 @@ services:
   - docker
 
 env:
-  - HAZELCAST_IMAGE=hazelcast-enterprise
-  - HAZELCAST_IMAGE=hazelcast-oss
-  - PROMETHEUS_PORT=8080
+  - HAZELCAST_IMAGE=hazelcast-enterprise PROMETHEUS_PORT=8080
+  - HAZELCAST_IMAGE=hazelcast-oss PROMETHEUS_PORT=8080
 
 install:
   - docker build -t $HAZELCAST_IMAGE $HAZELCAST_IMAGE
