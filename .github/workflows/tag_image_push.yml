@@ -38,3 +38,20 @@ jobs:
           docker buildx build --push \
             --tag hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
+
+      - name: Scan Hazelcast image by Azure (Trivy + Dockle)
+        uses: Azure/container-scan@v0
+        with:
+          image-name: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
+      - name: Scan Hazelcast image by Anchore
+        uses: anchore/scan-action@v1
+        with:
+          image-reference: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
+      - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
+        uses: Azure/container-scan@v0
+        with:
+          image-name: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
+      - name: Scan Hazelcast Enterprise image by Anchore
+        uses: anchore/scan-action@v1
+        with:
+          image-reference: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
