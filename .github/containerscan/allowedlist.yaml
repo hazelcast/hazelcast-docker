@@ -2,3 +2,5 @@ general:
   bestPracticeViolations:
     # HZ_LICENSE_KEY included as an env variable
     - CIS-DI-0010
+    # We don't sign Hazelcast Docker images
+    - CIS-DI-0005
