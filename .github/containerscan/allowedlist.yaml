@@ -1,0 +1,4 @@
+general:
+  bestPracticeViolations:
+    # HZ_LICENSE_KEY included as an env variable
+    - CIS-DI-0010
