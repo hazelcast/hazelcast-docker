@@ -129,41 +129,40 @@ Note that by default Hazelcast uses up to 80% of the container memory limit, but
 
 ### Using Custom Hazelcast Configuration File
 
-If you need to configure Hazelcast with your own `hazelcast.xml`, you need to mount the folder that has hazelcast.xml. You also need to pass the `hazelcast.xml` file path to `hazelcast.config` in `JAVA_OPTS` parameter. Please see the following example:
+If you need to configure Hazelcast with your own `hazelcast.yaml` (or `hazelcast.xml`), you can mount the host folder which contains Hazelcast configuration and pass `hazelcast.config` JVM property. For example, assumming you placed Hazelcast configuration as `/home/ubuntu/hazelcast/hazelcast.yaml`, you can execute the following command.
 
 ```
-$ docker run -e JAVA_OPTS="-Dhazelcast.config=/opt/hazelcast/config_ext/hazelcast.xml" -v PATH_TO_LOCAL_CONFIG_FOLDER:/opt/hazelcast/config_ext hazelcast/hazelcast
+$ docker run -e JAVA_OPTS="-Dhazelcast.config=/opt/hazelcast/config_ext/hazelcast.yaml" -v /home/ubuntu/hazelcast:/opt/hazelcast/config_ext hazelcast/hazelcast
 ```
+
+Alternatively you can [extend Hazelcast base image](#extending-hazelcast-base-image) adding your Hazelcast configuration file.
 
 ### Extending CLASSPATH with new jars or files
 
-Hazelcast has several extension points i.e MapStore API where you can provide your own implementation to add specific functionality into Hazelcast Cluster. If you have custom jars or files to put into classpath of docker container, you can simply use `CLASSPATH` environment variable and pass it via `docker run` command. Please see the following example:
+Hazelcast has several extension points i.e MapStore API where you can provide your own implementation to add specific functionality into Hazelcast Cluster. If you have custom jars or files to put into classpath of docker container, you can simply use Docker volume and use `CLASSPATH` environment variable in the `docker run` command. For example, assuming you placed your custom JARs into `/home/ubuntu/hazelcast/`, you can execute the following command.
 
 ```
-$ docker run -e CLASSPATH="/opt/hazelcast/CLASSPATH_EXT/*" -v PATH_TO_LOCAL_CONFIG_FOLDER:/opt/hazelcast/CLASSPATH_EXT hazelcast/hazelcast
+$ docker run -e CLASSPATH="/opt/hazelcast/CLASSPATH_EXT/*" -v /home/ubuntu/hazelcast:/opt/hazelcast/CLASSPATH_EXT hazelcast/hazelcast
 ```
+
+Alternatively you can [extend Hazelcast base image](#extending-hazelcast-base-image) adding your custom JARs.
 
 ### Extending Hazelcast Base Image
 
-You can use Hazelcast Docker Image to start a new Hazelcast member with default configuration. If you'd like to customize your Hazelcast member, you can extend the Hazelcast base image, provide your own configuration file and customize your initialization process. In order to do that, you need to create a new `Dockerfile` and build it with `docker build` command. 
+If you'd like to customize your Hazelcast member, you can extend the Hazelcast base image and provide your own configuration file or/and custom JARs. In order to do that, you need to create a new `Dockerfile` and build it with `docker build` command. 
 
-In the `Dockerfile` example below, we are creating a new image based on the Hazelcast image and adding our own configuration file from our host to the container, which is going to be used with Hazelcast when the container runs.
+In the `Dockerfile` example below, we are creating a new image based on the Hazelcast image and adding our own configuration file and a custom JAR from our host to the container, which is going to be used with Hazelcast when the container runs.
 
 ```
 FROM hazelcast/hazelcast:$HAZELCAST_VERSION
 
-# Adding custom hazelcast.xml
-ADD hazelcast.xml ${HZ_HOME}
-ENV JAVA_OPTS -Dhazelcast.config=${HZ_HOME}/hazelcast.xml
-```
+# Adding custom hazelcast.yaml
+ADD hazelcast.yaml ${HZ_HOME}
+ENV JAVA_OPTS -Dhazelcast.config=${HZ_HOME}/hazelcast.yaml
 
-After creating the `Dockerfile` you need to build it by running the command below:
-
+# Adding custom JARs to the classpath
+ADD custom-library.jar ${HZ_HOME}
 ```
-$ docker build .
-```
-
-Now you can run your own container with its ID or tag (if you provided `-t` option while building the image) using the `docker run` command.
 
 ## Graceful Shutdown
 
