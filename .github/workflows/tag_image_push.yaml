@@ -1,0 +1,45 @@
+name: Build/Push OS and EE 3.12.x image
+
+on:
+  create:
+    tags:
+      - 'v3.12.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set Release Version
+        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:11}
+      - name: Print Release Version
+        run: |
+          echo ${{ env.RELEASE_VERSION }}
+
+      - name: Login to docker hub
+        uses: actions-hub/docker/login@master
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build OSS image
+        run: |
+          cd ./hazelcast-oss/
+          docker build -t hazelcast/hazelcast:${{ env.RELEASE_VERSION }} .
+
+      - name: Build Enterprise image
+        run: |
+          cd ./hazelcast-enterprise/
+          docker build -t hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }} .
+
+      - name: Push OSS image to DockerHub
+        uses: actions-hub/docker@master
+        with:
+          args: push hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
+
+      - name: Push Enterprise image to DockerHub
+        uses: actions-hub/docker@master
+        with:
+          args: push hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
