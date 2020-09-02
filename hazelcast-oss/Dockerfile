@@ -33,10 +33,8 @@ EXPOSE 5701
 COPY *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 
 # Install
-RUN echo "Updating Alpine system" \
-    && apk upgrade --update-cache --available \
-    && echo "Installing new APK packages" \
-    && apk add openjdk11-jre bash curl procps nss \
+RUN echo "Installing new APK packages" \
+    && apk add --no-cache openjdk11-jre bash curl procps nss \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
@@ -50,6 +48,9 @@ RUN echo "Updating Alpine system" \
     && rm -rf /var/cache/apk/*
 
 WORKDIR ${HZ_HOME}
+
+RUN addgroup -S hazelcast && adduser -S hazelcast -G hazelcast
+USER hazelcast
 
 # Start Hazelcast server
 CMD ["/opt/hazelcast/start-hazelcast.sh"]
