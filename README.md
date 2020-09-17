@@ -80,15 +80,19 @@ The port of the JMX Prometheus agent. For example, if you set `PROMETHEUS_PORT=8
 
 ### LOGGING_LEVEL
 
-The logging level can be changed using the `LOGGING_LEVEL` variable, for example, to see the `FINEST` logs.
+The logging level can be changed using the `LOGGING_LEVEL` variable, for example, to see the `DEBUG` logs.
 
 ```
-$ docker run -e LOGGING_LEVEL=FINEST hazelcast/hazelcast
+$ docker run -e LOGGING_LEVEL=DEBUG hazelcast/hazelcast
 ```
 
-Available logging levels are (from highest to lowest): `SEVERE`, `WARNING`, `INFO`, `CONFIG`, `FINE`, `FINER`, and `FINEST`. The default logging level is `INFO`.
+Available logging levels are (from highest to lowest): `OFF`, `FATAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, `TRACE` and `ALL`. The default logging level is `INFO`. Invalid levels will be assumed `OFF`.
 
-Note that if you need some more custom logging configuration, you can configure the `logging.properties` file and build your own Hazelcast image.
+Note that if you need some more custom logging configuration, you can specify a configuration file.
+
+```
+$ docker run -v <config-file-path>:/opt/hazelcast/log4j2.properties hazelcast/hazelcast
+```
 
 ### HZ_LICENSE_KEY (Hazelcast Enterprise Only)
 

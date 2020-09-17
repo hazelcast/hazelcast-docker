@@ -22,8 +22,7 @@ if [ -n "${PROMETHEUS_PORT}" ]; then
 fi
 
 if [ -n "${LOGGING_LEVEL}" ]; then
-  sed -i "s/java.util.logging.ConsoleHandler.level = INFO/java.util.logging.ConsoleHandler.level = ${LOGGING_LEVEL}/g" logging.properties
-  sed -i "s/.level= INFO/.level= ${LOGGING_LEVEL}/g" logging.properties
+  sed -i "s/rootLogger.level=info/rootLogger.level=${LOGGING_LEVEL}/g" log4j2.properties
 fi
 
 echo "########################################"
