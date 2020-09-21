@@ -44,7 +44,6 @@ RUN echo "Installing new APK packages" \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
     && echo "Granting read and write permissions to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
-    && chmod o+w ${HZ_HOME} \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties" \
     && echo "Cleaning APK packages" \
