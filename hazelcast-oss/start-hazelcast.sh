@@ -25,6 +25,12 @@ if [ -z "${LOGGING_LEVEL}" ]; then
   export LOGGING_LEVEL=INFO
 fi
 
+if [ "$(arch)" == "s390x" ]; then
+  export LOGGING_PATTERN="%d [%highlight{\${LOG_LEVEL_PATTERN:-%5p}}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=magenta}][%style{%t{1.}}{cyan}] [%style{%-10c}{blue}]: %m%n"
+else
+  export LOGGING_PATTERN="%d [%highlight{\${LOG_LEVEL_PATTERN:-%5p}}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=magenta}] [%style{%t{1.}}{cyan}] [%style{%c{1.}}{blue}]: %m%n"
+fi
+
 echo "########################################"
 echo "# JAVA_OPTS=${JAVA_OPTS}"
 echo "# CLASSPATH=${CLASSPATH}"
