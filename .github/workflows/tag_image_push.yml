@@ -12,6 +12,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
+      - name: Checkout clair-scanner
+        uses: actions/checkout@v2
+        with:
+          repository: arminc/clair-scanner
+          path: clair-scanner
+
       - name: Set Release Version
         run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:11}
       - name: Print Release Version
@@ -55,3 +61,8 @@ jobs:
         uses: anchore/scan-action@v1
         with:
           image-reference: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
+      - name: Scan Hazelcast OS and Enterprise images by Clair
+        run: |
+          sh .github/scripts/clair_vulnerability_scan.sh \
+            hazelcast/hazelcast:${{ env.RELEASE_VERSION }} \
+            hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}

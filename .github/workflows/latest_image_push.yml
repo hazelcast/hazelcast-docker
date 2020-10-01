@@ -11,6 +11,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
+      - name: Checkout clair-scanner
+        uses: actions/checkout@v2
+        with:
+          repository: arminc/clair-scanner
+          path: clair-scanner
+
       - name: Set up Docker Buildx
         id: buildx
         uses: crazy-max/ghaction-docker-buildx@v1
@@ -48,3 +54,8 @@ jobs:
         uses: anchore/scan-action@v1
         with:
           image-reference: hazelcast/hazelcast-enterprise:latest
+      - name: Scan Hazelcast OS and Enterprise images by Clair
+        run: |
+          sh .github/scripts/clair_vulnerability_scan.sh \
+            hazelcast/hazelcast:latest \
+            hazelcast/hazelcast-enterprise:latest
