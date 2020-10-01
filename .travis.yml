@@ -36,6 +36,6 @@ notifications:
   email:
     recipients:
       - rafal@hazelcast.com
-      - hasan@hazelast.com
+      - hasan@hazelcast.com
     on_success: never
     on_failure: always
