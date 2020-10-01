@@ -21,9 +21,14 @@ if [ -n "${PROMETHEUS_PORT}" ]; then
   export JAVA_OPTS="-javaagent:${HZ_HOME}/lib/jmx_prometheus_javaagent.jar=${PROMETHEUS_PORT}:${PROMETHEUS_CONFIG} ${JAVA_OPTS}"
 fi
 
-if [ -n "${LOGGING_LEVEL}" ]; then
-  sed -i "s/java.util.logging.ConsoleHandler.level = INFO/java.util.logging.ConsoleHandler.level = ${LOGGING_LEVEL}/g" logging.properties
-  sed -i "s/.level= INFO/.level= ${LOGGING_LEVEL}/g" logging.properties
+if [ -z "${LOGGING_LEVEL}" ]; then
+  export LOGGING_LEVEL=INFO
+fi
+
+if [ "$(arch)" == "s390x" ]; then
+  export LOGGING_PATTERN="%d [%highlight{\${LOG_LEVEL_PATTERN:-%5p}}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=magenta}][%style{%t{1.}}{cyan}] [%style{%-10c}{blue}]: %m%n"
+else
+  export LOGGING_PATTERN="%d [%highlight{\${LOG_LEVEL_PATTERN:-%5p}}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=magenta}] [%style{%t{1.}}{cyan}] [%style{%c{1.}}{blue}]: %m%n"
 fi
 
 if [ -n "${HZ_LICENSE_KEY}" ]; then
