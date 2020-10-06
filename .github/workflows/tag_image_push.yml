@@ -53,7 +53,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           image: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
-          args: --file=hazelcast-oss/Dockerfile
+          args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan
       - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
         uses: Azure/container-scan@v0
         with:
@@ -68,4 +68,4 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           image: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
-          args: --file=hazelcast-enterprise/Dockerfile
+          args: --file=hazelcast-enterprise/Dockerfile --policy-path=.github/containerscan
