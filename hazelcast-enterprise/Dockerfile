@@ -1,4 +1,4 @@
-FROM alpine:3.12.2
+FROM registry.redhat.io/ubi8/ubi
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=4.1
@@ -21,6 +21,10 @@ ARG EUREKA_PLUGIN_URLS='https://repo1.maven.org/maven2/com/hazelcast/hazelcast-e
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
+    HZ_CP_MOUNT="${HZ_HOME}/external" \
+    LANG="en_US.utf8" \
+    USER_NAME="hazelcast" \
+    USER_UID=10001 \
     CLASSPATH_DEFAULT="${HZ_HOME}/*:${HZ_HOME}/lib/*" \
     JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Dhazelcast.logging.type=log4j2 -Dlog4j.configurationFile=${HZ_HOME}/log4j2.properties -XX:MaxRAMPercentage=80.0 -XX:MaxGCPauseMillis=5 --add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED" \
     HZ_LICENSE_KEY="" \
@@ -30,30 +34,45 @@ ENV HZ_HOME="${HZ_HOME}" \
     CLASSPATH="" \
     JAVA_OPTS=""
 
+LABEL name="Hazelcast IMDG Enterprise" \
+      maintainer="info@hazelcast.com" \
+      vendor="Hazelcast, Inc." \
+      version="8.1" \
+      release="${HZ_VERSION}" \
+      url="http://www.hazelcast.com" \
+      summary="Hazelcast IMDG Enterprise Image, certified to RHEL 8.1" \
+      description="Starts a standalone Hazelcast server instance to form a cluster based on Kubernetes discovery inside Openshift/Kubernetes"
+
 # Expose port
 EXPOSE 5701
 
 COPY *.sh *.yaml *.jar *.properties ${HZ_HOME}/
+COPY licenses /licenses
 
 # Install
-RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk11-jre bash curl \
+RUN mkdir -p "${HZ_HOME}/lib" "$HZ_CP_MOUNT" \
+    && echo "Disabling subscription-manager plugin to prevent redundant logs" \
+    && sed -i 's/^enabled=.*/enabled=0/g' /etc/dnf/plugins/subscription-manager.conf \
+    && dnf config-manager --disable \
+    && dnf update -y  && rm -rf /var/cache/dnf \
+    && dnf -y update-minimal --security --sec-severity=Important --sec-severity=Critical --setopt=tsflags=nodocs \
+    && echo "Installing new packages" \
+    && dnf -y --setopt=tsflags=nodocs install java-11-openjdk &> /dev/null \
+    && dnf -y clean all \
     && echo "Downloading Hazelcast and related JARs" \
-    && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
     && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${EUREKA_PLUGIN_URLS} ${LOG4J2_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
-    && echo "Granting read permission to ${HZ_HOME}" \
-    && chmod -R +r ${HZ_HOME} \
-    && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties" \
-    && echo "Cleaning APK packages" \
-    && rm -rf /var/cache/apk/*
+    && echo "Adding non-root user" \
+    && useradd -l -u $USER_UID -r -g 0 -d $HZ_HOME -s /sbin/nologin -c "${USER_UID} application user" $USER_NAME \
+    && chown -R $USER_UID:0 $HZ_HOME $HZ_CP_MOUNT \
+    && chmod -R g=u "$HZ_HOME" \
+    && chmod -R +r $HZ_HOME
 
 WORKDIR ${HZ_HOME}
 
-RUN addgroup -S hazelcast && adduser -S hazelcast -G hazelcast
-USER hazelcast
+### Switch to hazelcast user
+USER ${USER_UID}
 
 # Start Hazelcast server
 CMD ["/opt/hazelcast/start-hazelcast.sh"]

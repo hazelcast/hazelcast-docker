@@ -5,7 +5,7 @@ set -euo pipefail
 eval JAVA_OPTS=\"${JAVA_OPTS}\"
 eval CLASSPATH=\"${CLASSPATH}\"
 
-if [ -n "${CLASSPATH}" ]; then 
+if [ -n "${CLASSPATH}" ]; then
   export CLASSPATH="${CLASSPATH_DEFAULT}:${CLASSPATH}"
 else
   export CLASSPATH="${CLASSPATH_DEFAULT}"
@@ -34,9 +34,9 @@ fi
 if [ -n "${HZ_LICENSE_KEY}" ]; then
   export JAVA_OPTS="${JAVA_OPTS} -Dhazelcast.enterprise.license.key=${HZ_LICENSE_KEY}"
 else
-  set +u 
+  set +u
   export JAVA_OPTS="${JAVA_OPTS} -Dhazelcast.enterprise.license.key=${HZ_LICENCE_KEY}"
-  set -u 
+  set -u
 fi
 
 export JAVA_OPTS="${JAVA_OPTS} -Dhazelcast.tls.enabled=${TLS_ENABLED:-false}"
