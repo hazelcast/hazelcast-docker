@@ -54,11 +54,9 @@ RUN mkdir -p "${HZ_HOME}/lib" "$HZ_CP_MOUNT" \
     && echo "Disabling subscription-manager plugin to prevent redundant logs" \
     && sed -i 's/^enabled=.*/enabled=0/g' /etc/dnf/plugins/subscription-manager.conf \
     && dnf config-manager --disable \
-    && dnf update -y  && rm -rf /var/cache/dnf \
     && dnf -y update-minimal --security --sec-severity=Important --sec-severity=Critical --setopt=tsflags=nodocs \
     && echo "Installing new packages" \
     && dnf -y --setopt=tsflags=nodocs install java-11-openjdk &> /dev/null \
-    && dnf -y clean all \
     && echo "Downloading Hazelcast and related JARs" \
     && cd "${HZ_HOME}/lib" \
     && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${EUREKA_PLUGIN_URLS} ${LOG4J2_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
@@ -67,7 +65,8 @@ RUN mkdir -p "${HZ_HOME}/lib" "$HZ_CP_MOUNT" \
     && useradd -l -u $USER_UID -r -g 0 -d $HZ_HOME -s /sbin/nologin -c "${USER_UID} application user" $USER_NAME \
     && chown -R $USER_UID:0 $HZ_HOME $HZ_CP_MOUNT \
     && chmod -R g=u "$HZ_HOME" \
-    && chmod -R +r $HZ_HOME
+    && chmod -R +r $HZ_HOME \
+    && dnf -y clean all && rm -rf /var/cache/dnf
 
 WORKDIR ${HZ_HOME}
 
