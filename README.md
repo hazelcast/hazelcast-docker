@@ -218,7 +218,7 @@ Then, the metrics are available at: `http://localhost:8080/metrics`. Note that y
 To debug your Hazelcast with the standard Java Tools support, use the following command to start Hazelcast container:
 
 ```
-$ docker run -p 5005:5005 -e JAVA_TOOL_OPTIONS='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005' hazelcast/hazelcast
+$ docker run -p 5005:5005 -e JAVA_TOOL_OPTIONS='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005' hazelcast/hazelcast
 ```
 
 Now you can connect with your remote debugger using the address: `localhost:5005`.
