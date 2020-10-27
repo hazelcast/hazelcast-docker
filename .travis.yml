@@ -16,6 +16,10 @@ env:
   - HAZELCAST_IMAGE=hazelcast-oss
 
 install:
+  - |
+    if [ "$HAZELCAST_IMAGE" = "hazelcast-enterprise"]; then
+      docker login registry.redhat.io -u ${RH_REGISTRY_USERNAME} -p ${RH_REGISTRY_PASSWORD}
+    fi
   - docker build -t $HAZELCAST_IMAGE $HAZELCAST_IMAGE
 
 script:
