@@ -1,0 +1,43 @@
+version: v1.5.0
+ignore:
+  SNYK-ALPINE311-OPENSSL-544606:
+    - '*':
+        reason: "netty-tcnative requires libssl 1.0"
+        expires: 2021-01-15T00:00:00.000Z
+
+  SNYK-ALPINE311-OPENSSL-544707:
+    - '*':
+        reason: "netty-tcnative requires libssl 1.0"
+        expires: 2021-01-15T00:00:00.000Z
+
+  SNYK-ALPINE311-OPENSSL-544851:
+    - '*':
+        reason: "netty-tcnative requires libssl 1.0"
+        expires: 2021-01-15T00:00:00.000Z
+        
+  SNYK-ALPINE311-OPENSSL-544897:
+    - '*':
+        reason: "netty-tcnative requires libssl 1.0"
+        expires: 2021-01-15T00:00:00.000Z
+
+  SNYK-ALPINE311-OPENSSL-544988:
+    - '*':
+        reason: "netty-tcnative requires libssl 1.0"
+        expires: 2021-01-15T00:00:00.000Z
+
+  SNYK-ALPINE311-OPENSSL-545412:
+    - '*':
+        reason: "netty-tcnative requires libssl 1.0"
+        expires: 2021-01-15T00:00:00.000Z
+
+  SNYK-ALPINE311-OPENSSL-545889:
+    - '*':
+        reason: "netty-tcnative requires libssl 1.0"
+        expires: 2021-01-15T00:00:00.000Z
+
+  SNYK-ALPINE311-OPENSSL-587980:
+    - '*':
+        reason: "netty-tcnative requires libssl 1.0"
+        expires: 2021-01-15T00:00:00.000Z
+
+patch: {}
