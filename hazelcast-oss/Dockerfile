@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM alpine:3.12.1
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=3.12.10
@@ -38,7 +38,7 @@ COPY *.xml *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk8-jre bash curl procps nss \
+    && apk add --no-cache openjdk11-jre bash curl \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \

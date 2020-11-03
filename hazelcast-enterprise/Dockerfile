@@ -1,12 +1,12 @@
-FROM alpine:3.8
+FROM alpine:3.12.1
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=3.12.10
 ARG CACHE_API_VERSION=1.1.0
 ARG HZ_EUREKA_VERSION=1.1.1
 ARG JMX_PROMETHEUS_AGENT_VERSION=0.11.0
-ARG NETTY_VERSION=4.1.32.Final
-ARG NETTY_TCNATIVE_VERSION=2.0.20.Final
+ARG NETTY_VERSION=4.1.44.Final
+ARG NETTY_TCNATIVE_VERSION=2.0.28.Final
 ARG NETTY_TCNATIVE_CLASSIFIER=linux-x86_64
 
 # Build constants
@@ -44,7 +44,9 @@ COPY *.xml *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk8-jre bash apr openssl curl procps nss \
+    && apk add --no-cache openjdk11-jre bash apr curl \
+    && echo "Installing old OpenSSL 1.0 from Alpine 3.8" \
+    && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.8/main/ openssl=1.0.2u-r0 \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
