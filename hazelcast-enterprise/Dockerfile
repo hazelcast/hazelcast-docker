@@ -1,13 +1,10 @@
-FROM alpine:3.8
+FROM alpine:3.12.1
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=3.12.10
 ARG CACHE_API_VERSION=1.1.0
 ARG HZ_EUREKA_VERSION=1.1.1
 ARG JMX_PROMETHEUS_AGENT_VERSION=0.14.0
-ARG NETTY_VERSION=4.1.32.Final
-ARG NETTY_TCNATIVE_VERSION=2.0.20.Final
-ARG NETTY_TCNATIVE_CLASSIFIER=linux-x86_64
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
@@ -16,8 +13,6 @@ ARG HZ_HOME="/opt/hazelcast"
 ARG HAZELCAST_ALL_URL="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/hazelcast-enterprise-all-${HZ_VERSION}.jar"
 ARG CACHE_API_URL="https://repo1.maven.org/maven2/javax/cache/cache-api/${CACHE_API_VERSION}/cache-api-${CACHE_API_VERSION}.jar"
 ARG PROMETHEUS_AGENT_URL="https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/${JMX_PROMETHEUS_AGENT_VERSION}/jmx_prometheus_javaagent-${JMX_PROMETHEUS_AGENT_VERSION}.jar"
-ARG NETTY_URL="https://repo1.maven.org/maven2/io/netty/netty-all/${NETTY_VERSION}/netty-all-${NETTY_VERSION}.jar"
-ARG NETTY_TCNATIVE_URL="https://repo1.maven.org/maven2/io/netty/netty-tcnative/${NETTY_TCNATIVE_VERSION}/netty-tcnative-${NETTY_TCNATIVE_VERSION}-${NETTY_TCNATIVE_CLASSIFIER}.jar"
 # If you update Eureka plugin version, please update also all its dependencies
 # You can fetch Eureka plugin dependencies with `mvn dependency:list -DincludeScope=runtime -DoutputAbsoluteArtifactFilename=true` executed at https://github.com/hazelcast/hazelcast-eureka
 # For the already formatted output, use `mvn dependency:list -DincludeScope=runtime -DoutputAbsoluteArtifactFilename=true | sed '/\.m2\/repository/!d' | sed 's/.*repository\//https:\/\/repo1\.maven\.org\/maven2\//' | sed -e 'H;${x;s/\n/ /g;s/^ //;p;};d'`
@@ -44,11 +39,11 @@ COPY *.xml *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk8-jre bash apr openssl curl procps nss \
+    && apk add --no-cache openjdk11-jre bash curl \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
-    && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${NETTY_URL} ${NETTY_TCNATIVE_URL} ${EUREKA_PLUGIN_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
+    && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${EUREKA_PLUGIN_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
