@@ -37,9 +37,9 @@ jobs:
         with:
           image-name: hazelcast/hazelcast:latest
       - name: Scan Hazelcast image by Anchore
-        uses: anchore/scan-action@v1
+        uses: anchore/scan-action@v2.0.2
         with:
-          image-reference: hazelcast/hazelcast:latest
+          image: hazelcast/hazelcast:latest
       - name: Scan Hazelcast image by Snyk
         uses: snyk/actions/docker@master
         env:
@@ -52,9 +52,9 @@ jobs:
         with:
           image-name: hazelcast/hazelcast-enterprise:latest
       - name: Scan Hazelcast Enterprise image by Anchore
-        uses: anchore/scan-action@v1
+        uses: anchore/scan-action@v2.0.2
         with:
-          image-reference: hazelcast/hazelcast-enterprise:latest
+          image: hazelcast/hazelcast-enterprise:latest
       - name: Scan Hazelcast Enterprise image by Snyk
         uses: snyk/actions/docker@master
         env:
