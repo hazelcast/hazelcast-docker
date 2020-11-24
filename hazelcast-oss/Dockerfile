@@ -1,4 +1,4 @@
-FROM alpine:3.12.1
+FROM adoptopenjdk/openjdk11:jdk-11.0.9_11-alpine
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=4.1
@@ -36,7 +36,7 @@ COPY *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk11-jre bash curl \
+    && apk add --no-cache bash curl \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
