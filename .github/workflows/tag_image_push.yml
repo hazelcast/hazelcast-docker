@@ -40,14 +40,18 @@ jobs:
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
 
       - name: Scan Hazelcast image by Azure (Trivy + Dockle)
+        if: always()
         uses: Azure/container-scan@v0
         with:
           image-name: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
       - name: Scan Hazelcast image by Anchore
+        if: always()
         uses: anchore/scan-action@v2.0.2
         with:
           image: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
+          fail-build: true
       - name: Scan Hazelcast image by Snyk
+        if: always()
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -55,14 +59,18 @@ jobs:
           image: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
           args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan
       - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
+        if: always()
         uses: Azure/container-scan@v0
         with:
           image-name: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
       - name: Scan Hazelcast Enterprise image by Anchore
+        if: always()
         uses: anchore/scan-action@v2.0.2
         with:
           image: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
+          fail-build: true
       - name: Scan Hazelcast Enterprise image by Snyk
+        if: always()
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
