@@ -37,5 +37,6 @@ notifications:
     recipients:
       - rafal@hazelcast.com
       - hasan@hazelcast.com
+      - grzegorz.piwowarek@hazelcast.com
     on_success: never
     on_failure: always
