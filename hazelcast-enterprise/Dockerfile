@@ -37,7 +37,9 @@ COPY *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk11-jre bash curl \
+    && apk update \
+    && apk add --no-cache openjdk15-jre --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+    && apk add --no-cache bash curl \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
