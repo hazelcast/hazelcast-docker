@@ -1,9 +1,11 @@
 name: Build OS and EE image
 
 on:
-  create:
+  push:
+    branches:
+      - "!*"
     tags:
-      - 'v4.*'
+      - "v4.*"
 
 jobs:
   build:
