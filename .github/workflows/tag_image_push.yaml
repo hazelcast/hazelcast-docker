@@ -1,7 +1,9 @@
 name: Build/Push OS and EE 3.12.x image
 
 on:
-  create:
+  push:
+    branches:
+      - "!*"
     tags:
       - 'v3.12.*'
 
