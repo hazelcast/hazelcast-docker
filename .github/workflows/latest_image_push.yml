@@ -36,6 +36,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: push
     steps:
+      - name: Pull docker images
+        run: |
+          docker pull hazelcast/hazelcast:latest
+          docker pull hazelcast/hazelcast-enterprise:latest
+          docker images --digests
       - name: Scan Hazelcast image by Azure (Trivy + Dockle)
         if: always()
         uses: Azure/container-scan@v0
