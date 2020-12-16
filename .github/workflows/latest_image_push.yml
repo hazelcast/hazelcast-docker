@@ -2,10 +2,11 @@ name: Build latest OS and EE image
 
 on:
   push:
-    branches: master
+    branches:
+      - master
 
 jobs:
-  build:
+  push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -31,7 +32,10 @@ jobs:
           docker buildx build --push \
             --tag hazelcast/hazelcast-enterprise:latest \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
-
+  scan:
+    runs-on: ubuntu-latest
+    needs: push
+    steps:
       - name: Scan Hazelcast image by Azure (Trivy + Dockle)
         if: always()
         uses: Azure/container-scan@v0
@@ -70,3 +74,4 @@ jobs:
         with:
           image: hazelcast/hazelcast-enterprise:latest
           args: --file=hazelcast-enterprise/Dockerfile --policy-path=.github/containerscan
+
