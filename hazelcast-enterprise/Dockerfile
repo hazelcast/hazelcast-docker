@@ -49,17 +49,16 @@ RUN echo "Installing new packages" \
     && cd "${HZ_HOME}/lib" \
     && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${LOG4J2_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
+    && echo "Granting read permission to ${HZ_HOME}" \
+    && chmod -R +r ${HZ_HOME} \
+    && echo "Setting Pardot ID to 'docker'" \
+    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties" \
     && echo "Removed cached package data" \
     && microdnf -y clean all
 
-RUN echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties"
-
 RUN echo "Adding non-root user" \
     && groupadd --system hazelcast \
-    && useradd -l --system -g hazelcast -d ${HZ_HOME} ${USER_NAME} \
-    && echo "Granting read permission to ${HZ_HOME}" \
-    && chmod -R +r ${HZ_HOME}
+    && useradd -l --system -g hazelcast -d ${HZ_HOME} ${USER_NAME}
 
 WORKDIR ${HZ_HOME}
 
