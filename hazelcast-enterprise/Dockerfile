@@ -1,4 +1,4 @@
-FROM registry.redhat.io/ubi8/ubi
+FROM registry.access.redhat.com/ubi8/ubi-minimal
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=4.1
@@ -14,17 +14,10 @@ ARG HAZELCAST_ALL_URL="https://repository.hazelcast.com/release/com/hazelcast/ha
 ARG CACHE_API_URL="https://repo1.maven.org/maven2/javax/cache/cache-api/${CACHE_API_VERSION}/cache-api-${CACHE_API_VERSION}.jar"
 ARG PROMETHEUS_AGENT_URL="https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/${JMX_PROMETHEUS_AGENT_VERSION}/jmx_prometheus_javaagent-${JMX_PROMETHEUS_AGENT_VERSION}.jar"
 ARG LOG4J2_URLS="https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-core/${LOG4J2_VERSION}/log4j-core-${LOG4J2_VERSION}.jar https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-api/${LOG4J2_VERSION}/log4j-api-${LOG4J2_VERSION}.jar"
-# If you update Eureka plugin version, please update also all its dependencies
-# You can fetch Eureka plugin dependencies with `mvn dependency:list -DincludeScope=runtime -DoutputAbsoluteArtifactFilename=true` executed at https://github.com/hazelcast/hazelcast-eureka
-# For the already formatted output, use `mvn dependency:list -DincludeScope=runtime -DoutputAbsoluteArtifactFilename=true | sed '/\.m2\/repository/!d' | sed 's/.*repository\//https:\/\/repo1\.maven\.org\/maven2\//' | sed -e 'H;${x;s/\n/ /g;s/^ //;p;};d'`
-ARG EUREKA_PLUGIN_URLS='https://repo1.maven.org/maven2/com/hazelcast/hazelcast-eureka-one/2.0.1/hazelcast-eureka-one-2.0.1.jar https://repo1.maven.org/maven2/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.3/httpclient-4.5.3.jar https://repo1.maven.org/maven2/com/google/inject/guice/4.1.0/guice-4.1.0.jar https://repo1.maven.org/maven2/joda-time/joda-time/2.3/joda-time-2.3.jar https://repo1.maven.org/maven2/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar https://repo1.maven.org/maven2/aopalliance/aopalliance/1.0/aopalliance-1.0.jar https://repo1.maven.org/maven2/commons-configuration/commons-configuration/1.10/commons-configuration-1.10.jar https://repo1.maven.org/maven2/com/netflix/eureka/eureka-client/1.10.7/eureka-client-1.10.7.jar https://repo1.maven.org/maven2/com/thoughtworks/xstream/xstream/1.4.14/xstream-1.4.14.jar https://repo1.maven.org/maven2/com/netflix/servo/servo-core/0.12.21/servo-core-0.12.21.jar https://repo1.maven.org/maven2/com/google/code/gson/gson/2.8.6/gson-2.8.6.jar https://repo1.maven.org/maven2/com/google/errorprone/error_prone_annotations/2.3.4/error_prone_annotations-2.3.4.jar https://repo1.maven.org/maven2/com/netflix/netflix-commons/netflix-infix/0.3.0/netflix-infix-0.3.0.jar https://repo1.maven.org/maven2/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c.jar https://repo1.maven.org/maven2/commons-lang/commons-lang/2.6/commons-lang-2.6.jar https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.6.4/slf4j-api-1.6.4.jar https://repo1.maven.org/maven2/antlr/antlr/2.7.7/antlr-2.7.7.jar https://repo1.maven.org/maven2/com/google/guava/guava/30.0-jre/guava-30.0-jre.jar https://repo1.maven.org/maven2/com/sun/jersey/jersey-core/1.19.1/jersey-core-1.19.1.jar https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.9.10/jackson-annotations-2.9.10.jar https://repo1.maven.org/maven2/org/checkerframework/checker-qual/3.5.0/checker-qual-3.5.0.jar https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.9.10/jackson-core-2.9.10.jar https://repo1.maven.org/maven2/com/google/j2objc/j2objc-annotations/1.3/j2objc-annotations-1.3.jar https://repo1.maven.org/maven2/org/antlr/stringtemplate/3.2.1/stringtemplate-3.2.1.jar https://repo1.maven.org/maven2/org/apache/commons/commons-math/2.2/commons-math-2.2.jar https://repo1.maven.org/maven2/javax/ws/rs/jsr311-api/1.1.1/jsr311-api-1.1.1.jar https://repo1.maven.org/maven2/org/codehaus/jettison/jettison/1.3.7/jettison-1.3.7.jar https://repo1.maven.org/maven2/com/netflix/archaius/archaius-core/0.7.7/archaius-core-0.7.7.jar https://repo1.maven.org/maven2/xmlpull/xmlpull/1.1.3.1/xmlpull-1.1.3.1.jar https://repo1.maven.org/maven2/com/github/andrewoma/dexx/dexx-collections/0.2/dexx-collections-0.2.jar https://repo1.maven.org/maven2/commons-codec/commons-codec/1.15/commons-codec-1.15.jar https://repo1.maven.org/maven2/javax/inject/javax.inject/1/javax.inject-1.jar https://repo1.maven.org/maven2/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar https://repo1.maven.org/maven2/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar https://repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.6/httpcore-4.4.6.jar https://repo1.maven.org/maven2/com/github/vlsi/compactmap/compactmap/2.0/compactmap-2.0.jar https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.9.10.6/jackson-databind-2.9.10.6.jar https://repo1.maven.org/maven2/com/netflix/netflix-commons/netflix-eventbus/0.3.0/netflix-eventbus-0.3.0.jar https://repo1.maven.org/maven2/commons-jxpath/commons-jxpath/1.3/commons-jxpath-1.3.jar https://repo1.maven.org/maven2/com/sun/jersey/contribs/jersey-apache-client4/1.19.1/jersey-apache-client4-1.19.1.jar https://repo1.maven.org/maven2/javax/servlet/servlet-api/2.5/servlet-api-2.5.jar https://repo1.maven.org/maven2/org/antlr/antlr-runtime/3.4/antlr-runtime-3.4.jar https://repo1.maven.org/maven2/com/sun/jersey/jersey-client/1.19.1/jersey-client-1.19.1.jar https://repo1.maven.org/maven2/stax/stax-api/1.0.1/stax-api-1.0.1.jar'
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
-    HZ_CP_MOUNT="${HZ_HOME}/external" \
-    LANG="en_US.utf8" \
     USER_NAME="hazelcast" \
-    USER_UID=10001 \
     CLASSPATH_DEFAULT="${HZ_HOME}/*:${HZ_HOME}/lib/*" \
     JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Dhazelcast.logging.type=log4j2 -Dlog4j.configurationFile=${HZ_HOME}/log4j2.properties -XX:MaxRAMPercentage=80.0 -XX:MaxGCPauseMillis=5 --add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED" \
     HZ_LICENSE_KEY="" \
@@ -37,11 +30,10 @@ ENV HZ_HOME="${HZ_HOME}" \
 LABEL name="Hazelcast IMDG Enterprise" \
       maintainer="info@hazelcast.com" \
       vendor="Hazelcast, Inc." \
-      version="8.1" \
-      release="${HZ_VERSION}" \
-      url="http://www.hazelcast.com" \
-      summary="Hazelcast IMDG Enterprise Image, certified to RHEL 8.1" \
-      description="Starts a standalone Hazelcast server instance to form a cluster based on Kubernetes discovery inside Openshift/Kubernetes"
+      version="${HZ_VERSION}" \
+      release="1" \
+      summary="RHEL UBI based Hazelcast IMDG Enterprise Image" \
+      description="RHEL UBI based Hazelcast IMDG Enterprise Image"
 
 # Expose port
 EXPOSE 5701
@@ -50,28 +42,29 @@ COPY *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 COPY licenses /licenses
 
 # Install
-RUN mkdir -p "${HZ_HOME}/lib" "$HZ_CP_MOUNT" \
-    && echo "Disabling subscription-manager plugin to prevent redundant logs" \
-    && sed -i 's/^enabled=.*/enabled=0/g' /etc/dnf/plugins/subscription-manager.conf \
-    && dnf config-manager --disable \
-    && dnf -y update-minimal --security --sec-severity=Important --sec-severity=Critical --setopt=tsflags=nodocs \
-    && echo "Installing new packages" \
-    && dnf -y --setopt=tsflags=nodocs install java-11-openjdk &> /dev/null \
+RUN echo "Installing new packages" \
+    && microdnf -y --nodocs install shadow-utils java-11-openjdk-headless curl \
     && echo "Downloading Hazelcast and related JARs" \
+    && mkdir -p "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
-    && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${EUREKA_PLUGIN_URLS} ${LOG4J2_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
+    && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${LOG4J2_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
-    && echo "Adding non-root user" \
-    && useradd -l -u $USER_UID -r -g 0 -d $HZ_HOME -s /sbin/nologin -c "${USER_UID} application user" $USER_NAME \
-    && chown -R $USER_UID:0 $HZ_HOME $HZ_CP_MOUNT \
-    && chmod -R g=u "$HZ_HOME" \
-    && chmod -R +r $HZ_HOME \
-    && dnf -y clean all && rm -rf /var/cache/dnf
+    && echo "Removed cached package data" \
+    && microdnf -y clean all
+
+RUN echo "Setting Pardot ID to 'docker'" \
+    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties"
+
+RUN echo "Adding non-root user" \
+    && groupadd --system hazelcast \
+    && useradd -l --system -g hazelcast -d ${HZ_HOME} ${USER_NAME} \
+    && echo "Granting read permission to ${HZ_HOME}" \
+    && chmod -R +r ${HZ_HOME}
 
 WORKDIR ${HZ_HOME}
 
 ### Switch to hazelcast user
-USER ${USER_UID}
+USER ${USER_NAME}
 
 # Start Hazelcast server
 CMD ["/opt/hazelcast/start-hazelcast.sh"]
