@@ -43,7 +43,7 @@ COPY licenses /licenses
 
 # Install
 RUN echo "Installing new packages" \
-    && microdnf -y --nodocs install shadow-utils java-11-openjdk-headless curl \
+    && microdnf -y --nodocs --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless curl \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir -p "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
