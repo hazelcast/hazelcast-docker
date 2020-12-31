@@ -47,6 +47,21 @@ jobs:
         uses: anchore/scan-action@v1
         with:
           image-reference: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
+	    - name: Scan Hazelcast image by Snyk
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
+          args: --file=hazelcast-oss/Dockerfile
+
+      - name: Scan Hazelcast Enterprise image by Snyk
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
+          args: --file=hazelcast-enterprise/Dockerfile
       - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
         uses: Azure/container-scan@v0
         with:
