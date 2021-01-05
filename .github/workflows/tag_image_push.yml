@@ -44,6 +44,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: push
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
       - name: Scan Hazelcast image by Azure (Trivy + Dockle)
         if: always()
         uses: Azure/container-scan@v0
