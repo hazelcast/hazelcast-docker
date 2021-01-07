@@ -49,7 +49,7 @@ RUN echo "Installing new APK packages" \
     && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties" \
     && echo "Cleaning APK packages" \
     && apk del perl-xml-xpath grep curl \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-all-url.sh
 
 WORKDIR ${HZ_HOME}
 
