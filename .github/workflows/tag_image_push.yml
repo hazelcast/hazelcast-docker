@@ -37,11 +37,13 @@ jobs:
         run: |
           if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
             docker buildx build --push \
+              --build-arg HZ_VERSION=${{env.RELEASE_VERSION }} \
               --tag hazelcast/hazelcast:${{ env.RELEASE_VERSION }} \
               --tag hazelcast/hazelcast:latest \
               --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
           else
             docker buildx build --push \
+              --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
               --tag hazelcast/hazelcast:${{ env.RELEASE_VERSION }} \
               --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
           fi
@@ -50,11 +52,13 @@ jobs:
         run: |
           if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
             docker buildx build --push \
+              --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
               --tag hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }} \
               --tag hazelcast/hazelcast-enterprise:latest \
               --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise 
           else
             docker buildx build --push \
+              --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
               --tag hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }} \
               --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
           fi
