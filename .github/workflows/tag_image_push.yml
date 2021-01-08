@@ -48,9 +48,9 @@ jobs:
 
       - name: Build/Push EE image
         run: |
-          TAGS="--tag hazelcast/hazelcast:${{ env.RELEASE_VERSION }}"
+          TAGS="--tag hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}"
           if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
-            TAGS="${TAGS} --tag hazelcast/hazelcast:latest"
+            TAGS="${TAGS} --tag hazelcast/hazelcast-enterprise:latest"
           fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
