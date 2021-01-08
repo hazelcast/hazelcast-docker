@@ -36,7 +36,7 @@ COPY *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk11-jre bash curl perl-xml-xpath grep \
+    && apk add --no-cache openjdk11-jre bash curl perl-xml-xpath \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
@@ -48,7 +48,7 @@ RUN echo "Installing new APK packages" \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties" \
     && echo "Cleaning APK packages" \
-    && apk del perl-xml-xpath grep curl \
+    && apk del perl-xml-xpath curl \
     && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-all-url.sh
 
 WORKDIR ${HZ_HOME}
