@@ -36,10 +36,11 @@ COPY *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk11-jre bash curl \
+    && apk add --no-cache openjdk11-jre bash curl perl-xml-xpath \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
+    && HAZELCAST_ALL_URL=$(${HZ_HOME}/get-hz-all-url.sh) \
     && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${EUREKA_PLUGIN_URLS} ${LOG4J2_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
     && echo "Granting read permission to ${HZ_HOME}" \
@@ -47,7 +48,8 @@ RUN echo "Installing new APK packages" \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties" \
     && echo "Cleaning APK packages" \
-    && rm -rf /var/cache/apk/*
+    && apk del perl-xml-xpath curl \
+    && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-all-url.sh
 
 WORKDIR ${HZ_HOME}
 
