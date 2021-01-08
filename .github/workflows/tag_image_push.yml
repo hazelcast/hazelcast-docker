@@ -2,11 +2,13 @@ name: Build OS and EE image
 
 on:
   push:
+    branches:
+      - "!*"
     tags:
-      - "v*"
+      - "v4.*"
 
 jobs:
-  build:
+  push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
