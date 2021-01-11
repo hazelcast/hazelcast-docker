@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=4.1.1
@@ -8,6 +8,7 @@ ARG LOG4J2_VERSION=2.13.3
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
+ARG USER_NAME="hazelcast"
 
 # JARs to download
 ARG HAZELCAST_ALL_URL="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/hazelcast-enterprise-all-${HZ_VERSION}.jar"
@@ -17,7 +18,6 @@ ARG LOG4J2_URLS="https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-c
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
-    USER_NAME="hazelcast" \
     CLASSPATH_DEFAULT="${HZ_HOME}/*:${HZ_HOME}/lib/*" \
     JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Dhazelcast.logging.type=log4j2 -Dlog4j.configurationFile=${HZ_HOME}/log4j2.properties -XX:MaxRAMPercentage=80.0 -XX:MaxGCPauseMillis=5 --add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED" \
     HZ_LICENSE_KEY="" \
@@ -32,8 +32,8 @@ LABEL name="Hazelcast IMDG Enterprise" \
       vendor="Hazelcast, Inc." \
       version="${HZ_VERSION}" \
       release="1" \
-      summary="RHEL UBI based Hazelcast IMDG Enterprise Image" \
-      description="RHEL UBI based Hazelcast IMDG Enterprise Image"
+      summary="Hazelcast IMDG Enterprise Image" \
+      description="Hazelcast IMDG Enterprise Image"
 
 # Expose port
 EXPOSE 5701
