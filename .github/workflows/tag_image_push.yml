@@ -67,7 +67,7 @@ jobs:
 
       - name: Scan Hazelcast image by Anchore
         if: always()
-        uses: anchore/scan-action@v2.0.2
+        uses: anchore/scan-action@2.0.3
         with:
           image: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
           fail-build: true
@@ -89,7 +89,7 @@ jobs:
 
       - name: Scan Hazelcast Enterprise image by Anchore
         if: always()
-        uses: anchore/scan-action@v2.0.2
+        uses: anchore/scan-action@2.0.3
         with:
           image: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
           fail-build: true

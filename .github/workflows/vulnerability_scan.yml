@@ -26,7 +26,7 @@ jobs:
 
       - name: Scan OSS image by Anchore
         if: always()
-        uses: anchore/scan-action@v2.0.2
+        uses: anchore/scan-action@2.0.3
         with:
           image: hazelcast/oss:${{ github.sha }}
           fail-build: true
@@ -48,7 +48,7 @@ jobs:
 
       - name: Scan EE image by Anchore
         if: always()
-        uses: anchore/scan-action@v2.0.2
+        uses: anchore/scan-action@2.0.3
         with:
           image: hazelcast/ee:${{ github.sha }}
           fail-build: true
