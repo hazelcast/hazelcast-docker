@@ -48,6 +48,16 @@ jobs:
             ${TAGS} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
 
+      - name: Update Docker Hub Description of OSS image
+        if: env.PUSH_LATEST == 'yes'
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: hazelcast/hazelcast
+          short-description: Hazelcast IMDG Docker Image
+          readme-filepath: ./README.md
+
       - name: Build/Push EE image
         run: |
           TAGS="--tag hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}"
@@ -58,6 +68,16 @@ jobs:
             --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
             ${TAGS} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
+
+      - name: Update Docker Hub Description of EE image
+        if: env.PUSH_LATEST == 'yes'
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: hazelcast/hazelcast-enterprise
+          short-description: Hazelcast IMDG Enterprise Docker Image
+          readme-filepath: ./README.md
 
       - name: Scan Hazelcast image by Azure (Trivy + Dockle)
         if: always()
