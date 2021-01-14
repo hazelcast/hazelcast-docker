@@ -36,13 +36,13 @@ jobs:
         if: always()
         uses: Azure/container-scan@v0
         with:
-          image-name: hazelcast/hazelcast-enterprise:latest
+          image-name: hazelcast/hazelcast:latest-snapshot
 
       - name: Scan Hazelcast Enterprise image by Anchore
         if: always()
         uses: anchore/scan-action@2.0.3
         with:
-          image: hazelcast/hazelcast-enterprise:latest
+          image-name: hazelcast/hazelcast:latest-snapshot
           fail-build: true
 
       - name: Scan Hazelcast Enterprise image by Snyk
@@ -51,5 +51,5 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: hazelcast/hazelcast-enterprise:latest
+          image-name: hazelcast/hazelcast:latest-snapshot
           args: --file=hazelcast-enterprise/Dockerfile --policy-path=.github/containerscan
