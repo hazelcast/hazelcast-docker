@@ -49,7 +49,6 @@ RUN echo "Installing new packages" \
     && mkdir -p "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
     && HAZELCAST_ALL_URL=$(${HZ_HOME}/get-hz-ee-all-url.sh) \
-    && echo $HAZELCAST_ALL_URL \
     && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${LOG4J2_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
     && echo "Granting read permission to ${HZ_HOME}" \
