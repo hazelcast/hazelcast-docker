@@ -1,4 +1,4 @@
-name: Build latest EE image
+name: Build OSS snapshot image
 
 on:
   workflow_dispatch:
