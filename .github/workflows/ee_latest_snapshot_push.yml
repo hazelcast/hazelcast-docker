@@ -30,7 +30,15 @@ jobs:
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --tag hazelcast/hazelcast-enterprise:latest-snapshot \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise 
+            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
+
+      - name: Trigger Helm Chart Snapshot Action
+        run: |
+          curl  -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${GH_API_TOKEN} " \
+            https://api.github.com/repos/hazelcast/charts/actions/workflows/push-hazelcast-enterprise-snapshot.yml/dispatches \
+            -d '{"ref":"master"}'
 
       - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
         if: always()
