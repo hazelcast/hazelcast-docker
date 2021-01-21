@@ -45,7 +45,7 @@ wait_for_container_build_or_scan()
     TIMEOUT_IN_MINS=$1
     NOF_RETRIES=$(( $TIMEOUT_IN_MINS / 2 ))
     # Wait until the image is built and scanned
-    for i in `seq 1 10`; do
+    for i in `seq 1 ${NOF_RETRIES}`; do
         BUILD=$(get_container_build "${PROJECT_ID}" "${VERSION}" ${RHEL_API_KEY})
         SCAN_STATUS=$(echo "${BUILD}" | jq -r '.scan_status')
         DIGEST=$(echo "${BUILD}" | jq -r '.digest')
@@ -66,7 +66,7 @@ publish_the_image()
     # Publish the image
     echo "Publishing the image..."
     RESPONSE=$( \
-    #    curl --silent \
+        curl --silent \
             --request POST \
             --header "Authorization: Bearer ${RHEL_API_KEY}" \
             --header 'Cache-Control: no-cache' \
