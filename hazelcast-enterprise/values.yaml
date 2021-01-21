@@ -1,0 +1,17 @@
+image:
+  repository: HZ_EE_RHEL_REPOSITORY
+  tag: HZ_EE_VERSION
+  pullSecrets:
+    - PULL_SECRET 
+cluster:
+  memberCount: HAZELCAST_CLUSTER_SIZE
+hazelcast:
+  licenseKey: HZ_ENTERPRISE_LICENSE
+securityContext:
+  enabled: false
+
+mancenter:
+  enabled: true
+  image:
+    repository: "registry.connect.redhat.com/hazelcast/management-center-4-rhel8"
+    tag: HZ_MC_VERSION
