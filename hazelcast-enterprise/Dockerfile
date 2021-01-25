@@ -18,6 +18,7 @@ ARG LOG4J2_URLS="https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-c
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
+    HZ_VERSION="${HZ_VERSION}" \
     CLASSPATH_DEFAULT="${HZ_HOME}/*:${HZ_HOME}/lib/*" \
     JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Dhazelcast.logging.type=log4j2 -Dlog4j.configurationFile=${HZ_HOME}/log4j2.properties -XX:MaxRAMPercentage=80.0 -XX:MaxGCPauseMillis=5 --add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED" \
     HZ_LICENSE_KEY="" \
@@ -44,18 +45,20 @@ COPY licenses /licenses
 # Install
 RUN echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-8-appstream --enablerepo=ubi-8-baseos \
-        --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless curl \
+        --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir -p "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
     && HAZELCAST_ALL_URL=$(${HZ_HOME}/get-hz-ee-all-url.sh) \
     && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${LOG4J2_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
+    && echo "Setting Pardot ID to 'docker'" \
+    && echo 'hazelcastDownloadId=docker' > "hazelcast-download.properties" \
+    && zip -f hazelcast-enterprise-all-${HZ_VERSION}.jar hazelcast-download.properties \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
-    && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties" \
-    && echo "Removed cached package data" \
+    && echo "Removed cached package data and unnecessary tools" \
+    && microdnf remove zip unzip \
     && microdnf -y clean all \
     && rm ${HZ_HOME}/get-hz-ee-all-url.sh
 
