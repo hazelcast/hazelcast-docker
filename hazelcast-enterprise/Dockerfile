@@ -45,11 +45,13 @@ RUN echo "Installing new APK packages" \
     && cd "${HZ_HOME}/lib" \
     && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${EUREKA_PLUGIN_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
+    && echo "Setting Pardot ID to 'docker'" \
+    && echo 'hazelcastDownloadId=docker' > "hazelcast-download.properties" \
+    && zip -f hazelcast-enterprise-all-${HZ_VERSION}.jar hazelcast-download.properties \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
-    && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties" \
     && echo "Cleaning APK packages" \
+    && apk del zip \
     && rm -rf /var/cache/apk/*
 
 WORKDIR ${HZ_HOME}
