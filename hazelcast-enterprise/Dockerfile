@@ -56,7 +56,7 @@ RUN echo "Installing new packages" \
     && zip -f hazelcast-enterprise-all-${HZ_VERSION}.jar hazelcast-download.properties \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
-    && echo "Removed cached package data and unnecessary tools" \
+    && echo "Removing cached package data and unnecessary tools" \
     && microdnf remove zip unzip \
     && microdnf -y clean all \
     && rm ${HZ_HOME}/get-hz-ee-all-url.sh
