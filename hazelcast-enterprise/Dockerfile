@@ -44,17 +44,19 @@ COPY licenses /licenses
 # Install
 RUN echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-8-appstream --enablerepo=ubi-8-baseos \
-        --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless curl \
+        --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir -p "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
     && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${LOG4J2_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
+    && echo "Setting Pardot ID to 'docker'" \
+    && echo 'hazelcastDownloadId=docker' > "hazelcast-download.properties" \
+    && zip -f hazelcast-enterprise-all-${HZ_VERSION}.jar hazelcast-download.properties \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
-    && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties" \
-    && echo "Removed cached package data" \
+    && echo "Removing cached package data and unnecessary tools" \
+    && microdnf remove zip unzip \
     && microdnf -y clean all
 
 RUN echo "Adding non-root user" \
