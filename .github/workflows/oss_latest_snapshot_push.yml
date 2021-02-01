@@ -6,6 +6,9 @@ on:
       HZ_VERSION:
         description: 'Version of Hazelcast to build the image for'
         required: true
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: true
 
 jobs:
   push:
@@ -29,6 +32,7 @@ jobs:
         run: |
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
             --tag hazelcast/hazelcast:latest-snapshot \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
 
