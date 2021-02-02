@@ -44,11 +44,12 @@ RUN echo "Installing new APK packages" \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "hazelcast-download.properties" \
-    && zip -f hazelcast-all-*.jar hazelcast-download.properties \
+    && zip -u hazelcast-all-*.jar hazelcast-download.properties \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Cleaning APK packages" \
-    && apk del curl zip
+    && apk del curl zip \
+    && rm -rf /var/cache/apk/*
 
 WORKDIR ${HZ_HOME}
 
