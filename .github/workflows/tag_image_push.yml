@@ -5,7 +5,7 @@ on:
     branches:
       - "!*"
     tags:
-      - "v4.1.*"
+      - "v4.*"
 
 jobs:
   push:
