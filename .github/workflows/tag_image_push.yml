@@ -20,7 +20,10 @@ jobs:
         run: echo "RELEASE_VERSION=${GITHUB_REF:11}" >> $GITHUB_ENV
 
       - name: Check if latest tag should be pushed
-        run: echo "PUSH_LATEST=$([[ $(git tag --list "v*" | sort | tail -n 1) = "${GITHUB_REF:10}" ]] && echo yes || echo no)" >> $GITHUB_ENV
+        run: |
+          FILTERED_TAGS=$(git tag --list "v*" |  grep -E -v '*BETA*' )
+          LATEST_TAG=$((IFS=$'\n' && echo "${FILTERED_TAGS[*]}") | sort | tail -n 1)
+          echo "PUSH_LATEST=$([[ "$LATEST_TAG" = "${GITHUB_REF:10}" ]] && echo yes || echo no)" >> $GITHUB_ENV
 
       - name: Print Push Latest
         run: |
