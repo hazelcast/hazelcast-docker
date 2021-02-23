@@ -12,6 +12,13 @@ on:
 
 jobs:
   push:
+    strategy:
+      matrix:
+        variant:
+          - name: ''
+            suffix: ''
+          - name: slim
+            suffix: -slim
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -32,8 +39,9 @@ jobs:
         run: |
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --build-arg HZ_VARIANT="${{ matrix.variant.name }}" \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
-            --tag hazelcast/hazelcast:latest-snapshot \
+            --tag hazelcast/hazelcast:5.0-snapshot${{ matrix.variant.suffix }} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
 
       - name: Trigger Helm Chart Snapshot Action
@@ -48,13 +56,13 @@ jobs:
         if: always()
         uses: Azure/container-scan@v0
         with:
-          image-name: hazelcast/hazelcast:latest-snapshot
+          image-name: hazelcast/hazelcast:5.0-snapshot${{ matrix.variant.suffix }}
 
       - name: Scan Hazelcast image by Anchore
         if: always()
         uses: anchore/scan-action@v2.0.4
         with:
-          image: hazelcast/hazelcast:latest-snapshot
+          image: hazelcast/hazelcast:5.0-snapshot${{ matrix.variant.suffix }}
           fail-build: true
 
       - name: Scan Hazelcast image by Snyk
@@ -63,5 +71,5 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: hazelcast/hazelcast:latest-snapshot
+          image: hazelcast/hazelcast:5.0-snapshot${{ matrix.variant.suffix }}
           args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan
