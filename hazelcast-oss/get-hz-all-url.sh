@@ -6,11 +6,15 @@
 # the latest snapshot version. Thus, the [1] in snapshotVersion[1] is arbitrary because all of elements in the list have same value. The list consists of 'jar', 'pom', 'sources' and 'javadoc'.
 if [[ "${HZ_VERSION}" == *"SNAPSHOT"* ]]
 then
-    xml=$(curl -fsSL https://oss.sonatype.org/content/repositories/snapshots/com/hazelcast/hazelcast-all/${HZ_VERSION}/maven-metadata.xml)
+    xml=$(curl -fsSL https://oss.sonatype.org/content/repositories/snapshots/com/hazelcast/hazelcast-distribution/${HZ_VERSION}/maven-metadata.xml)
     version=$(echo $xml | xpath -q -e '/metadata/versioning/snapshotVersions/snapshotVersion[1]/value/text()' )
-    url="https://oss.sonatype.org/content/repositories/snapshots/com/hazelcast/hazelcast-all/${HZ_VERSION}/hazelcast-all-${version}.jar"
+
+    # The slim is an artifact with a classifier, need to add `-` there
+    if [[ -n "${HZ_VARIANT}" ]]; then SUFFIX="-${HZ_VARIANT}"; fi
+
+    url="https://oss.sonatype.org/content/repositories/snapshots/com/hazelcast/hazelcast-distribution/${HZ_VERSION}/hazelcast-distribution-${version}${SUFFIX}.zip"
 else
-    url="https://repo1.maven.org/maven2/com/hazelcast/hazelcast-all/${HZ_VERSION}/hazelcast-all-${HZ_VERSION}.jar"
+    url="https://repo1.maven.org/maven2/com/hazelcast/hazelcast-distribution/${HZ_VERSION}/hazelcast-distribution-${HZ_VERSION}.zip"
 fi
 
 echo $url
