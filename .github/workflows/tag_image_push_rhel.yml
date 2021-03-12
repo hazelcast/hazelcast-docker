@@ -1,4 +1,4 @@
-name: hz-enterprise-operator-rhel-autorelease
+name: Build EE RHEL image
 
 on:
   push:
