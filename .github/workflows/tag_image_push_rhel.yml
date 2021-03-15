@@ -42,18 +42,19 @@ jobs:
           docker build \
                 --build-arg HZ_VERSION=${RELEASE_VERSION} \
                 --tag ${RHEL_IMAGE} hazelcast-enterprise
+                
       - name: Log in to Red Hat Scan Registry and Push the Image
         run: |
           docker login ${SCAN_REGISTRY} -u unused -p ${HZ_EE_RHEL_REPO_PASSWORD}
           docker push ${RHEL_IMAGE}
+
       - name: Wait for Scan to Complete
         run: |
           PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
           VERSION=${RELEASE_VERSION}
           source .github/scripts/publish-rhel.sh
           wait_for_container_build_or_scan $TIMEOUT_IN_MINS
-        
-          
+
       - name: Deploy Hazelcast Cluster
         run: |
           WORKDIR=$(pwd)/${NAME}
@@ -75,7 +76,6 @@ jobs:
           CLUSTER_SIZE: 3
           NAME: hazelcast-enterprise
 
-
       - name: Validate Cluster Size
         run: |
           PROJECT=hz-ee-test-${{ github.run_id }}
@@ -91,12 +91,12 @@ jobs:
           CLUSTER_SIZE: 3
           NAME: hazelcast-enterprise
 
-
       - name: Clean up After Test
         if: always()
         run: |
           PROJECT=hz-ee-test-${{ github.run_id }}
           .github/scripts/clean-up.sh $PROJECT
+
       - name: Publish the Hazelcast-Enterprise-Operator image
         run: |
           PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
