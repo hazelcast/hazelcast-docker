@@ -1,0 +1,106 @@
+name: Build EE RHEL image
+
+on:
+  push:
+    branches:
+      - "!*"
+    tags:
+      - "v4.0.*"
+
+jobs:
+  build:
+    defaults:
+      run:
+        shell: bash
+    env:
+      SCAN_REGISTRY: "scan.connect.redhat.com"
+      TIMEOUT_IN_MINS: 120
+      HZ_MC_VERSION: 4.2020.12-2
+      HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
+      OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
+      OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
+      OCP_CLUSTER_URL: ${{ secrets.OCP_CLUSTER_URL }}
+      HZ_EE_RHEL_REPO_PASSWORD: ${{ secrets.HZ_EE_RHEL_REPO_PASSWORD }}
+      HZ_EE_RHEL_REPOSITORY: ${{ secrets.HZ_EE_RHEL_REPOSITORY }}
+      RHEL_API_KEY:  ${{ secrets.RHEL_API_KEY }}
+
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set Release version and Rhel image as environment variables
+        run: |
+          RELEASE_VERSION=${GITHUB_REF:11}
+          echo "RHEL_IMAGE=${HZ_EE_RHEL_REPOSITORY}:${RELEASE_VERSION}" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
+          
+      - name: Build the Hazelcast Enterprise image
+        run: |
+          docker build \
+                --build-arg HZ_VERSION=${RELEASE_VERSION} \
+                --tag ${RHEL_IMAGE} hazelcast-enterprise
+                
+      - name: Log in to Red Hat Scan Registry and Push the Image
+        run: |
+          docker login ${SCAN_REGISTRY} -u unused -p ${HZ_EE_RHEL_REPO_PASSWORD}
+          docker push ${RHEL_IMAGE}
+
+      - name: Wait for Scan to Complete
+        run: |
+          PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
+          VERSION=${RELEASE_VERSION}
+          source .github/scripts/publish-rhel.sh
+          wait_for_container_build_or_scan $TIMEOUT_IN_MINS
+
+      - name: Deploy Hazelcast Cluster
+        run: |
+          WORKDIR=$(pwd)/${NAME}
+          PROJECT=hz-ee-test-${{ github.run_id }}
+          .github/scripts/smoke-test.sh \
+                        "$WORKDIR" \
+                        "$PROJECT"  \
+                        "$OCP_LOGIN_USERNAME"  \
+                        "$OCP_LOGIN_PASSWORD" \
+                        "$OCP_CLUSTER_URL" \
+                        "$HZ_EE_RHEL_REPO_PASSWORD" \
+                        "$HZ_EE_RHEL_REPOSITORY" \
+                        "$RELEASE_VERSION" \
+                        "$CLUSTER_SIZE" \
+                        "$HZ_ENTERPRISE_LICENSE" \
+                        "$HZ_MC_VERSION"
+      
+        env:
+          CLUSTER_SIZE: 3
+          NAME: hazelcast-enterprise
+
+      - name: Validate Cluster Size
+        run: |
+          PROJECT=hz-ee-test-${{ github.run_id }}
+          HZ_NAME=$PROJECT
+          NAME=hazelcast-enterprise
+          
+          source .github/scripts/cluster-verification.sh
+          wait_for_last_member_initialization $CLUSTER_SIZE
+          verify_cluster_size $CLUSTER_SIZE
+          oc wait --for=condition=Ready --timeout=120s pod ${HZ_NAME}-${NAME}-mancenter-0
+          verify_management_center $CLUSTER_SIZE
+        env:
+          CLUSTER_SIZE: 3
+          NAME: hazelcast-enterprise
+
+      - name: Clean up After Test
+        if: always()
+        run: |
+          PROJECT=hz-ee-test-${{ github.run_id }}
+          .github/scripts/clean-up.sh $PROJECT
+
+      - name: Publish the Hazelcast-Enterprise-Operator image
+        run: |
+          PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
+          VERSION=${RELEASE_VERSION}
+          source .github/scripts/publish-rhel.sh
+          wait_for_container_build_or_scan $TIMEOUT_IN_MINS
+          publish_the_image

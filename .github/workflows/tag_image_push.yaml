@@ -1,0 +1,127 @@
+name: Build OS and EE image
+
+on:
+  push:
+    branches:
+      - "!*"
+    tags:
+      - "v4.0.*"
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set Release Version
+        run: echo "RELEASE_VERSION=${GITHUB_REF:11}" >> $GITHUB_ENV
+
+      - name: Check if latest tag should be pushed
+        run: |
+          FILTERED_TAGS=$(git tag --list "v*" |  grep -E -v '*BETA*' )
+          LATEST_TAG=$((IFS=$'\n' && echo "${FILTERED_TAGS[*]}") | sort | tail -n 1)
+          echo "PUSH_LATEST=$([[ "$LATEST_TAG" = "${GITHUB_REF:10}" ]] && echo yes || echo no)" >> $GITHUB_ENV
+
+      - name: Print Push Latest
+        run: |
+          echo ${{ env.PUSH_LATEST }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1.0.1
+
+      - name:  Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.1.1
+        with:
+          version: v0.5.1
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build/Push OSS image
+        run: |
+          TAGS="--tag hazelcast/hazelcast:${{ env.RELEASE_VERSION }}"
+          if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
+            TAGS="${TAGS} --tag hazelcast/hazelcast:latest"
+          fi
+          docker buildx build --push \
+            --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
+            ${TAGS} \
+            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
+
+      - name: Update Docker Hub Description of OSS image
+        if: env.PUSH_LATEST == 'yes'
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: hazelcast/hazelcast
+          short-description: Hazelcast IMDG Docker Image
+          readme-filepath: ./README.md
+
+      - name: Build/Push EE image
+        run: |
+          TAGS="--tag hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}"
+          if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
+            TAGS="${TAGS} --tag hazelcast/hazelcast-enterprise:latest"
+          fi
+          docker buildx build --push \
+            --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
+            ${TAGS} \
+            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
+
+      - name: Update Docker Hub Description of EE image
+        if: env.PUSH_LATEST == 'yes'
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: hazelcast/hazelcast-enterprise
+          short-description: Hazelcast IMDG Enterprise Docker Image
+          readme-filepath: ./README.md
+
+      - name: Scan Hazelcast image by Azure (Trivy + Dockle)
+        if: always()
+        uses: Azure/container-scan@v0
+        with:
+          image-name: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
+
+      - name: Scan Hazelcast image by Anchore
+        if: always()
+        uses: anchore/scan-action@v2.0.4
+        with:
+          image: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
+          fail-build: true
+
+      - name: Scan Hazelcast image by Snyk
+        if: always()
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
+          args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan
+
+      - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
+        if: always()
+        uses: Azure/container-scan@v0
+        with:
+          image-name: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
+
+      - name: Scan Hazelcast Enterprise image by Anchore
+        if: always()
+        uses: anchore/scan-action@v2.0.4
+        with:
+          image: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
+          fail-build: true
+
+      - name: Scan Hazelcast Enterprise image by Snyk
+        if: always()
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
+          args: --file=hazelcast-enterprise/Dockerfile --policy-path=.github/containerscan
