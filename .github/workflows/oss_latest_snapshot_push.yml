@@ -28,21 +28,16 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build/Push OSS image
+      - name: Build OSS image
         run: |
-          docker buildx build --push \
+          docker build \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
-            --tag hazelcast/hazelcast:latest-snapshot \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
+            --tag hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }} hazelcast-oss
 
-      - name: Trigger Helm Chart Snapshot Action
+      - name: Push OSS image
         run: |
-          curl  -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.GH_API_TOKEN }} " \
-            https://api.github.com/repos/hazelcast/charts/actions/workflows/push-hazelcast-snapshot.yml/dispatches \
-            -d '{"ref":"master"}'
+          docker push hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}
 
       - name: Scan Hazelcast image by Azure (Trivy + Dockle)
         if: always()
