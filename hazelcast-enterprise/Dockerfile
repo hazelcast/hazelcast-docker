@@ -1,7 +1,7 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
 
 # Versions of Hazelcast and Hazelcast plugins
-ARG HZ_VERSION=4.1.1
+ARG HZ_VERSION=4.0.3
 ARG CACHE_API_VERSION=1.1.1
 ARG JMX_PROMETHEUS_AGENT_VERSION=0.14.0
 ARG LOG4J2_VERSION=2.13.3
