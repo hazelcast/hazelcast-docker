@@ -83,9 +83,13 @@ jobs:
           NAME=hazelcast-enterprise
           
           source .github/scripts/cluster-verification.sh
+
           wait_for_last_member_initialization $CLUSTER_SIZE
+
           verify_cluster_size $CLUSTER_SIZE
+
           oc wait --for=condition=Ready --timeout=120s pod ${HZ_NAME}-${NAME}-mancenter-0
+
           verify_management_center $CLUSTER_SIZE
         env:
           CLUSTER_SIZE: 3
@@ -101,6 +105,9 @@ jobs:
         run: |
           PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
           VERSION=${RELEASE_VERSION}
+
           source .github/scripts/publish-rhel.sh
+
           wait_for_container_build_or_scan $TIMEOUT_IN_MINS
+          
           publish_the_image
