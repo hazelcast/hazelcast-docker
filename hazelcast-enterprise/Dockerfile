@@ -43,7 +43,7 @@ RUN echo "Installing new APK packages" \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
-    && HAZELCAST_ALL_URL=$(${HZ_HOME}/get-hz-all-url.sh) \
+    && HAZELCAST_ALL_URL=$(${HZ_HOME}/get-hz-ee-all-url.sh) \
     && for JAR_URL in ${HAZELCAST_ALL_URL} ${CACHE_API_URL} ${PROMETHEUS_AGENT_URL} ${EUREKA_PLUGIN_URLS}; do curl -sf -O -L ${JAR_URL} || exit $?; done \
     && mv jmx_prometheus_javaagent-*.jar jmx_prometheus_javaagent.jar \
     && echo "Setting Pardot ID to 'docker'" \
