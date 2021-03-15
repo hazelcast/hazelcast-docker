@@ -30,13 +30,18 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
+          TAGS="--tag hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}"
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            TAGS="${TAGS} --tag hazelcast/hazelcast:latest-snapshot"
+          fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
-            --tag hazelcast/hazelcast:latest-snapshot \
+            $TAGS \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
 
       - name: Trigger Helm Chart Snapshot Action
+        if: github.ref == 'refs/heads/master'
         run: |
           curl  -X POST \
             -H "Accept: application/vnd.github.v3+json" \
