@@ -36,7 +36,7 @@ COPY *.sh *.yaml *.jar *.properties ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk11-jre-headless bash curl perl-xml-xpath zip \
+    && apk add --no-cache openjdk11-jre-headless bash curl libxml2-utils zip \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
@@ -49,7 +49,7 @@ RUN echo "Installing new APK packages" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Cleaning APK packages" \
-    && apk del perl-xml-xpath curl zip \
+    && apk del libxml2-utils curl zip\
     && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-all-url.sh
 
 WORKDIR ${HZ_HOME}
