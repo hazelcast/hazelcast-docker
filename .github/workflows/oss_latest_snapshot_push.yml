@@ -1,0 +1,72 @@
+name: Build OSS 4.0.z snapshot image
+
+on:
+  workflow_dispatch:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to build the image for'
+        required: true
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: true
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1.0.1
+
+      - name:  Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.1.1
+        with:
+          version: v0.5.1
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build/Push OSS image
+        run: |
+          TAGS="--tag hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}"
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            TAGS="${TAGS} --tag hazelcast/hazelcast:latest-snapshot"
+          fi
+          docker buildx build --push \
+            --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
+            $TAGS \
+            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
+
+      - name: Trigger Helm Chart Snapshot Action
+        if: github.ref == 'refs/heads/master'
+        run: |
+          curl  -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GH_API_TOKEN }} " \
+            https://api.github.com/repos/hazelcast/charts/actions/workflows/push-hazelcast-snapshot.yml/dispatches \
+            -d '{"ref":"master"}'
+
+      - name: Scan Hazelcast image by Azure (Trivy + Dockle)
+        if: always()
+        uses: Azure/container-scan@v0
+        with:
+          image-name: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}
+
+      - name: Scan Hazelcast image by Anchore
+        if: always()
+        uses: anchore/scan-action@v2.0.4
+        with:
+          image: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}
+          fail-build: true
+
+      - name: Scan Hazelcast image by Snyk
+        if: always()
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}
+          args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan
