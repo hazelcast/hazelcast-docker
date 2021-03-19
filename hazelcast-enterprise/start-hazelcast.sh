@@ -31,15 +31,18 @@ else
   export LOGGING_PATTERN="%d [%highlight{\${LOG_LEVEL_PATTERN:-%5p}}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=magenta}] [%style{%t{1.}}{cyan}] [%style{%c{1.}}{blue}]: %m%n"
 fi
 
+# for 4.0.x backward compatibility
+set +u
 if [ -n "${HZ_LICENSE_KEY}" ]; then
-  export JAVA_OPTS="${JAVA_OPTS} -Dhazelcast.enterprise.license.key=${HZ_LICENSE_KEY}"
-else
-  set +u
-  export JAVA_OPTS="${JAVA_OPTS} -Dhazelcast.enterprise.license.key=${HZ_LICENCE_KEY}"
-  set -u
+  export HZ_LICENSEKEY="${HZ_LICENSE_KEY}"
 fi
 
-export JAVA_OPTS="${JAVA_OPTS} -Dhazelcast.tls.enabled=${TLS_ENABLED:-false}"
+if [ -n "${TLS_ENABLED}" ]; then
+  export HZ_NETWORK_SSL_ENABLED=${TLS_ENABLED}
+fi
+set -u
+
+export JAVA_OPTS="${JAVA_OPTS}"
 
 echo "########################################"
 echo "# JAVA_OPTS=${JAVA_OPTS}"

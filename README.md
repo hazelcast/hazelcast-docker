@@ -18,13 +18,13 @@ This command will pull a Hazelcast Docker image and run a new Hazelcast instance
 For the simplest end-to-end scenario, you can create a Hazelcast cluster with two Docker containers and access it from the client application.
 
 ```
-$ docker run -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5701" -p 5701:5701 hazelcast/hazelcast:$HAZELCAST_VERSION
-$ docker run -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" -p 5702:5701 hazelcast/hazelcast:$HAZELCAST_VERSION
+$ docker run -e HZ_NETWORK_PUBLICADDRESS=<host_ip>:5701 -p 5701:5701 hazelcast/hazelcast:$HAZELCAST_VERSION
+$ docker run -e HZ_NETWORK_PUBLICADDRESS=<host_ip>:5702 -p 5702:5701 hazelcast/hazelcast:$HAZELCAST_VERSION
 ```
 
 Note that:
 * each container must publish the `5701` port under a different host machine port (`5701` and `5702` in the example)
-* supplying a custom `hazelcast.local.publicAddress` is critical for autodiscovery. Otherwise, Hazelcast will bind to Docker's internal ports.
+* supplying a custom `HZ_NETWORK_PUBLICADDRESS` is critical for autodiscovery. Otherwise, Hazelcast will bind to Docker's internal ports.
 * `<host_ip>` needs to be the host machine address that will be used for the Hazelcast communication
 
 After setting up the cluster, you can start the [client](https://github.com/hazelcast/hazelcast-code-samples/tree/master/clients/basic) application to check if it works correctly.
@@ -36,7 +36,7 @@ You can launch a Hazelcast Enterprise Docker Container by running the following 
 Please request trial license [here](https://hazelcast.com/hazelcast-enterprise-download/) or contact sales@hazelcast.com.
 
 ```
-$ docker run -e HZ_LICENSE_KEY=<your_license_key> hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
+$ docker run -e HZ_LICENSEKEY=<your_license_key> hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
 ```
 
 ### Hazelcast Enterprise Hello World
@@ -44,8 +44,8 @@ $ docker run -e HZ_LICENSE_KEY=<your_license_key> hazelcast/hazelcast-enterprise
 To run two Hazelcast nodes, use the following commands.
 
 ```
-$ docker run -p 5701:5701 -e HZ_LICENSE_KEY=<your_license_key> -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5701" hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
-$ docker run -p 5702:5701 -e HZ_LICENSE_KEY=<your_license_key> -e JAVA_OPTS="-Dhazelcast.local.publicAddress=<host_ip>:5702" hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
+$ docker run -p 5701:5701 -e HZ_LICENSEKEY=<your_license_key> -e HZ_NETWORK_PUBLICADDRESS=<host_ip>:5701 hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
+$ docker run -p 5702:5701 -e HZ_LICENSEKEY=<your_license_key> -e HZ_NETWORK_PUBLICADDRESS=<host_ip>:5702 hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
 ```
 
 Note that:
@@ -95,31 +95,6 @@ Note that if you need some more custom logging configuration, you can specify a 
 $ docker run -v <config-file-path>:/opt/hazelcast/log4j2.properties hazelcast/hazelcast
 ```
 
-### HZ_LICENSE_KEY (Hazelcast Enterprise Only)
-
-The license key for Hazelcast Enterprise can be defined using the `HZ_LICENSE_KEY` variable.
-
-```
-$ docker run -e HZ_LICENSE_KEY=<your_license_key> hazelcast/hazelcast-enterprise
-```
-
-### TLS_ENABLED (Hazelcast Enterprise Only)
-
-The `TLS_ENABLED` environment variable can be used to enable TLS for the communication. The key material folder should be mounted and properly referenced by using `JAVA_OPTS` variable.
-
-```bash
-# generate a sample key material to the current folder (self-signed certificate)
-keytool -validity 365 -genkeypair -alias server -keyalg EC -keystore server.keystore -storepass 123456 -keypass 123456 -dname CN=localhost
-keytool -export -alias server -keystore server.keystore -storepass 123456 -file server.crt
-keytool -import -noprompt -alias server -keystore server.truststore -storepass 123456 -file server.crt
-
-# run Hazelcast Enterprise with TLS enabled
-docker run -v `pwd`:/keystore -e HZ_LICENSE_KEY=<your_license_key> \
-    -e TLS_ENABLED=true \
-    -e "JAVA_OPTS=-Djavax.net.ssl.keyStore=/keystore/server.keystore -Djavax.net.ssl.keyStorePassword=123456 -Djavax.net.ssl.trustStore=/keystore/server.truststore -Djavax.net.ssl.trustStorePassword=123456" \
-    hazelcast/hazelcast-enterprise
-```
-
 ## Customizing Hazelcast
 
 ### Memory
@@ -131,6 +106,30 @@ $ docker run -m 512M hazelcast/hazelcast:$HAZELCAST_VERSION
 ```
 
 Note that by default Hazelcast uses up to 80% of the container memory limit, but you can configure it by adding `-XX:MaxRAMPercentage` to the `JAVA_OPTS` variable.
+
+### Configuring Hazelcast via Environment Variables
+
+With Hazelcast IMDG 4.1 release, configuration entries of your cluster can be overritten without changing the declarative configuration files (XML/YAML), see [Overriding Configuration documentation section](https://docs.hazelcast.org/docs/latest/manual/html-single/#overriding-configuration).
+
+Assume that you want to have the following configuration for your cluster, represented as YAML:
+```yaml
+hazelcast:
+  cluster-name: dev
+  network:
+    port:
+      auto-increment: true
+      port-count: 100
+      port: 5701
+```
+
+If you want to use the environment variables, the above would be represented as a set of the following environment variables:
+```bash
+$ docker run -e HZ_CLUSTERNAME=dev \
+  -e HZ_NETWORK_PORT_AUTOINCREMENT=true \
+  -e HZ_NETWORK_PORT_PORTCOUNT=100 \
+  -e HZ_NETWORK_PORT_PORT=5701 \
+  hazelcast/hazelcast
+```
 
 ### Using Custom Hazelcast Configuration File
 
@@ -151,6 +150,29 @@ $ docker run -e CLASSPATH="/opt/hazelcast/CLASSPATH_EXT/*" -v /home/ubuntu/hazel
 ```
 
 Alternatively, you can [extend Hazelcast base image](#extending-hazelcast-base-image) adding your custom JARs.
+
+
+### Using TLS (Hazelcast Enterprise Only)
+
+The `HZ_NETWORK_SSL_ENABLED` environment variable can be used to enable TLS for the communication. The key material folder should be mounted and properly referenced by using `JAVA_OPTS` variable.
+
+1. Generate a sample key material (self-signed certificate)
+```bash
+$ mkdir keystore
+$ keytool -validity 365 -genkeypair -alias server -keyalg EC -keystore ./keystore/server.keystore -storepass 123456 -keypass 123456 -dname CN=localhost
+$ keytool -export -alias server -keystore ./keystore/server.keystore -storepass 123456 -file ./keystore/server.crt
+$ keytool -import -noprompt -alias server -keystore ./keystore/server.truststore -storepass 123456 -file ./keystore/server.crt
+```
+
+2. Run Hazelcast IMDG Enterprise with TLS enabled:
+```bash
+$ docker run -e HZ_LICENSEKEY=<your_license_key> \
+    -e HZ_NETWORK_SSL_ENABLED=true \
+    -v `pwd`/keystore:/keystore \
+    -e "JAVA_OPTS=-Djavax.net.ssl.keyStore=/keystore/server.keystore -Djavax.net.ssl.keyStorePassword=123456
+    -Djavax.net.ssl.trustStore=/keystore/server.truststore -Djavax.net.ssl.trustStorePassword=123456" \
+    hazelcast/hazelcast-enterprise
+```
 
 ### Extending Hazelcast Base Image
 
