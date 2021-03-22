@@ -1,0 +1,54 @@
+name: Build EE snapshot image
+
+on:
+  workflow_dispatch:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to build the image for'
+        required: true
+      HZ_EE_REVISION:
+        description: 'Commit id of Hazelcast Enterprise snapshot jar'
+        required: true
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build EE image
+        run: |
+          docker build \
+            --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
+            --tag hazelcast/hazelcast-enterprise:${{ github.event.inputs.HZ_VERSION }} hazelcast-enterprise
+
+      - name: Push EE image
+        run: |
+          docker push hazelcast/hazelcast-enterprise:${{ github.event.inputs.HZ_VERSION }}
+
+      - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
+        if: always()
+        uses: Azure/container-scan@v0
+        with:
+          image-name: hazelcast/hazelcast-enterprise:${{ github.event.inputs.HZ_VERSION }}
+
+      - name: Scan Hazelcast Enterprise image by Anchore
+        if: always()
+        uses: anchore/scan-action@v2.0.4
+        with:
+          image: hazelcast/hazelcast-enterprise:${{ github.event.inputs.HZ_VERSION }}
+          fail-build: true
+
+      - name: Scan Hazelcast Enterprise image by Snyk
+        if: always()
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: hazelcast/hazelcast-enterprise:${{ github.event.inputs.HZ_VERSION }}
+          args: --file=hazelcast-enterprise/Dockerfile --policy-path=.github/containerscan
