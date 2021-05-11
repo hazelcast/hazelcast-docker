@@ -1,4 +1,4 @@
-name: Build EE snapshot image
+name: Build EE 4.1.z snapshot image
 
 on:
   workflow_dispatch:
