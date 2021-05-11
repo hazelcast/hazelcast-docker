@@ -11,12 +11,13 @@ ARG HZ_HOME="/opt/hazelcast"
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
     CLASSPATH_DEFAULT="${HZ_HOME}/*:${HZ_HOME}/lib/*" \
-    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -Dhazelcast.logging.type=log4j2 -Dlog4j.configurationFile=${HZ_HOME}/config/log4j2.properties -XX:MaxRAMPercentage=80.0 -XX:MaxGCPauseMillis=5 --add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED" \
+    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -XX:MaxRAMPercentage=80.0 -XX:MaxGCPauseMillis=5" \
     PROMETHEUS_PORT="" \
     PROMETHEUS_CONFIG="${HZ_HOME}/config/jmx_agent_config.yaml" \
     LOGGING_LEVEL="" \
     CLASSPATH="" \
-    JAVA_OPTS=""
+    JAVA_OPTS="" \
+    PATH=${HZ_HOME}/bin:$PATH
 
 # Expose port
 EXPOSE 5701
@@ -48,4 +49,4 @@ RUN addgroup -S hazelcast && adduser -S hazelcast -G hazelcast
 USER hazelcast
 
 # Start Hazelcast server
-CMD ["./bin/hazelcast-start"]
+CMD ["hazelcast-start"]
