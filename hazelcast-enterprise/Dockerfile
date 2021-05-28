@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
+FROM redhat/ubi8-minimal:8.4
 
 # Versions of Hazelcast
 ARG HZ_VERSION=5.0-SNAPSHOT
@@ -51,7 +51,7 @@ RUN echo "Installing new packages" \
     && echo "Removing cached package data and unnecessary tools" \
     && microdnf remove zip unzip \
     && microdnf -y clean all \
-    && rm -rf ${HZ_HOME}/get-hz-ee-dist-zip.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp
+    && rm -rf ${HZ_HOME}/get-hz-ee-dist-zip.sh ${HZ_HOME}/hazelcast-enterprise-distribution.zip ${HZ_HOME}/tmp
 
 COPY log4j2.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
