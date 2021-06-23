@@ -49,7 +49,8 @@ $ docker run -p 5702:5701 -e HZ_LICENSEKEY=<your_license_key> -e HZ_NETWORK_PUBL
 ```
 
 Note that:
-* This example assumes unencrypted communication channels for IMDG members and clients. Hazelcast allows you to encrypt socket level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](https://github.com/hazelcast/hazelcast-docker#tls_enabled-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
+* With 5.0 release, `HZ_LICENSE_KEY` enviroment variable is not usable anymore to configure Hazelcast license key. Please use `HZ_LICENSEKEY` environment variable like above commands.
+* This example assumes unencrypted communication channels for Hazelcast members and clients. Hazelcast allows you to encrypt socket level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](https://github.com/hazelcast/hazelcast-docker#tls_enabled-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
 
 ### Management Center Hello World
 
