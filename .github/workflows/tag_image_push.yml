@@ -125,6 +125,7 @@ jobs:
         with:
           image: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
           args: --file=hazelcast-enterprise/Dockerfile --policy-path=.github/containerscan
+
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
