@@ -3,6 +3,9 @@ general:
     # netty-tcnative still requires libssl 1.0
     - CVE-2019-1543
     - CVE-2020-1967
+    # ubi-minimal marked as WONTFIX
+    - CVE-2019-1010022
+    - CVE-2019-5827
   bestPracticeViolations:
     # HZ_LICENSE_KEY included as an env variable
     - CIS-DI-0010
