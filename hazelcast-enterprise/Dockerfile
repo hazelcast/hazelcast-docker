@@ -32,7 +32,7 @@ LABEL name="Hazelcast IMDG Enterprise" \
 EXPOSE 5701
 
 COPY licenses /licenses
-COPY get-hz-ee-dist-zip.sh ${HZ_HOME}/
+COPY *.jar get-hz-ee-dist-zip.sh ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new packages" \
@@ -45,7 +45,7 @@ RUN echo "Installing new packages" \
     && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/hazelcast-download.properties" \
-    && zip -u ${HZ_HOME}/lib/hazelcast-enterprise-all-${HZ_VERSION}.jar ${HZ_HOME}/hazelcast-download.properties \
+    && zip -u ${HZ_HOME}/lib/hazelcast-enterprise-${HZ_VERSION}.jar ${HZ_HOME}/hazelcast-download.properties \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Removing cached package data and unnecessary tools" \
@@ -65,4 +65,4 @@ WORKDIR ${HZ_HOME}
 USER ${USER_NAME}
 
 # Start Hazelcast server
-CMD ["hazelcast-start"]
+CMD ["hz-start"]
