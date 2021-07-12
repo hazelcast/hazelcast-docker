@@ -22,7 +22,7 @@ ENV HZ_HOME="${HZ_HOME}" \
 # Expose port
 EXPOSE 5701
 
-COPY get-hz-dist-zip.sh ${HZ_HOME}/
+COPY *.jar get-hz-dist-zip.sh ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
@@ -49,4 +49,4 @@ RUN addgroup -S hazelcast && adduser -S hazelcast -G hazelcast
 USER hazelcast
 
 # Start Hazelcast server
-CMD ["hazelcast-start"]
+CMD ["hz-start"]
