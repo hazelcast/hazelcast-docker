@@ -87,13 +87,7 @@ jobs:
         uses: Azure/container-scan@v0
         with:
           image-name: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
-
-      - name: Scan Hazelcast image by Anchore
-        if: always()
-        uses: anchore/scan-action@v2.0.4
-        with:
-          image: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
-          fail-build: true
+          severity-threshold: MEDIUM
 
       - name: Scan Hazelcast image by Snyk
         if: always()
@@ -102,20 +96,14 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           image: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
-          args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan
+          args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan --severity-threshold=medium
 
       - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
         if: always()
         uses: Azure/container-scan@v0
         with:
           image-name: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
-
-      - name: Scan Hazelcast Enterprise image by Anchore
-        if: always()
-        uses: anchore/scan-action@v2.0.4
-        with:
-          image: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
-          fail-build: true
+          severity-threshold: MEDIUM
 
       - name: Scan Hazelcast Enterprise image by Snyk
         if: always()
@@ -124,7 +112,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           image: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
-          args: --file=hazelcast-enterprise/Dockerfile --policy-path=.github/containerscan
+          args: --file=hazelcast-enterprise/Dockerfile --policy-path=.github/containerscan --severity-threshold=medium
 
       - name: Create release
         uses: ncipollo/release-action@v1
