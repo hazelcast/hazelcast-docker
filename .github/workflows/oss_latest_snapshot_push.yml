@@ -49,12 +49,12 @@ jobs:
             https://api.github.com/repos/hazelcast/charts/actions/workflows/push-hazelcast-snapshot.yml/dispatches \
             -d '{"ref":"master"}'
 
-      - name: Scan Hazelcast image by Azure (Trivy + Dockle)
-        if: always()
-        uses: Azure/container-scan@v0
+      - name: Scan OSS image by Trivy
+        uses: aquasecurity/trivy-action@master
         with:
-          image-name: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}
-          severity-threshold: MEDIUM
+          image-ref: 'hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}'
+          ignore-unfixed: true
+          severity: 'MEDIUM,HIGH,CRITICAL'
 
       - name: Scan Hazelcast image by Snyk
         if: always()
