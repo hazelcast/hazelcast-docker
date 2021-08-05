@@ -57,7 +57,7 @@ jobs:
           VERSION=${RELEASE_VERSION}
           source .github/scripts/publish-rhel.sh
 
-          wait_for_container_build_or_scan $TIMEOUT_IN_MINS
+          wait_for_container_scan "$PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
         
           
       - name: Deploy Hazelcast Cluster
@@ -115,5 +115,5 @@ jobs:
           VERSION=${RELEASE_VERSION}
           source .github/scripts/publish-rhel.sh
 
-          wait_for_container_build_or_scan $TIMEOUT_IN_MINS
-          publish_the_image
+          publish_the_image "$PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+          wait_for_container_publish "$PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
