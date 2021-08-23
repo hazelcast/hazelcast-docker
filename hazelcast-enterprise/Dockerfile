@@ -18,6 +18,7 @@ ENV HZ_HOME="${HZ_HOME}" \
     LOGGING_LEVEL="" \
     CLASSPATH="" \
     JAVA_OPTS="" \
+    HAZELCAST_CONFIG=config/hazelcast-docker.xml \
     PATH=${HZ_HOME}/bin:$PATH
 
 LABEL name="Hazelcast IMDG Enterprise" \
