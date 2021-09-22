@@ -1,4 +1,4 @@
-name: Build OSS snapshot image
+name: Build OSS 4.2.z snapshot image
 
 on:
   workflow_dispatch:
