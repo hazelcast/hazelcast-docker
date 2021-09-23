@@ -36,7 +36,7 @@ jobs:
         working-directory: management-center-openshift
         run: |
           FILTERED_TAGS=$(git tag --list "v*" |  grep -E -v '.*(BETA|-).*' )
-          LATEST_TAG=$((IFS=$'\n' && echo "${FILTERED_TAGS[*]}") | sort | tail -n 1)
+          LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
           echo $LATEST_TAG
           echo "HZ_MC_VERSION=${LATEST_TAG:11}" >> $GITHUB_ENV
 
