@@ -45,11 +45,12 @@ jobs:
             echo "Major version cannot be ${MAJOR_VERSION}."
             exit 1
           fi
+          echo "HZ_EE_MAJOR_VERSION=${MAJOR_VERSION}" >> $GITHUB_ENV
 
       - name: Set Management Center Version to be used in the tests
         working-directory: management-center-openshift
         run: |
-          FILTERED_TAGS=$(git tag --list "v*" |  grep -E -v '.*(BETA|-).*' )
+          FILTERED_TAGS=$(git tag --list "${HZ_EE_MAJOR_VERSION}*" |  grep -E -v '.*(BETA|-).*' )
           LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
           echo $LATEST_TAG
           echo "HZ_MC_VERSION=${LATEST_TAG:11}" >> $GITHUB_ENV
