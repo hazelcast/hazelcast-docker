@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/hazelcast-oss"
+    target-branch: "master"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "docker"
+    directory: "/hazelcast-enterprise"
+    target-branch: "master"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "master"
+    schedule:
+      interval: "daily"

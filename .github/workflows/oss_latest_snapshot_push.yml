@@ -30,7 +30,7 @@ jobs:
         uses: docker/setup-qemu-action@v1.1.0
 
       - name:  Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1.3.0
+        uses: docker/setup-buildx-action@v1.6.0
         with:
           version: v0.5.1
 
@@ -39,10 +39,38 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
+          TAGS="--tag ${DOCKER_ORG}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            TAGS="${TAGS} --tag ${DOCKER_ORG}/hazelcast:latest-snapshot${{ matrix.suffix }}"
+          fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
-            --tag ${DOCKER_ORG}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }} \
-            --tag ${DOCKER_ORG}/hazelcast:latest-snapshot${{ matrix.suffix }} \
+            $TAGS \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
+
+      - name: Trigger Helm Chart Snapshot Action
+        if: github.ref == 'refs/heads/master'
+        run: |
+          curl  -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GH_API_TOKEN }} " \
+            https://api.github.com/repos/hazelcast/charts/actions/workflows/push-hazelcast-snapshot.yml/dispatches \
+            -d '{"ref":"master"}'
+
+      - name: Scan Hazelcast image by Azure (Trivy + Dockle)
+        if: always()
+        uses: Azure/container-scan@v0
+        with:
+          image-name: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}
+          severity-threshold: MEDIUM
+
+      - name: Scan Hazelcast image by Snyk
+        if: always()
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}
+          args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan --severity-threshold=medium
