@@ -38,7 +38,7 @@ RUN echo "Installing new APK packages" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Cleaning APK packages and redundant files/folders" \
-    && apk del libxml2-utils curl zip unzip \
+    && apk del libxml2-utils zip unzip \
     && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-dist-zip.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp
 
 COPY log4j2.properties jmx_agent_config.yaml ${HZ_HOME}/config/
