@@ -27,7 +27,7 @@ COPY *.jar get-hz-dist-zip.sh ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk11-jre-headless bash curl libxml2-utils zip unzip \
+    && apk add --no-cache openjdk11-jre-headless bash curl libxml2-utils zip unzip curl \
     && echo "Downloading Hazelcast${HZ_VARIANT} distribution zip..." \
     && HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-dist-zip.sh) \
     && curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-distribution.zip \
