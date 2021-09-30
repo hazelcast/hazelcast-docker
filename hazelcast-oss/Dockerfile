@@ -27,7 +27,7 @@ COPY *.jar get-hz-dist-zip.sh ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new APK packages" \
-    && apk add --no-cache openjdk11-jre-headless bash curl libxml2-utils zip unzip curl \
+    && apk add --no-cache openjdk11-jre-headless bash curl libxml2-utils zip unzip \
     && echo "Downloading Hazelcast${HZ_VARIANT} distribution zip..." \
     && HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-dist-zip.sh) \
     && curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-distribution.zip \
@@ -38,7 +38,7 @@ RUN echo "Installing new APK packages" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Cleaning APK packages and redundant files/folders" \
-    && apk del libxml2-utils curl zip unzip \
+    && apk del libxml2-utils zip unzip \
     && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-dist-zip.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp
 
 COPY log4j2.properties jmx_agent_config.yaml ${HZ_HOME}/config/
