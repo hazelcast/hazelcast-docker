@@ -19,8 +19,8 @@ jobs:
       OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
       OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
       OCP_CLUSTER_URL: ${{ secrets.OCP_CLUSTER_URL }}
-      HZ_EE_RHEL_REPO_PASSWORD: ${{ secrets.HZ_EE_RHEL_REPO_PASSWORD }}
-      HZ_EE_RHEL_REPOSITORY: ${{ secrets.HZ_EE_RHEL_REPOSITORY }}
+      HZ_EE_RHEL_REPO_PASSWORD: ${{ secrets.HZ_EE_4_RHEL_REPO_PASSWORD }}
+      HZ_EE_RHEL_REPOSITORY: ${{ secrets.HZ_EE_4_RHEL_REPOSITORY }}
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
 
     runs-on: ubuntu-latest
@@ -35,8 +35,8 @@ jobs:
       - name: Set Management Center Version to be used in the tests
         working-directory: management-center-openshift
         run: |
-          FILTERED_TAGS=$(git tag --list "v*" |  grep -E -v '.*(BETA|-).*' )
-          LATEST_TAG=$((IFS=$'\n' && echo "${FILTERED_TAGS[*]}") | sort | tail -n 1)
+          FILTERED_TAGS=$(git tag --list "v4*" |  grep -E -v '.*(BETA|-).*' )
+          LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
           echo $LATEST_TAG
           echo "HZ_MC_VERSION=${LATEST_TAG:11}" >> $GITHUB_ENV
 
