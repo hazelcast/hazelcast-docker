@@ -20,12 +20,27 @@ jobs:
       OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
       OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
       OCP_CLUSTER_URL: ${{ secrets.OCP_CLUSTER_URL }}
-      HZ_EE_RHEL_REPO_PASSWORD: ${{ secrets.HZ_EE_RHEL_REPO_PASSWORD }}
-      HZ_EE_RHEL_REPOSITORY: ${{ secrets.HZ_EE_RHEL_REPOSITORY }}
+      HZ_EE_RHEL_REPO_PASSWORD: ${{ secrets.HZ_4_EE_RHEL_REPO_PASSWORD }}
+      HZ_EE_RHEL_REPOSITORY: ${{ secrets.HZ_4_EE_RHEL_REPOSITORY }}
       RHEL_API_KEY:  ${{ secrets.RHEL_API_KEY }}
 
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout to Management Center Openshift
+        uses: actions/checkout@v2
+        with:
+          repository: hazelcast/management-center-openshift
+          path: management-center-openshift
+          fetch-depth: 0
+
+      - name: Set Management Center Version to be used in the tests
+        working-directory: management-center-openshift
+        run: |
+          FILTERED_TAGS=$(git tag --list "v4*" |  grep -E -v '.*(BETA|-).*' )
+          LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
+          echo $LATEST_TAG
+          echo "HZ_MC_VERSION=${LATEST_TAG:11}" >> $GITHUB_ENV
+
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
