@@ -13,6 +13,15 @@ on:
 jobs:
   push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+         - variant: slim
+           suffix: '-slim'
+         - variant: ''
+           suffix: ''
+    env:
+      DOCKER_ORG: hazelcast
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -30,12 +39,13 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
-          TAGS="--tag hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}"
+          TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            TAGS="${TAGS} --tag hazelcast/hazelcast:latest-snapshot"
+            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}"
           fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
             $TAGS \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
@@ -53,7 +63,7 @@ jobs:
         if: always()
         uses: Azure/container-scan@v0
         with:
-          image-name: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}
+          image-name: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}
           severity-threshold: MEDIUM
 
       - name: Scan Hazelcast image by Snyk
@@ -62,5 +72,5 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}
+          image: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}
           args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan --severity-threshold=medium
