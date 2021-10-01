@@ -51,9 +51,9 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
-          TAGS="--tag ${DOCKER_ORG}/hazelcast:${{ env.RELEASE_VERSION }}${{ matrix.suffix }}"
+          TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast:${{ env.RELEASE_VERSION }}${{ matrix.suffix }}"
           if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
-            TAGS="${TAGS} --tag ${DOCKER_ORG}/hazelcast:latest${{ matrix.suffix }}"
+            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest${{ matrix.suffix }}"
           fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
@@ -67,15 +67,15 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: ${DOCKER_ORG}/hazelcast
+          repository: ${{ env.DOCKER_ORG }}/hazelcast
           short-description: Hazelcast Docker Image
           readme-filepath: ./README.md
 
       - name: Build/Push EE image
         run: |
-          TAGS="--tag ${DOCKER_ORG}/hazelcast-enterprise:${{ env.RELEASE_VERSION }}${{ matrix.suffix }}"
+          TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${{ env.RELEASE_VERSION }}${{ matrix.suffix }}"
           if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
-            TAGS="${TAGS} --tag ${DOCKER_ORG}/hazelcast-enterprise:latest${{ matrix.suffix }}"
+            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:latest${{ matrix.suffix }}"
           fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
@@ -89,7 +89,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: ${DOCKER_ORG}/hazelcast-enterprise
+          repository: ${{ env.DOCKER_ORG }}/hazelcast-enterprise
           short-description: Hazelcast Enterprise Docker Image
           readme-filepath: ./README.md
 
