@@ -20,8 +20,8 @@ jobs:
       OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
       OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
       OCP_CLUSTER_URL: ${{ secrets.OCP_CLUSTER_URL }}
-      HZ_EE_RHEL_REPO_PASSWORD: ${{ secrets.HZ_EE_4_RHEL_REPO_PASSWORD }}
-      HZ_EE_RHEL_REPOSITORY: ${{ secrets.HZ_EE_4_RHEL_REPOSITORY }}
+      HZ_EE_RHEL_REPO_PASSWORD: ${{ secrets.HZ_4_EE_RHEL_REPO_PASSWORD }}
+      HZ_EE_RHEL_REPOSITORY: ${{ secrets.HZ_4_EE_RHEL_REPOSITORY }}
       RHEL_API_KEY:  ${{ secrets.RHEL_API_KEY }}
 
     runs-on: ubuntu-latest
