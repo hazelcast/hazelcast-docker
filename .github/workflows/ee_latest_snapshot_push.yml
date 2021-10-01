@@ -13,12 +13,21 @@ on:
 jobs:
   push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+         - variant: slim
+           suffix: '-slim'
+         - variant: ''
+           suffix: ''
+    env:
+      DOCKER_ORG: hazelcast
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1.1.0
+        uses: docker/setup-qemu-action@v1.2.0
 
       - name:  Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
@@ -30,12 +39,13 @@ jobs:
 
       - name: Build/Push EE image
         run: |
-          TAGS="--tag hazelcast/hazelcast-enterprise:${{ github.event.inputs.HZ_VERSION }}"
+          TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            TAGS="${TAGS} --tag hazelcast/hazelcast-enterprise:latest-snapshot"
+            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:latest-snapshot${{ matrix.suffix }}"
           fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
             $TAGS \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise

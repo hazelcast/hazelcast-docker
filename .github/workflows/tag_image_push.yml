@@ -5,11 +5,20 @@ on:
     branches:
       - "!*"
     tags:
-      - "v4.*"
+      - "v5.*"
 
 jobs:
   push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+         - variant: slim
+           suffix: '-slim'
+         - variant: ''
+           suffix: ''
+    env:
+      DOCKER_ORG: hazelcast
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -42,12 +51,13 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
-          TAGS="--tag hazelcast/hazelcast:${{ env.RELEASE_VERSION }}"
+          TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast:${{ env.RELEASE_VERSION }}${{ matrix.suffix }}"
           if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
-            TAGS="${TAGS} --tag hazelcast/hazelcast:latest"
+            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest${{ matrix.suffix }}"
           fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
+            --build-arg HZ_VARIANT=${{ matrix.variant }} \
             ${TAGS} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
 
@@ -57,18 +67,19 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: hazelcast/hazelcast
-          short-description: Hazelcast IMDG Docker Image
+          repository: ${{ env.DOCKER_ORG }}/hazelcast
+          short-description: Hazelcast Docker Image
           readme-filepath: ./README.md
 
       - name: Build/Push EE image
         run: |
-          TAGS="--tag hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}"
+          TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${{ env.RELEASE_VERSION }}${{ matrix.suffix }}"
           if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
-            TAGS="${TAGS} --tag hazelcast/hazelcast-enterprise:latest"
+            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:latest${{ matrix.suffix }}"
           fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.RELEASE_VERSION }} \
+            --build-arg HZ_VARIANT=${{ matrix.variant }} \
             ${TAGS} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
 
@@ -78,8 +89,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: hazelcast/hazelcast-enterprise
-          short-description: Hazelcast IMDG Enterprise Docker Image
+          repository: ${{ env.DOCKER_ORG }}/hazelcast-enterprise
+          short-description: Hazelcast Enterprise Docker Image
           readme-filepath: ./README.md
 
       - name: Scan Hazelcast image by Azure (Trivy + Dockle)
