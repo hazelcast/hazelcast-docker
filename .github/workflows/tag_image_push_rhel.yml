@@ -34,7 +34,7 @@ jobs:
       - name: Set Hazelcast Enterprise RHEL repository and password
         working-directory: management-center-openshift
         run: |
-          MAJOR_VERSION=$(echo "${GITHUB_REF:11}" | cut -d'.' -f 1 )
+          MAJOR_VERSION=$(echo "${GITHUB_REF:10}" | cut -d'.' -f 1 )
           if [[ "$MAJOR_VERSION" == "v4" ]]; then
             echo "HZ_EE_RHEL_REPOSITORY=${{ secrets.HZ_4_EE_RHEL_REPOSITORY }}" >> $GITHUB_ENV
             echo "HZ_EE_RHEL_REPO_PASSWORD=${{ secrets.HZ_4_EE_RHEL_REPO_PASSWORD }}" >> $GITHUB_ENV
