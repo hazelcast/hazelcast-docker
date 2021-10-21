@@ -13,5 +13,5 @@ securityContext:
 mancenter:
   enabled: true
   image:
-    repository: "registry.connect.redhat.com/hazelcast/management-center-4-rhel8"
+    repository: "registry.connect.redhat.com/hazelcast/management-center-MC_MAJOR_VERSION-rhel8"
     tag: HZ_MC_VERSION
