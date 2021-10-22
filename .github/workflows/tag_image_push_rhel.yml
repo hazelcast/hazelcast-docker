@@ -72,7 +72,7 @@ jobs:
 
       - name: Deploy Hazelcast Cluster
         run: |
-          WORKDIR=$(pwd)/${NAME}
+          WORKDIR=$(pwd)/.github/scripts
           PROJECT=hz-ee-test-${{ github.run_id }}
           .github/scripts/smoke-test.sh \
                         "$WORKDIR" \
@@ -89,7 +89,6 @@ jobs:
 
         env:
           CLUSTER_SIZE: 3
-          NAME: hazelcast-enterprise
 
       - name: Validate Cluster Size
         run: |
@@ -108,7 +107,6 @@ jobs:
           verify_management_center $CLUSTER_SIZE
         env:
           CLUSTER_SIZE: 3
-          NAME: hazelcast-enterprise
 
       - name: Clean up After Test
         if: always()
