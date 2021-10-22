@@ -5,7 +5,6 @@ on:
     branches:
       - "!*"
     tags:
-      - "v4.*"
       - "v5.*"
 
 jobs:
@@ -35,16 +34,8 @@ jobs:
         working-directory: management-center-openshift
         run: |
           MAJOR_VERSION=$(echo "${GITHUB_REF:10}" | cut -d'.' -f 1 )
-          if [[ "$MAJOR_VERSION" == "v4" ]]; then
-            echo "HZ_EE_RHEL_REPOSITORY=${{ secrets.HZ_4_EE_RHEL_REPOSITORY }}" >> $GITHUB_ENV
-            echo "HZ_EE_RHEL_REPO_PASSWORD=${{ secrets.HZ_4_EE_RHEL_REPO_PASSWORD }}" >> $GITHUB_ENV
-          elif [[ "$MAJOR_VERSION" == "v5" ]]; then
-            echo "HZ_EE_RHEL_REPOSITORY=${{ secrets.HZ_5_EE_RHEL_REPOSITORY }}" >> $GITHUB_ENV
-            echo "HZ_EE_RHEL_REPO_PASSWORD=${{ secrets.HZ_5_EE_RHEL_REPO_PASSWORD }}" >> $GITHUB_ENV
-          else
-            echo "Major version cannot be ${MAJOR_VERSION}."
-            exit 1
-          fi
+          echo "HZ_EE_RHEL_REPOSITORY=${{ secrets.HZ_5_EE_RHEL_REPOSITORY }}" >> $GITHUB_ENV
+          echo "HZ_EE_RHEL_REPO_PASSWORD=${{ secrets.HZ_5_EE_RHEL_REPO_PASSWORD }}" >> $GITHUB_ENV
           echo "HZ_EE_MAJOR_VERSION=${MAJOR_VERSION}" >> $GITHUB_ENV
 
       - name: Set Management Center Version to be used in the tests
