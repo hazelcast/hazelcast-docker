@@ -58,19 +58,3 @@ jobs:
             -H "Authorization: token ${{ secrets.GH_API_TOKEN }} " \
             https://api.github.com/repos/hazelcast/charts/actions/workflows/push-hazelcast-snapshot.yml/dispatches \
             -d '{"ref":"master"}'
-
-      - name: Scan Hazelcast image by Azure (Trivy + Dockle)
-        if: always()
-        uses: Azure/container-scan@v0
-        with:
-          image-name: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}
-          severity-threshold: MEDIUM
-
-      - name: Scan Hazelcast image by Snyk
-        if: always()
-        uses: snyk/actions/docker@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          image: hazelcast/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}
-          args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan --severity-threshold=medium
