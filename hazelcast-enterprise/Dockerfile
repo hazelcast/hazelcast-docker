@@ -33,15 +33,17 @@ LABEL name="Hazelcast IMDG Enterprise" \
 EXPOSE 5701
 
 COPY licenses /licenses
-COPY *.jar get-hz-ee-dist-zip.sh ${HZ_HOME}/
+COPY *.jar get-hz-ee-dist-zip.sh hazelcast-enterprise-distribution.zip ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-8-appstream --enablerepo=ubi-8-baseos \
         --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip tar \
     && echo "Downloading Hazelcast${HZ_VARIANT} distribution zip..." \
-    && HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-ee-dist-zip.sh) \
-    && curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip \
+    && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
+        HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-ee-dist-zip.sh); \
+        curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
+       fi \
     && unzip -qq ${HZ_HOME}/hazelcast-enterprise-distribution.zip 'hazelcast-*/**' -d ${HZ_HOME}/tmp/ \
     && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
     && echo "Setting Pardot ID to 'docker'" \
