@@ -68,5 +68,4 @@ jobs:
           docker buildx build --push \
             --build-arg HZ_VERSION=${RELEASE_VERSION} \
             --tag ${NLC_IMAGE_NAME}:${RELEASE_VERSION}\
-            --platform=linux/amd64 \ 
-            --file hazelcast-enterprise/Dockerfile.nlc hazelcast-enterprise
+            --platform=linux/amd64 hazelcast-enterprise
