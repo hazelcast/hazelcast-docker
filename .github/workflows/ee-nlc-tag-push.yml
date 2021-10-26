@@ -42,7 +42,6 @@ jobs:
             ZIP_NAME=${HZ_VERSION}-nlc.zip
           S3_NLC_ZIP_URL=${S3_NLC_URL}/${ZIP_NAME}
 
-          echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
           echo "S3_NLC_ZIP_URL=${S3_NLC_ZIP_URL}" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
@@ -54,9 +53,7 @@ jobs:
           aws-region: 'us-east-1'
 
       - name: Download NLC zip from S3
-        run: |
-          mkdir ./hazelcast-enterprise/tmp
-          aws s3 cp ${S3_NLC_ZIP_URL} ./hazelcast-enterprise/hazelcast-enterprise-distribution.zip
+        run: aws s3 cp ${S3_NLC_ZIP_URL} ./hazelcast-enterprise/hazelcast-enterprise-distribution.zip
           
       - name: Login to Docker Hub
         run: echo "${NLC_REPO_TOKEN}" | docker login -u ${NLC_REPO_USERNAME} ${NLC_REPOSITORY} --password-stdin
