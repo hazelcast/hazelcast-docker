@@ -1,0 +1,55 @@
+name: Build EE NLC snapshot image
+
+on:
+  workflow_dispatch:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to build the image for'
+        required: true
+      HZ_EE_REVISION:
+        description: 'Commit id of Hazelcast Enterprise snapshot jar'
+        required: true
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    env:
+      HZ_VERSION : ${{ github.event.inputs.HZ_VERSION }}
+      NLC_REPOSITORY: ${{ secrets.NLC_REPOSITORY }}
+      NLC_REPO_USERNAME: ${{ secrets.NLC_REPO_USERNAME }}
+      NLC_REPO_TOKEN: ${{ secrets.NLC_REPO_TOKEN }}
+      NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
+      S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Download NLC image from S3
+        run: |
+          ZIP_NAME=hazelcast-enterprise-${HZ_VERSION}-nlc.zip
+          S3_NLC_ZIP_URL=${S3_NLC_URL}/snapshot/${ZIP_NAME}
+          
+          mkdir ./hazelcast-enterprise/tmp 
+          aws s3 cp ${S3_NLC_ZIP_URL} ./${ZIP_NAME}
+          unzip -qq ./${ZIP_NAME} 'hazelcast-*/**' -d ./hazelcast-enterprise/tmp/ 
+          mv ./hazelcast-enterprise/tmp/*/lib/hazelcast-enterprise-all-*.jar ./hazelcast-enterprise/
+
+      - name: Login to Docker Hub
+        run: echo "${NLC_REPO_TOKEN}" | docker login -u ${NLC_REPO_USERNAME} ${NLC_REPOSITORY} --password-stdin
+
+      - name: Build EE image
+        run: |
+          docker build \
+            --build-arg HZ_VERSION=${HZ_VERSION} \
+            --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
+            --tag ${NLC_IMAGE_NAME}:${HZ_VERSION} hazelcast-enterprise
+
+      - name: Push EE image
+        run: docker push ${NLC_IMAGE_NAME}:${HZ_VERSION} 
