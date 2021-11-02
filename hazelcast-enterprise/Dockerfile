@@ -33,7 +33,7 @@ LABEL name="Hazelcast IMDG Enterprise" \
 EXPOSE 5701
 
 COPY licenses /licenses
-COPY *.jar get-hz-ee-dist-zip.sh hazelcast-enterprise-distribution.zip ${HZ_HOME}/
+COPY *.jar get-hz-ee-dist-zip.sh hazelcast-*.zip ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new packages" \
