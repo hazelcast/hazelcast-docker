@@ -52,4 +52,4 @@ jobs:
             --tag ${NLC_IMAGE_NAME}:${RELEASE_VERSION} hazelcast-enterprise
 
       - name: Push EE image
-        run: docker push {NLC_IMAGE_NAME}:${RELEASE_VERSION} 
+        run: docker push ${NLC_IMAGE_NAME}:${RELEASE_VERSION} 
