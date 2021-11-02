@@ -5,7 +5,6 @@ on:
     branches:
       - "!*"
     tags:
-      - "v4.*"
       - "v5.*"
 
 
@@ -27,12 +26,7 @@ jobs:
 
       - name: Set NLC zip URL
         run: |
-          HZ_MAJOR_VERSION=${RELEASE_VERSION:0:1}
-          if [[ $HZ_MAJOR_VERSION = "5" ]]; then
-            ZIP_NAME=hazelcast-enterprise-${HZ_VERSION}-nlc.zip
-          else
-            ZIP_NAME=${HZ_VERSION}-nlc.zip
-          S3_NLC_ZIP_URL=${S3_NLC_URL}/${ZIP_NAME}
+          S3_NLC_ZIP_URL=${S3_NLC_URL}/hazelcast-enterprise-${RELEASE_VERSION}-nlc.zip
 
           echo "S3_NLC_ZIP_URL=${S3_NLC_ZIP_URL}" >> $GITHUB_ENV
 
