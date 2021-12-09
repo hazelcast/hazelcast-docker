@@ -92,7 +92,7 @@ Available logging levels are (from highest to lowest): `OFF`, `FATAL`, `ERROR`, 
 Note that if you need some more custom logging configuration, you can specify a configuration file.
 
 ```
-$ docker run -v <config-file-path>:/opt/hazelcast/log4j2.properties hazelcast/hazelcast
+$ docker run -v <config-file-path>:/opt/hazelcast/config/log4j2.properties hazelcast/hazelcast
 ```
 
 ## Customizing Hazelcast
