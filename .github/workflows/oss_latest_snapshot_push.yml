@@ -49,12 +49,3 @@ jobs:
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
             $TAGS \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
-
-      - name: Trigger Helm Chart Snapshot Action
-        if: github.ref == 'refs/heads/master'
-        run: |
-          curl  -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.GH_API_TOKEN }} " \
-            https://api.github.com/repos/hazelcast/charts/actions/workflows/push-hazelcast-snapshot.yml/dispatches \
-            -d '{"ref":"master"}'
