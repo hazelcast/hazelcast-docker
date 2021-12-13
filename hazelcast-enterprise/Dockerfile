@@ -4,7 +4,7 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 ARG HZ_VERSION=4.1.6
 ARG CACHE_API_VERSION=1.1.1
 ARG JMX_PROMETHEUS_AGENT_VERSION=0.14.0
-ARG LOG4J2_VERSION=2.13.3
+ARG LOG4J2_VERSION=2.15.0
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
