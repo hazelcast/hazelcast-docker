@@ -93,38 +93,6 @@ jobs:
           short-description: Hazelcast Enterprise Docker Image
           readme-filepath: ./README.md
 
-      - name: Scan Hazelcast image by Azure (Trivy + Dockle)
-        if: always()
-        uses: Azure/container-scan@v0
-        with:
-          image-name: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
-          severity-threshold: MEDIUM
-
-      - name: Scan Hazelcast image by Snyk
-        if: always()
-        uses: snyk/actions/docker@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          image: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
-          args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan --severity-threshold=medium
-
-      - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
-        if: always()
-        uses: Azure/container-scan@v0
-        with:
-          image-name: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
-          severity-threshold: MEDIUM
-
-      - name: Scan Hazelcast Enterprise image by Snyk
-        if: always()
-        uses: snyk/actions/docker@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          image: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
-          args: --file=hazelcast-enterprise/Dockerfile --policy-path=.github/containerscan --severity-threshold=medium
-
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
