@@ -43,8 +43,8 @@ jobs:
         run: |
           mkdir ./hazelcast-enterprise/tmp 
           aws s3 cp ${S3_NLC_ZIP_URL} ./${ZIP_NAME}
-          unzip -qq ./${ZIP_NAME} 'hazelcast-*/**' -d ./hazelcast-enterprise/tmp/ 
-          mv ./hazelcast-enterprise/tmp/*/lib/hazelcast-enterprise-all-*.jar ./hazelcast-enterprise/
+          unzip -qq ./${ZIP_NAME} "${RELEASE_VERSION}-nlc/hazelcast-enterprise-*/**" -d ./hazelcast-enterprise/tmp/ 
+          mv ./hazelcast-enterprise/tmp/${RELEASE_VERSION}-nlc/hazelcast-enterprise-*/hazelcast-enterprise-all-*.jar ./hazelcast-enterprise/
           
       - name: Login to Docker Hub
         run: echo "${NLC_REPO_TOKEN}" | docker login -u ${NLC_REPO_USERNAME} ${NLC_REPOSITORY} --password-stdin
