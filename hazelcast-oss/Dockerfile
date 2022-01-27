@@ -49,4 +49,4 @@ RUN addgroup -S hazelcast && adduser -S hazelcast -G hazelcast
 USER hazelcast
 
 # Start Hazelcast server
-CMD ["hz-start"]
+CMD ["hz", "start"]
