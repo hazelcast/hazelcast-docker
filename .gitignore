@@ -50,3 +50,6 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 
+hazelcast/hazelcast-distribution.zip
+hazelcast-enterprise/hazelcast-enterprise-distribution.zip
+
