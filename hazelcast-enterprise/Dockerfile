@@ -55,7 +55,7 @@ RUN echo "Installing new packages" \
     && microdnf -y clean all \
     && rm -rf ${HZ_HOME}/get-hz-ee-dist-zip.sh ${HZ_HOME}/hazelcast-enterprise-distribution.zip ${HZ_HOME}/tmp
 
-COPY log4j2.properties jmx_agent_config.yaml ${HZ_HOME}/config/
+COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 RUN echo "Adding non-root user" \
     && groupadd --system hazelcast \

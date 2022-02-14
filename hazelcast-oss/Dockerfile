@@ -41,7 +41,7 @@ RUN echo "Installing new APK packages" \
     && apk del libxml2-utils zip unzip \
     && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-dist-zip.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp
 
-COPY log4j2.properties jmx_agent_config.yaml ${HZ_HOME}/config/
+COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 WORKDIR ${HZ_HOME}
 
