@@ -15,7 +15,6 @@ ENV HZ_HOME="${HZ_HOME}" \
     JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -XX:MaxRAMPercentage=80.0 -XX:MaxGCPauseMillis=5" \
     PROMETHEUS_PORT="" \
     PROMETHEUS_CONFIG="${HZ_HOME}/config/jmx_agent_config.yaml" \
-    LOGGING_LEVEL="" \
     CLASSPATH="" \
     JAVA_OPTS="" \
     HAZELCAST_CONFIG=config/hazelcast-docker.xml \
