@@ -95,6 +95,22 @@ Note that if you need some more custom logging configuration, you can specify a 
 $ docker run -v <config-file-path>:/opt/hazelcast/config/log4j2.properties hazelcast/hazelcast
 ```
 
+### LOGGING_CONFIG
+
+_since version 5.1_
+
+The logging configuration can be changed using the `LOGGING_CONFIG` variable, for example you can mount your own Log4j2 configuration file and set the path using this variable.
+The default value is set to `/opt/hazelcast/config/log4j2.properties`.
+A relative or an absolute path can be provided.
+
+We also provide `log4j2-json.properties` file in the image. This is using the Log4j2 [log4j-layout-template-json](https://logging.apache.org/log4j/2.x/manual/json-template-layout.html) module. To use it you can do the following:
+
+```
+$ docker run -e LOGGING_CONFIG=log4j2-json.properties hazelcast/hazelcast
+```
+
+See the [Log4j2 manual](https://logging.apache.org/log4j/2.x/manual/) for reference.
+
 ## Customizing Hazelcast
 
 ### Memory
