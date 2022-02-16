@@ -1,4 +1,4 @@
-name: Build EE NLC snapshot image
+name: Build EE NLC tag image
 
 on:
   push:
