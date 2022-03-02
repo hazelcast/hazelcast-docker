@@ -22,7 +22,7 @@ jobs:
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
