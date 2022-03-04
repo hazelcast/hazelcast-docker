@@ -18,7 +18,7 @@ ENV HZ_HOME="${HZ_HOME}" \
     CLASSPATH="" \
     JAVA_OPTS="" \
     HAZELCAST_CONFIG=config/hazelcast-docker.xml \
-    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
     PATH=${HZ_HOME}/bin:$PATH
 
 LABEL name="Hazelcast IMDG Enterprise" \
