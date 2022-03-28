@@ -61,16 +61,6 @@ jobs:
             ${TAGS} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
 
-      - name: Update Docker Hub Description of OSS image
-        if: env.PUSH_LATEST == 'yes'
-        uses: peter-evans/dockerhub-description@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: ${{ env.DOCKER_ORG }}/hazelcast
-          short-description: Hazelcast Docker Image
-          readme-filepath: ./README.md
-
       - name: Build/Push EE image
         run: |
           TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${{ env.RELEASE_VERSION }}${{ matrix.suffix }}"
@@ -83,13 +73,27 @@ jobs:
             ${TAGS} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
 
+  post-push:
+    runs-on: ubuntu-latest
+    needs: push
+    steps:
+      - name: Update Docker Hub Description of OSS image
+        if: env.PUSH_LATEST == 'yes'
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: hazelcast/hazelcast
+          short-description: Hazelcast Docker Image
+          readme-filepath: ./README.md
+
       - name: Update Docker Hub Description of EE image
         if: env.PUSH_LATEST == 'yes'
         uses: peter-evans/dockerhub-description@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: ${{ env.DOCKER_ORG }}/hazelcast-enterprise
+          repository: hazelcast/hazelcast-enterprise
           short-description: Hazelcast Enterprise Docker Image
           readme-filepath: ./README.md
 
