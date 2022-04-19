@@ -39,11 +39,13 @@ COPY *.jar get-hz-ee-dist-zip.sh hazelcast-*.zip ${HZ_HOME}/
 RUN echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-8-appstream --enablerepo=ubi-8-baseos \
         --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip tar \
-    && echo "Downloading Hazelcast${HZ_VARIANT} distribution zip..." \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
         HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-ee-dist-zip.sh); \
+        echo "Downloading Hazelcast${HZ_VARIANT} distribution zip from ${HAZELCAST_ZIP_URL}..."; \
         curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
-       fi \
+    else \
+           echo "Using local hazelcast-enterprise-distribution.zip"; \
+    fi \
     && unzip -qq ${HZ_HOME}/hazelcast-enterprise-distribution.zip 'hazelcast-*/**' -d ${HZ_HOME}/tmp/ \
     && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
     && echo "Setting Pardot ID to 'docker'" \
