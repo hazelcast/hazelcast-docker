@@ -6,9 +6,9 @@
 # the latest snapshot version. Thus, the [1] in snapshotVersion[1] is arbitrary because all of elements in the list have same value. The list consists of 'jar', 'pom', 'sources' and 'javadoc'.
 if [[ "${HZ_VERSION}" == *"SNAPSHOT"* ]]
 then
-    curl -O -fsSL "https://repository.hazelcast.com/artifactory/snapshot/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/maven-metadata.xml"
+    curl -O -fsSL "https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/maven-metadata.xml"
     version=$(xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[1]/value/text()" maven-metadata.xml)
-    url="https://repository.hazelcast.com/artifactory/snapshot/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/hazelcast-enterprise-all-${version}.jar"
+    url="https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/hazelcast-enterprise-all-${version}.jar"
     rm maven-metadata.xml
 else
     url="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-all/${HZ_VERSION}/hazelcast-enterprise-all-${HZ_VERSION}.jar"
