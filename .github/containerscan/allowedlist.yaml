@@ -3,6 +3,13 @@ general:
     # ubi-minimal marked as WONTFIX
     - CVE-2019-1010022
     - CVE-2019-5827
+    # https://github.com/hazelcast/hazelcast/blob/master/owasp-check-suppressions.xml#L228-L234
+    - CVE-2020-25644
+    # https://github.com/hazelcast/hazelcast/issues/21045
+    - CVE-2020-36518
+    # False positive - hazelcast-client-3.12.12.jar is not vulnerable
+    # See https://github.com/advisories/GHSA-v57x-gxfj-484q
+    - GHSA-v57x-gxfj-484q
   bestPracticeViolations:
     # HZ_LICENSE_KEY included as an env variable
     - CIS-DI-0010
