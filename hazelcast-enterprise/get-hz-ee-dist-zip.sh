@@ -10,13 +10,13 @@ if [[ -n "${HZ_VARIANT}" ]]; then SUFFIX="-${HZ_VARIANT}"; fi
 
 if [[ "${HZ_VERSION}" == *"SNAPSHOT"* ]]
 then
-    curl -O -fsSL https://repository.hazelcast.com/artifactory/snapshot/com/hazelcast/hazelcast-enterprise-distribution/${HZ_VERSION}/maven-metadata.xml
+    curl -O -fsSL https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/${HZ_VERSION}/maven-metadata.xml
     version=$(xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[1]/value/text()" maven-metadata.xml)
 
-    url="https://repository.hazelcast.com/artifactory/snapshot/com/hazelcast/hazelcast-enterprise-distribution/${HZ_VERSION}/hazelcast-enterprise-distribution-${version}${SUFFIX}.zip"
+    url="https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/${HZ_VERSION}/hazelcast-enterprise-distribution-${version}${SUFFIX}.zip"
     rm maven-metadata.xml
 else
-    url="https://repository.hazelcast.com/artifactory/release/com/hazelcast/hazelcast-enterprise-distribution/${HZ_VERSION}/hazelcast-enterprise-distribution-${HZ_VERSION}${SUFFIX}.zip"
+    url="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/${HZ_VERSION}/hazelcast-enterprise-distribution-${HZ_VERSION}${SUFFIX}.zip"
 fi
 
 echo $url
