@@ -10,6 +10,8 @@ general:
     # False positive - hazelcast-client-3.12.12.jar is not vulnerable
     # See https://github.com/advisories/GHSA-v57x-gxfj-484q
     - GHSA-v57x-gxfj-484q
+    # This was present only in 5.1-BETA-1, it was fixed in 5.1 and older versions were not affected
+    - CVE-2022-0265
   bestPracticeViolations:
     # HZ_LICENSE_KEY included as an env variable
     - CIS-DI-0010
