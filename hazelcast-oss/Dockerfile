@@ -1,4 +1,4 @@
-FROM alpine:3.14.2
+FROM alpine:3.15.4
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=4.2.4
