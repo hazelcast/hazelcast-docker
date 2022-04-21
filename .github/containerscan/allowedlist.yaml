@@ -3,6 +3,8 @@ general:
     # ubi-minimal marked as WONTFIX
     - CVE-2019-1010022
     - CVE-2019-5827
+    # This was present only in 5.1-BETA-1, it was fixed in 5.1 and older versions were not affected
+    - CVE-2022-0265
   bestPracticeViolations:
     # HZ_LICENSE_KEY included as an env variable
     - CIS-DI-0010
