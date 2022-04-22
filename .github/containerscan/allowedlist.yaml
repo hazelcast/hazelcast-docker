@@ -6,6 +6,8 @@ general:
     # ubi-minimal marked as WONTFIX
     - CVE-2019-1010022
     - CVE-2019-5827
+    # https://github.com/hazelcast/hazelcast/issues/21045
+    - CVE-2020-36518
     # This was present only in 5.1-BETA-1, it was fixed in 5.1 and older versions were not affected
     - CVE-2022-0265
   bestPracticeViolations:
