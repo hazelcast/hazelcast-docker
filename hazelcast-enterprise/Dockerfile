@@ -1,4 +1,4 @@
-FROM redhat/ubi8-minimal:8.5
+FROM redhat/ubi8-minimal:8.6
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=4.2.5
