@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
         required: true
       RELEASE_VERSION:
         description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
