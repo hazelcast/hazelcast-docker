@@ -7,7 +7,14 @@ on:
     tags:
       - "v4.*"
       - "v5.*"
-
+  workflow_dispatch:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3
+        required: true
+      RELEASE_VERSION:
+        description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
+        required: false
 jobs:
   build:
     defaults:
@@ -21,24 +28,45 @@ jobs:
       OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
       OCP_CLUSTER_URL: ${{ secrets.OCP_CLUSTER_URL }}
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
+      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
 
     runs-on: ubuntu-latest
     steps:
+      - name: Set HZ version as environment variable
+        run: |
+          if [ -z "${{ env.HZ_VERSION }}" ]; then
+             HZ_VERSION=${GITHUB_REF:11}
+          else
+             HZ_VERSION=${{ env.HZ_VERSION }}
+          fi
+          echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
+          echo "::set-env name=HZ_VERSION::HZ_VERSION"
+
+      - name: Set Release version as environment variable
+        run: |
+          if [ -z "${{ env.RELEASE_VERSION }}" ]; then
+             RELEASE_VERSION=${{ env.HZ_VERSION }}
+          else
+             RELEASE_VERSION=${{ env.RELEASE_VERSION }}
+          fi
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
       - name: Checkout to Management Center Openshift
         uses: actions/checkout@v2
         with:
           repository: hazelcast/management-center-openshift
           path: management-center-openshift
           fetch-depth: 0
+          ref: v${{ env.HZ_VERSION }}
 
       - name: Set Hazelcast Enterprise RHEL repository and password
         working-directory: management-center-openshift
         run: |
-          MAJOR_VERSION=$(echo "${GITHUB_REF:10}" | cut -d'.' -f 1 )
-          if [[ "$MAJOR_VERSION" == "v4" ]]; then
+          MAJOR_VERSION=$(echo "${HZ_VERSION:0:1}")
+          if [[ "$MAJOR_VERSION" == "4" ]]; then
             echo "HZ_EE_RHEL_REPOSITORY=${{ secrets.HZ_4_EE_RHEL_REPOSITORY }}" >> $GITHUB_ENV
             echo "HZ_EE_RHEL_REPO_PASSWORD=${{ secrets.HZ_4_EE_RHEL_REPO_PASSWORD }}" >> $GITHUB_ENV
-          elif [[ "$MAJOR_VERSION" == "v5" ]]; then
+          elif [[ "$MAJOR_VERSION" == "5" ]]; then
             echo "HZ_EE_RHEL_REPOSITORY=${{ secrets.HZ_5_EE_RHEL_REPOSITORY }}" >> $GITHUB_ENV
             echo "HZ_EE_RHEL_REPO_PASSWORD=${{ secrets.HZ_5_EE_RHEL_REPO_PASSWORD }}" >> $GITHUB_ENV
           else
@@ -60,16 +88,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set Release version and Rhel image as environment variables
+      - name: Set RHEL image as environment variable
         run: |
-          RELEASE_VERSION=${GITHUB_REF:11}
           echo "RHEL_IMAGE=${HZ_EE_RHEL_REPOSITORY}:${RELEASE_VERSION}" >> $GITHUB_ENV
-          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
 
       - name: Build the Hazelcast Enterprise image
         run: |
           docker build \
-                --build-arg HZ_VERSION=${RELEASE_VERSION} \
+                --build-arg HZ_VERSION=${HZ_VERSION} \
                 --tag ${RHEL_IMAGE} hazelcast-enterprise
 
       - name: Log in to Red Hat Scan Registry and Push the Image

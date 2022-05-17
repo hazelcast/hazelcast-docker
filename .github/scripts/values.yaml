@@ -1,6 +1,6 @@
 image:
   repository: HZ_EE_RHEL_REPOSITORY
-  tag: HZ_EE_VERSION
+  tag: RELEASE_VERSION
   pullSecrets:
     - PULL_SECRET
 cluster:

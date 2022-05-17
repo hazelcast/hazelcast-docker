@@ -13,7 +13,7 @@ RED_HAT_USERNAME=unused
 HZ_EE_RHEL_REPO_PASSWORD=$6
 RED_HAT_EMAIL=unused
 HZ_EE_RHEL_REPOSITORY=$7
-HZ_EE_VERSION=$8
+RELEASE_VERSION=$8
 HAZELCAST_CLUSTER_SIZE=$9
 HZ_ENTERPRISE_LICENSE=${10}
 HZ_MC_VERSION=${11}
@@ -35,7 +35,7 @@ helm repo add hazelcast https://hazelcast-charts.s3.amazonaws.com/
 helm repo update
 
 sed -i "s|HZ_EE_RHEL_REPOSITORY|\"${HZ_EE_RHEL_REPOSITORY}\"|g" ${WORKDIR}/values.yaml
-sed -i "s/HZ_EE_VERSION/\"${HZ_EE_VERSION}\"/g" ${WORKDIR}/values.yaml
+sed -i "s/RELEASE_VERSION/\"${RELEASE_VERSION}\"/g" ${WORKDIR}/values.yaml
 sed -i "s/PULL_SECRET/hz-pull-secret/g" ${WORKDIR}/values.yaml
 sed -i "s/HAZELCAST_CLUSTER_SIZE/${HAZELCAST_CLUSTER_SIZE}/g" ${WORKDIR}/values.yaml
 sed -i "s/HZ_ENTERPRISE_LICENSE/${HZ_ENTERPRISE_LICENSE}/g" ${WORKDIR}/values.yaml
