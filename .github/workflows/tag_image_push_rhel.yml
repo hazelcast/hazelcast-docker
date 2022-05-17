@@ -41,12 +41,11 @@ jobs:
              HZ_VERSION=${{ env.HZ_VERSION }}
           fi
           echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
-          echo "::set-env name=HZ_VERSION::HZ_VERSION"
 
       - name: Set Release version as environment variable
         run: |
           if [ -z "${{ env.RELEASE_VERSION }}" ]; then
-             RELEASE_VERSION=${{ env.HZ_VERSION }}
+             RELEASE_VERSION=${HZ_VERSION}
           else
              RELEASE_VERSION=${{ env.RELEASE_VERSION }}
           fi
@@ -57,7 +56,7 @@ jobs:
           repository: hazelcast/management-center-openshift
           path: management-center-openshift
           fetch-depth: 0
-          ref: v${{ env.HZ_VERSION }}
+          ref: v${HZ_VERSION}
 
       - name: Set Hazelcast Enterprise RHEL repository and password
         working-directory: management-center-openshift
