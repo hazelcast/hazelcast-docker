@@ -56,7 +56,7 @@ jobs:
           repository: hazelcast/management-center-openshift
           path: management-center-openshift
           fetch-depth: 0
-          ref: v${HZ_VERSION}
+          ref: v${{ env.HZ_VERSION }}
 
       - name: Set Hazelcast Enterprise RHEL repository and password
         working-directory: management-center-openshift
