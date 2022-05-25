@@ -37,9 +37,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
 
-      - name: Download NLC zip from S3
-        run: aws s3 cp ${S3_NLC_ZIP_URL} ./hazelcast-enterprise/hazelcast-enterprise-distribution.zip
-          
+      - name: Get presigned NLC URL from S3
+        run: |
+          HAZELCAST_ZIP_URL="$(aws s3 presign ${S3_NLC_ZIP_URL})"
+          echo "HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL}" >> $GITHUB_ENV
+
       - name: Login to Docker Hub
         run: echo "${NLC_REPO_TOKEN}" | docker login -u ${NLC_REPO_USERNAME} ${NLC_REPOSITORY} --password-stdin
 
@@ -47,6 +49,7 @@ jobs:
         run: |
           docker build \
             --build-arg HZ_VERSION=${RELEASE_VERSION} \
+            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --tag ${NLC_IMAGE_NAME}:${RELEASE_VERSION} hazelcast-enterprise
 
       - name: Push EE image
