@@ -36,7 +36,7 @@ jobs:
           ZIP_NAME=hazelcast-enterprise-${HZ_VERSION}-nlc.zip
           S3_NLC_ZIP_URL=${S3_NLC_URL}/snapshot/${ZIP_NAME}
 
-          HAZELCAST_ZIP_URL="$(aws s3 presign ${S3_NLC_ZIP_URL})"
+          HAZELCAST_ZIP_URL="$(aws s3 presign ${S3_NLC_ZIP_URL} --expires-in 600)"
           echo "HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL}" >> $GITHUB_ENV
 
       - name: Login to Docker Hub
