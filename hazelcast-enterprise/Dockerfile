@@ -8,6 +8,7 @@ ARG HZ_VARIANT=""
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
+ARG HAZELCAST_ZIP_URL=""
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -42,7 +43,7 @@ RUN echo "Installing new packages" \
         --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip tar \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
         HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-ee-dist-zip.sh); \
-        echo "Downloading Hazelcast${HZ_VARIANT} distribution zip from ${HAZELCAST_ZIP_URL}..."; \
+        echo "Downloading Hazelcast${HZ_VARIANT} distribution zip from ${HAZELCAST_ZIP_URL//\?*/?***********}..."; \
         curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
     else \
            echo "Using local hazelcast-enterprise-distribution.zip"; \
