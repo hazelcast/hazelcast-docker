@@ -114,7 +114,7 @@ jobs:
           PROJECT=hz-ee-test-${{ github.run_id }}
           .github/scripts/clean-up.sh $PROJECT
 
-      - name: Publish the Hazelcast-Enterprise-Operator image
+      - name: Publish the Hazelcast Enterprise image
         run: |
           PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
           VERSION=${RELEASE_VERSION}
