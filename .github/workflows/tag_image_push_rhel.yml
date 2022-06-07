@@ -113,7 +113,8 @@ jobs:
           PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
           ./preflight-linux-amd64 check container ${RHEL_IMAGE} \
           --submit --pyxis-api-token=${RHEL_API_KEY} \
-          --certification-project-id=$PROJECT_ID
+          --certification-project-id=$PROJECT_ID \
+          --docker-config ~/.docker/config.json
 
       - name: Wait for Scan to Complete
         run: |
