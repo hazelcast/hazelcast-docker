@@ -77,6 +77,20 @@ jobs:
           docker login ${SCAN_REGISTRY} -u unused -p ${HZ_EE_RHEL_REPO_PASSWORD}
           docker push ${RHEL_IMAGE}
 
+      - name: Install preflight tool
+        run: |
+          PREFLIGHT_VERSION=$(curl -s https://api.github.com/repos/redhat-openshift-ecosystem/openshift-preflight/releases/latest | grep 'tag_name' | cut -d\" -f4)
+          wget https://github.com/redhat-openshift-ecosystem/openshift-preflight/releases/download/${PREFLIGHT_VERSION}/preflight-linux-amd64
+          chmod +x preflight-linux-amd64
+
+      - name: Run preflight scan
+        run: |
+          PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
+          ./preflight-linux-amd64 check container ${RHEL_IMAGE} \
+          --submit --pyxis-api-token=${RHEL_API_KEY} \
+          --certification-project-id=$PROJECT_ID \
+          --docker-config ~/.docker/config.json
+
       - name: Wait for Scan to Complete
         run: |
           PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
