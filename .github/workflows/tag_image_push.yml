@@ -84,7 +84,7 @@ jobs:
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             ${TAGS} \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
+            --platform=linux/arm64,linux/amd64,linux/ppc64le hazelcast-oss
 
       - name: Build/Push EE image
         run: |
