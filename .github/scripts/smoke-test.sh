@@ -26,7 +26,7 @@ eval "${LOGIN_COMMAND}"
 oc new-project $PROJECT
 
 oc create secret docker-registry hz-pull-secret \
- --docker-server=scan.connect.redhat.com \
+ --docker-server=quay.io \
  --docker-username=$RED_HAT_USERNAME \
  --docker-password=$HZ_EE_RHEL_REPO_PASSWORD \
  --docker-email=$RED_HAT_EMAIL
