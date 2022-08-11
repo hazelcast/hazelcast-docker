@@ -39,7 +39,7 @@ get_image()
              --header "X-API-KEY: ${RHEL_API_KEY}" \
              "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${ID}/images?${FILTER}&${INCLUDE}")
 
-    echo "${RESPONSE}" | jq ".data[] | select(.repositories[].tags[]?.name==\"${VERSION}\")" | jq -s '{data:., total: length}'
+    echo "${RESPONSE}" | jq ".data[] | select(.repositories[].tags[]?.name==\"${VERSION}\")" | jq -s '.[0] | select( . != null)' | jq -s '{data:., total: length}'
 }
 
 wait_for_container_scan()
