@@ -48,4 +48,4 @@ jobs:
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
             $TAGS \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
+            --platform=linux/arm64,linux/amd64,linux/ppc64le hazelcast-oss
