@@ -75,7 +75,7 @@ jobs:
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             ${TAGS} \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-oss
+            --platform=linux/arm64,linux/amd64,linux/ppc64le hazelcast-oss
 
       - name: Update Docker Hub Description of OSS image
         if: env.PUSH_LATEST == 'yes'
