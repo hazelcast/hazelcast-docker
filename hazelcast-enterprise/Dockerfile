@@ -36,7 +36,7 @@ COPY *.jar get-hz-ee-dist-zip.sh hazelcast-*.zip ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new packages" \
-    && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-8-appstream --enablerepo=ubi-8-baseos \
+    && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-8-appstream-rpms --enablerepo=ubi-8-baseos-rpms \
         --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip tar \
     && echo "Downloading Hazelcast${HZ_VARIANT} distribution zip..." \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
