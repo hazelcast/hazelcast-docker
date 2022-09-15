@@ -6,7 +6,7 @@ This repository contains Dockerfiles for the official Hazelcast Docker images.
 
 ### Hazelcast
 
-You can launch a Hazelcast Docker Container by running the following command. You can find the full list of Hazelcast versions to replace $HAZELCAST_VERSION at [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast/tags).
+You can launch a Hazelcast Docker Container by running the following command. You can find the full list of Hazelcast versions to replace $HAZELCAST_VERSION at the [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast/tags).
 
 ```
 $ docker run hazelcast/hazelcast:$HAZELCAST_VERSION
@@ -31,9 +31,9 @@ After setting up the cluster, you can start the [client](https://github.com/haze
 
 ### Hazelcast Enterprise
 
-You can launch a Hazelcast Enterprise Docker Container by running the following command. You can find the full list of Hazelcast Enterprise versions to replace $HAZELCAST_VERSION at [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast-enterprise/tags).
+You can launch a Hazelcast Enterprise Docker Container by running the following command. You can find the full list of Hazelcast Enterprise versions to replace $HAZELCAST_VERSION at the [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast-enterprise/tags).
 
-Please request trial license [here](https://hazelcast.com/hazelcast-enterprise-download/) or contact sales@hazelcast.com.
+Please request a trial license [here](https://hazelcast.com/hazelcast-enterprise-download/) or contact sales@hazelcast.com.
 
 ```
 $ docker run -e HZ_LICENSEKEY=<your_license_key> hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
@@ -49,11 +49,11 @@ $ docker run -p 5702:5701 -e HZ_LICENSEKEY=<your_license_key> -e HZ_NETWORK_PUBL
 ```
 
 Note that:
-* This example assumes unencrypted communication channels for IMDG members and clients. Hazelcast allows you to encrypt socket level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](https://github.com/hazelcast/hazelcast-docker#tls_enabled-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
+* This example assumes unencrypted communication channels for IMDG members and clients. Hazelcast allows you to encrypt socket-level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](https://github.com/hazelcast/hazelcast-docker#tls_enabled-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
 
 ### Management Center Hello World
 
-No matter if you started Hazelcast or Hazelcast Enterprise cluster, you could use the Management Center application to monitor and manage your cluster.
+Whether you started the Hazelcast or Hazelcast Enterprise cluster, you could use the Management Center application to monitor and manage your cluster.
 
 ```
 docker run \
