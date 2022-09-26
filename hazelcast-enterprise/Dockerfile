@@ -3,7 +3,7 @@ FROM redhat/ubi8-minimal:8.6
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=4.2.5
 ARG CACHE_API_VERSION=1.1.1
-ARG JMX_PROMETHEUS_AGENT_VERSION=0.14.0
+ARG JMX_PROMETHEUS_AGENT_VERSION=0.17.2
 ARG LOG4J2_VERSION=2.17.2
 
 # Build constants
