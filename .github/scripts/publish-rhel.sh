@@ -30,7 +30,7 @@ get_image()
         echo "Need first parameter as 'published' or 'not_published'." ; return 1
     fi
 
-    local FILTER="filter=deleted==false;${PUBLISHED_FILTER};repositories.tags.name==${VERSION}"
+    local FILTER="filter=deleted==false;${PUBLISHED_FILTER}"
     local INCLUDE="include=total,data.repositories.tags.name,data.scan_status,data._id"
 
     local RESPONSE=$( \
@@ -39,7 +39,7 @@ get_image()
              --header "X-API-KEY: ${RHEL_API_KEY}" \
              "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${ID}/images?${FILTER}&${INCLUDE}")
 
-    echo "${RESPONSE}"
+    echo "${RESPONSE}" | jq ".data[] | select(.repositories[].tags[]?.name==\"${VERSION}\")" | jq -s '.[0] | select( . != null)' | jq -s '{data:., total: length}'
 }
 
 wait_for_container_scan()
