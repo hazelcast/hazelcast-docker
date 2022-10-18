@@ -92,12 +92,6 @@ publish_the_image()
     # Get ID of the PID from the API.
     local ID=$(get_id_from_pid "${PROJECT_ID}" "${RHEL_API_KEY}")
 
-    local IS_PUBLISHED=$(get_image published "${ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.total')
-    if [[ $IS_PUBLISHED == "1" ]]; then
-        echo "Image is already published, exiting"
-        return 0
-    fi
-
     local IMAGE=$(get_image not_published "${ID}" "${VERSION}" "${RHEL_API_KEY}")
     local IMAGE_EXISTS=$(echo $IMAGE | jq -r '.total')
     if [[ $IMAGE_EXISTS == "1" ]]; then
