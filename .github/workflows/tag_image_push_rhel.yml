@@ -92,6 +92,8 @@ jobs:
       - name: Set RHEL image as environment variable
         run: |
           PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
+          SCAN_REPOSITORY=quay.io/redhat-isv-containers/${PROJECT_ID:6}
+          echo "SCAN_REPOSITORY=${SCAN_REPOSITORY}" >> $GITHUB_ENV
           echo "RHEL_IMAGE=quay.io/redhat-isv-containers/${PROJECT_ID:6}:${RELEASE_VERSION}" >> $GITHUB_ENV
 
       - name: Build the Hazelcast Enterprise image
@@ -137,8 +139,9 @@ jobs:
                         "$OCP_LOGIN_USERNAME"  \
                         "$OCP_LOGIN_PASSWORD" \
                         "$OCP_CLUSTER_URL" \
-                        "$HZ_EE_RHEL_REPO_PASSWORD" \
-                        "$HZ_EE_RHEL_REPOSITORY" \
+                        "$SCAN_REGISTRY_USER" \
+                        "$SCAN_REGISTRY_PASSWORD" \
+                        "$SCAN_REPOSITORY" \
                         "$RELEASE_VERSION" \
                         "$CLUSTER_SIZE" \
                         "$HZ_ENTERPRISE_LICENSE" \
