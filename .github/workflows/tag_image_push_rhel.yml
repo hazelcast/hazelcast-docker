@@ -21,7 +21,9 @@ jobs:
       run:
         shell: bash
     env:
-      SCAN_REGISTRY: "scan.connect.redhat.com"
+      SCAN_REGISTRY: "quay.io"
+      SCAN_REGISTRY_USER: ${{ secrets.SCAN_REGISTRY_USER }}
+      SCAN_REGISTRY_PASSWORD: ${{ secrets.SCAN_REGISTRY_PASSWORD }}
       TIMEOUT_IN_MINS: 120
       HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
       OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
@@ -89,7 +91,8 @@ jobs:
 
       - name: Set RHEL image as environment variable
         run: |
-          echo "RHEL_IMAGE=${HZ_EE_RHEL_REPOSITORY}:${RELEASE_VERSION}" >> $GITHUB_ENV
+          PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
+          echo "RHEL_IMAGE=quay.io/redhat-isv-containers/${PROJECT_ID}:${RELEASE_VERSION}" >> $GITHUB_ENV
 
       - name: Build the Hazelcast Enterprise image
         run: |
@@ -99,7 +102,7 @@ jobs:
 
       - name: Log in to Red Hat Scan Registry and Push the Image
         run: |
-          docker login ${SCAN_REGISTRY} -u unused -p ${HZ_EE_RHEL_REPO_PASSWORD}
+          docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
           docker push ${RHEL_IMAGE}
 
       - name: Install preflight tool
