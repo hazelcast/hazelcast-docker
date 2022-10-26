@@ -1,5 +1,5 @@
 image:
-  repository: HZ_EE_RHEL_REPOSITORY
+  repository: SCAN_REPOSITORY
   tag: RELEASE_VERSION
   pullSecrets:
     - PULL_SECRET
