@@ -94,10 +94,10 @@ publish_the_image()
             --header "X-API-KEY: ${RHEL_API_KEY}" \
             --header 'Cache-Control: no-cache' \
             --header 'Content-Type: application/json' \
-            --data "{\"image_id\":\"${IMAGE_ID}\" , \"tag\" : \"${VERSION}\" }" \
-            "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/tags")
-    
-    echo "Created a tag request, please check if the image is published."
+            --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"publish\" }" \
+            "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
+
+    echo "Created a image request, please check if the image is published."
 }
 
 wait_for_container_publish()
