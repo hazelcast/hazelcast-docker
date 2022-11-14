@@ -21,7 +21,10 @@ jobs:
       run:
         shell: bash
     env:
-      SCAN_REGISTRY: "scan.connect.redhat.com"
+      SCAN_REGISTRY: "quay.io"
+      SCAN_REGISTRY_USER: ${{ secrets.SCAN_REGISTRY_USER }}
+      SCAN_REGISTRY_PASSWORD: ${{ secrets.SCAN_REGISTRY_PASSWORD }}
+      RHEL_PROJECT_ID: ${{ secrets.RHEL_PROJECT_ID }}
       TIMEOUT_IN_MINS: 120
       HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
       OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
@@ -57,22 +60,6 @@ jobs:
           path: management-center-openshift
           fetch-depth: 0
 
-      - name: Set Hazelcast Enterprise RHEL repository and password
-        working-directory: management-center-openshift
-        run: |
-          MAJOR_VERSION=$(echo "${HZ_VERSION:0:1}")
-          if [[ "$MAJOR_VERSION" == "4" ]]; then
-            echo "HZ_EE_RHEL_REPOSITORY=${{ secrets.HZ_4_EE_RHEL_REPOSITORY }}" >> $GITHUB_ENV
-            echo "HZ_EE_RHEL_REPO_PASSWORD=${{ secrets.HZ_4_EE_RHEL_REPO_PASSWORD }}" >> $GITHUB_ENV
-          elif [[ "$MAJOR_VERSION" == "5" ]]; then
-            echo "HZ_EE_RHEL_REPOSITORY=${{ secrets.HZ_5_EE_RHEL_REPOSITORY }}" >> $GITHUB_ENV
-            echo "HZ_EE_RHEL_REPO_PASSWORD=${{ secrets.HZ_5_EE_RHEL_REPO_PASSWORD }}" >> $GITHUB_ENV
-          else
-            echo "Major version cannot be ${MAJOR_VERSION}."
-            exit 1
-          fi
-          echo "HZ_EE_MAJOR_VERSION=${MAJOR_VERSION}" >> $GITHUB_ENV
-
       - name: Set Management Center Version to be used in the tests
         working-directory: management-center-openshift
         run: |
@@ -88,7 +75,9 @@ jobs:
 
       - name: Set RHEL image as environment variable
         run: |
-          echo "RHEL_IMAGE=${HZ_EE_RHEL_REPOSITORY}:${RELEASE_VERSION}" >> $GITHUB_ENV
+          SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}
+          echo "SCAN_REPOSITORY=${SCAN_REPOSITORY}" >> $GITHUB_ENV
+          echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${RELEASE_VERSION}" >> $GITHUB_ENV
 
       - name: Build the Hazelcast Enterprise image
         run: |
@@ -98,7 +87,7 @@ jobs:
 
       - name: Log in to Red Hat Scan Registry and Push the Image
         run: |
-          docker login ${SCAN_REGISTRY} -u unused -p ${HZ_EE_RHEL_REPO_PASSWORD}
+          docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
           docker push ${RHEL_IMAGE}
 
       - name: Install preflight tool
@@ -109,19 +98,17 @@ jobs:
 
       - name: Run preflight scan
         run: |
-          PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
           ./preflight-linux-amd64 check container ${RHEL_IMAGE} \
           --submit --pyxis-api-token=${RHEL_API_KEY} \
-          --certification-project-id=$PROJECT_ID \
+          --certification-project-id=${RHEL_PROJECT_ID} \
           --docker-config ~/.docker/config.json
 
       - name: Wait for Scan to Complete
         run: |
-          PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
           VERSION=${RELEASE_VERSION}
           source .github/scripts/publish-rhel.sh
 
-          wait_for_container_scan "$PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
+          wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
 
       - name: Deploy Hazelcast Cluster
         run: |
@@ -133,12 +120,14 @@ jobs:
                         "$OCP_LOGIN_USERNAME"  \
                         "$OCP_LOGIN_PASSWORD" \
                         "$OCP_CLUSTER_URL" \
-                        "$HZ_EE_RHEL_REPO_PASSWORD" \
-                        "$HZ_EE_RHEL_REPOSITORY" \
+                        "$SCAN_REGISTRY_USER" \
+                        "$SCAN_REGISTRY_PASSWORD" \
+                        "$SCAN_REPOSITORY" \
                         "$RELEASE_VERSION" \
                         "$CLUSTER_SIZE" \
                         "$HZ_ENTERPRISE_LICENSE" \
-                        "$HZ_MC_VERSION"
+                        "$HZ_MC_VERSION" \
+                        "$SCAN_REGISTRY"
 
         env:
           CLUSTER_SIZE: 3
@@ -169,9 +158,8 @@ jobs:
 
       - name: Publish the Hazelcast Enterprise image
         run: |
-          PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
           VERSION=${RELEASE_VERSION}
           source .github/scripts/publish-rhel.sh
 
-          publish_the_image "$PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
-          wait_for_container_publish "$PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
+          publish_the_image "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+          wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
