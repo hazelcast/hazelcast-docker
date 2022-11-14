@@ -113,7 +113,7 @@ jobs:
       - name: Deploy Hazelcast Cluster
         run: |
           WORKDIR=$(pwd)/.github/scripts
-          PROJECT=hz-ee-test-${{ github.run_id }}
+          PROJECT=hz-ee-test-${{ github.run_id }}-${{ github.run_attempt }}
           .github/scripts/smoke-test.sh \
                         "$WORKDIR" \
                         "$PROJECT"  \
