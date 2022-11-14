@@ -59,7 +59,6 @@ jobs:
           repository: hazelcast/management-center-openshift
           path: management-center-openshift
           fetch-depth: 0
-          ref: v${{ env.HZ_VERSION }}
 
       - name: Set Management Center Version to be used in the tests
         working-directory: management-center-openshift
