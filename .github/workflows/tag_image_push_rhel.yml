@@ -134,7 +134,7 @@ jobs:
 
       - name: Validate Cluster Size
         run: |
-          PROJECT=hz-ee-test-${{ github.run_id }}
+          PROJECT=hz-ee-test-${{ github.run_id }}-${{ github.run_attempt }}
           HZ_NAME=$PROJECT
           NAME=hazelcast-enterprise
 
@@ -153,7 +153,7 @@ jobs:
       - name: Clean up After Test
         if: always()
         run: |
-          PROJECT=hz-ee-test-${{ github.run_id }}
+          PROJECT=hz-ee-test-${{ github.run_id }}-${{ github.run_attempt }}
           .github/scripts/clean-up.sh $PROJECT
 
       - name: Publish the Hazelcast Enterprise image
