@@ -144,7 +144,12 @@ jobs:
 
           verify_cluster_size $CLUSTER_SIZE
 
-          oc wait --for=condition=Ready --timeout=120s pod ${HZ_NAME}-${NAME}-mancenter-0
+          for i in `seq 1 5`; do
+              echo "Waiting for ${HZ_NAME}-${NAME}-mancenter-0 pod to be ready"
+              kubectl get pods
+              oc wait --for=condition=Ready --timeout=120s pod ${HZ_NAME}-${NAME}-mancenter-0 && break
+              sleep 30
+          done
 
           verify_management_center $CLUSTER_SIZE
         env:
