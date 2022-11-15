@@ -143,6 +143,7 @@ jobs:
 
           verify_cluster_size $CLUSTER_SIZE
 
+          echo "Waiting for ${HZ_NAME}-${NAME}-mancenter-0 pod to be ready"
           oc wait --for=condition=Ready --timeout=120s pod ${HZ_NAME}-${NAME}-mancenter-0
 
           verify_management_center $CLUSTER_SIZE
