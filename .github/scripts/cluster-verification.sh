@@ -7,6 +7,7 @@ wait_for_last_member_initialization() {
     local LAST_MEMBER=$(( $SIZE - 1 ))
     for i in `seq 1 10`; do
         if [[ $(kubectl get pods ${HZ_NAME}-${NAME}-${LAST_MEMBER} -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; then
+            kubectl get pods
             echo "waiting for pod ${HZ_NAME}-${NAME}-${LAST_MEMBER} to be ready..." && sleep 30
             if [ "$i" = "10" ]; then
             echo "${HZ_NAME}-${NAME}-${LAST_MEMBER} pod failed to be ready!"
@@ -48,6 +49,7 @@ verify_cluster_size() {
 #CHECK IF ALL MEMBERS CAN COMMUNICATE WITH MANAGEMENT CENTER
 verify_management_center() {
     local SIZE=$1
+    echo "Verifying management center"
     for i in `seq 1 5`; do
         local MEMBER_COUNT=$(kubectl logs ${HZ_NAME}-${NAME}-mancenter-0 | grep -E "Started communication with (a new )?member" | wc -l)
         if [ "$MEMBER_COUNT" = "${SIZE}" ]; then
