@@ -1,6 +1,7 @@
 image:
   repository: SCAN_REPOSITORY
   tag: RELEASE_VERSION
+  pullPolicy: Always
   pullSecrets:
     - PULL_SECRET
 cluster:
