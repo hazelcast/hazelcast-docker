@@ -6,26 +6,67 @@ on:
       - "!*"
     tags:
       - "v4.1.*"
-
+  workflow_dispatch:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
+        required: true
+      RELEASE_VERSION:
+        description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
+        required: false
 jobs:
   build:
     defaults:
       run:
         shell: bash
     env:
-      SCAN_REGISTRY: "scan.connect.redhat.com"
+      SCAN_REGISTRY: "quay.io"
       TIMEOUT_IN_MINS: 120
-      HZ_MC_VERSION: 4.2020.12-2
       HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
       OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
       OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
       OCP_CLUSTER_URL: ${{ secrets.OCP_CLUSTER_URL }}
-      HZ_EE_RHEL_REPO_PASSWORD: ${{ secrets.HZ_4_EE_RHEL_REPO_PASSWORD }}
-      HZ_EE_RHEL_REPOSITORY: ${{ secrets.HZ_4_EE_RHEL_REPOSITORY }}
-      RHEL_API_KEY:  ${{ secrets.RHEL_API_KEY }}
+      RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
+      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
 
     runs-on: ubuntu-latest
     steps:
+      - name: Set HZ version as environment variable
+        run: |
+          if [ -z "${{ env.HZ_VERSION }}" ]; then
+             HZ_VERSION=${GITHUB_REF:11}
+          else
+             HZ_VERSION=${{ env.HZ_VERSION }}
+          fi
+          echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
+
+      - name: Set Release version as environment variable
+        run: |
+          if [ -z "${{ env.RELEASE_VERSION }}" ]; then
+             RELEASE_VERSION=${HZ_VERSION}
+          else
+             RELEASE_VERSION=${{ env.RELEASE_VERSION }}
+          fi
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
+          
+      - name: Set Hazelcast Enterprise RHEL repository and password
+        run: |
+          HZ_MAJOR_VERSION=$(echo "${HZ_VERSION:0:1}")
+          if [[ "$HZ_MAJOR_VERSION" == "4" ]]; then
+            echo "SCAN_REGISTRY_USER=${{ secrets.SCAN_REGISTRY_USER_V4 }}" >> $GITHUB_ENV
+            echo "SCAN_REGISTRY_PASSWORD=${{ secrets.SCAN_REGISTRY_PASSWORD_V4 }}" >> $GITHUB_ENV
+            echo "RHEL_PROJECT_ID=${{ secrets.RHEL_PROJECT_ID_V4 }}" >> $GITHUB_ENV
+          elif [[ "$HZ_MAJOR_VERSION" == "5" ]]; then
+            echo "SCAN_REGISTRY_USER=${{ secrets.SCAN_REGISTRY_USER_V5 }}" >> $GITHUB_ENV
+            echo "SCAN_REGISTRY_PASSWORD=${{ secrets.SCAN_REGISTRY_PASSWORD_V5 }}" >> $GITHUB_ENV
+            echo "RHEL_PROJECT_ID=${{ secrets.RHEL_PROJECT_ID_V5 }}" >> $GITHUB_ENV
+          else
+            echo "Major version cannot be ${HZ_MAJOR_VERSION}."
+            exit 1
+          fi
+          echo "HZ_MAJOR_VERSION=${HZ_MAJOR_VERSION}" >> $GITHUB_ENV
+
       - name: Checkout to Management Center Openshift
         uses: actions/checkout@v2
         with:
@@ -36,7 +77,7 @@ jobs:
       - name: Set Management Center Version to be used in the tests
         working-directory: management-center-openshift
         run: |
-          FILTERED_TAGS=$(git tag --list "v4*" |  grep -E -v '.*(BETA|-).*' )
+          FILTERED_TAGS=$(git tag --list "v${HZ_MAJOR_VERSION}*" |  grep -E -v '.*(BETA|-).*' )
           LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
           echo $LATEST_TAG
           echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
@@ -46,59 +87,68 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set Release version and Rhel image as environment variables
+      - name: Set RHEL image as environment variable
         run: |
-          RELEASE_VERSION=${GITHUB_REF:11}
-          echo "RHEL_IMAGE=${HZ_EE_RHEL_REPOSITORY}:${RELEASE_VERSION}" >> $GITHUB_ENV
-          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
-
+          SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}
+          echo "SCAN_REPOSITORY=${SCAN_REPOSITORY}" >> $GITHUB_ENV
+          echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${RELEASE_VERSION}" >> $GITHUB_ENV
 
       - name: Build the Hazelcast Enterprise image
         run: |
           docker build \
-                --build-arg HZ_VERSION=${RELEASE_VERSION} \
+                --build-arg HZ_VERSION=${HZ_VERSION} \
                 --tag ${RHEL_IMAGE} hazelcast-enterprise
-
 
       - name: Log in to Red Hat Scan Registry and Push the Image
         run: |
-          docker login ${SCAN_REGISTRY} -u unused -p ${HZ_EE_RHEL_REPO_PASSWORD}
+          docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
           docker push ${RHEL_IMAGE}
 
+      - name: Install preflight tool
+        run: |
+          PREFLIGHT_VERSION=$(curl -s https://api.github.com/repos/redhat-openshift-ecosystem/openshift-preflight/releases/latest | grep 'tag_name' | cut -d\" -f4)
+          wget https://github.com/redhat-openshift-ecosystem/openshift-preflight/releases/download/${PREFLIGHT_VERSION}/preflight-linux-amd64
+          chmod +x preflight-linux-amd64
+
+      - name: Run preflight scan
+        run: |
+          ./preflight-linux-amd64 check container ${RHEL_IMAGE} \
+          --submit --pyxis-api-token=${RHEL_API_KEY} \
+          --certification-project-id=${RHEL_PROJECT_ID} \
+          --docker-config ~/.docker/config.json
 
       - name: Wait for Scan to Complete
         run: |
-          PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
           VERSION=${RELEASE_VERSION}
           source .github/scripts/publish-rhel.sh
 
-          wait_for_container_build_or_scan $TIMEOUT_IN_MINS
-
+          wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
 
       - name: Deploy Hazelcast Cluster
         run: |
           WORKDIR=$(pwd)/.github/scripts
-          PROJECT=hz-ee-test-${{ github.run_id }}
+          PROJECT=hztest-${{ github.run_id }}-${{ github.run_attempt }}
           .github/scripts/smoke-test.sh \
                         "$WORKDIR" \
                         "$PROJECT"  \
                         "$OCP_LOGIN_USERNAME"  \
                         "$OCP_LOGIN_PASSWORD" \
                         "$OCP_CLUSTER_URL" \
-                        "$HZ_EE_RHEL_REPO_PASSWORD" \
-                        "$HZ_EE_RHEL_REPOSITORY" \
+                        "$SCAN_REGISTRY_USER" \
+                        "$SCAN_REGISTRY_PASSWORD" \
+                        "$SCAN_REPOSITORY" \
                         "$RELEASE_VERSION" \
                         "$CLUSTER_SIZE" \
                         "$HZ_ENTERPRISE_LICENSE" \
-                        "$HZ_MC_VERSION"
+                        "$HZ_MC_VERSION" \
+                        "$SCAN_REGISTRY"
 
         env:
           CLUSTER_SIZE: 3
 
-
       - name: Validate Cluster Size
         run: |
-          PROJECT=hz-ee-test-${{ github.run_id }}
+          PROJECT=hztest-${{ github.run_id }}-${{ github.run_attempt }}
           HZ_NAME=$PROJECT
           NAME=hazelcast-enterprise
 
@@ -108,25 +158,27 @@ jobs:
 
           verify_cluster_size $CLUSTER_SIZE
 
-          oc wait --for=condition=Ready --timeout=120s pod ${HZ_NAME}-${NAME}-mancenter-0
+          for i in `seq 1 5`; do
+              echo "Waiting for ${HZ_NAME}-${NAME}-mancenter-0 pod to be ready"
+              kubectl get pods
+              oc wait --for=condition=Ready --timeout=120s pod ${HZ_NAME}-${NAME}-mancenter-0 && break
+              sleep 30
+          done
 
           verify_management_center $CLUSTER_SIZE
         env:
           CLUSTER_SIZE: 3
 
-
       - name: Clean up After Test
         if: always()
         run: |
-          PROJECT=hz-ee-test-${{ github.run_id }}
+          PROJECT=hztest-${{ github.run_id }}-${{ github.run_attempt }}
           .github/scripts/clean-up.sh $PROJECT
 
-
-      - name: Publish the Hazelcast-Enterprise-Operator image
+      - name: Publish the Hazelcast Enterprise image
         run: |
-          PROJECT_ID=$( echo ${HZ_EE_RHEL_REPOSITORY} | grep -m 1 -Po "/\K.+(?=/)" )
           VERSION=${RELEASE_VERSION}
           source .github/scripts/publish-rhel.sh
 
-          wait_for_container_build_or_scan $TIMEOUT_IN_MINS
-          publish_the_image
+          publish_the_image "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+          wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
