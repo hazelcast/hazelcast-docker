@@ -107,7 +107,7 @@ wait_for_container_publish()
     local RHEL_API_KEY=$3
     local TIMEOUT_IN_MINS=$4
 
-    local NOF_RETRIES=$(( $TIMEOUT_IN_MINS / 2 ))
+    local NOF_RETRIES=$(( $TIMEOUT_IN_MINS * 2 ))
     # Wait until the image is published
     for i in `seq 1 ${NOF_RETRIES}`; do
         local IS_PUBLISHED=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.total')
@@ -119,7 +119,7 @@ wait_for_container_publish()
             echo "Image is still not published, waiting..."
         fi
 
-        sleep 120
+        sleep 30
 
         if [[ $i == $NOF_RETRIES ]]; then
             echo "Timeout! Publish could not be finished"
