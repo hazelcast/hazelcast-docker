@@ -1,60 +1,64 @@
 #!/bin/bash
 
-get_containers()
+get_image()
 {
-    PROJECT_ID=$1
-    VERSION=$2
-    RHEL_API_KEY=$3
+    local PUBLISHED=$1
+    local RHEL_PROJECT_ID=$2
+    local VERSION=$3
+    local RHEL_API_KEY=$4
 
-    RESPONSE=$( \
-        curl --silent \
-             --request POST \
-             --header "Content-Type: application/json" \
-             --header "Authorization: Bearer ${RHEL_API_KEY}" \
-             --data {} \
-             "https://connect.redhat.com/api/v2/projects/${PROJECT_ID}/tags?tags=${VERSION}")
-
-    echo "${RESPONSE}"
-}
-
-get_container_build()
-{
-    PROJECT_ID=$1
-    VERSION=$2
-    RHEL_API_KEY=$3
-
-    BUILD=$(get_containers "${PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.tags[0]')
-    if [ "${BUILD}" == "null" ]; then
-        # TAG can be also stored as "${VERSION}, latest"
-        BUILD=$(get_containers "${PROJECT_ID}" "${VERSION}%2C%20latest" "${RHEL_API_KEY}" | jq -r '.tags[0]')
+    if [[ $PUBLISHED == "published" ]]; then
+        local PUBLISHED_FILTER="repositories.published==true"
+    elif [[ $PUBLISHED == "not_published" ]]; then
+        local PUBLISHED_FILTER="repositories.published!=true"
+    else
+        echo "Need first parameter as 'published' or 'not_published'." ; return 1
     fi
-    echo "${BUILD}"
+
+    local FILTER="filter=deleted==false;${PUBLISHED_FILTER}"
+    local INCLUDE="include=total,data.repositories.tags.name,data.scan_status,data._id"
+
+    local RESPONSE=$( \
+        curl --silent \
+             --request GET \
+             --header "X-API-KEY: ${RHEL_API_KEY}" \
+             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}&${INCLUDE}")
+
+    echo "${RESPONSE}" | jq ".data[] | select(.repositories[].tags[]?.name==\"${VERSION}\")" | jq -s '.[0] | select( . != null)' | jq -s '{data:., total: length}'
 }
 
-is_build_valid()
+wait_for_container_scan()
 {
-    BUILD=$1
+    local RHEL_PROJECT_ID=$1
+    local VERSION=$2
+    local RHEL_API_KEY=$3
+    local TIMEOUT_IN_MINS=$4
 
-    echo "${BUILD}" | jq -r '.digest' > /dev/null
-    return $?
-}
+    local IS_PUBLISHED=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.total')
+    if [[ $IS_PUBLISHED == "1" ]]; then
+        echo "Image is already published, exiting"
+        return 0
+    fi
 
-
-wait_for_container_build_or_scan()
-{
-    TIMEOUT_IN_MINS=$1
-    NOF_RETRIES=$(( $TIMEOUT_IN_MINS / 2 ))
-    # Wait until the image is built and scanned
+    local NOF_RETRIES=$(( $TIMEOUT_IN_MINS / 2 ))
+    # Wait until the image is scanned
     for i in `seq 1 ${NOF_RETRIES}`; do
-        BUILD=$(get_container_build "${PROJECT_ID}" "${VERSION}" ${RHEL_API_KEY})
-        SCAN_STATUS=$(echo "${BUILD}" | jq -r '.scan_status')
-        DIGEST=$(echo "${BUILD}" | jq -r '.digest')
-        if [ "${SCAN_STATUS}" == "passed" ]; then
-            break
+        local IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+        local SCAN_STATUS=$(echo "$IMAGE" | jq -r '.data[0].scan_status')
+
+        if [[ $SCAN_STATUS == "in progress" ]]; then
+            echo "Scanning in progress, waiting..."
+        elif [[ $SCAN_STATUS == "null" ]];  then
+            echo "Image is still not present in the registry!"
+        elif [[ $SCAN_STATUS == "passed" ]]; then
+            echo "Scan passed!" ; return 0
+        else
+            echo "Scan failed!" ; return 1
         fi
-        echo "Building or scanning in progress, waiting..."
+
         sleep 120
-        if [ "$i" = "$NOF_RETRIES" ]; then
+
+        if [[ $i == $NOF_RETRIES ]]; then
             echo "Timeout! Scan could not be finished"
             return 42
         fi
@@ -63,30 +67,63 @@ wait_for_container_build_or_scan()
 
 publish_the_image()
 {
+    local RHEL_PROJECT_ID=$1
+    local VERSION=$2
+    local RHEL_API_KEY=$3
+
+    local IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+    local IMAGE_EXISTS=$(echo $IMAGE | jq -r '.total')
+    if [[ $IMAGE_EXISTS == "1" ]]; then
+        local SCAN_STATUS=$(echo $IMAGE | jq -r '.data[0].scan_status')
+        if [[ $SCAN_STATUS != "passed" ]]; then
+            echo "Image you are trying to publish did not pass the certification test, its status is \"${SCAN_STATUS}\""
+            return 1
+        fi
+    else
+        echo "Image you are trying to publish does not exist."
+        return 1
+    fi
+
+    local IMAGE_ID=$(echo "$IMAGE" | jq -r '.data[0]._id')
+
     # Publish the image
     echo "Publishing the image..."
     RESPONSE=$( \
         curl --silent \
             --request POST \
-            --header "Authorization: Bearer ${RHEL_API_KEY}" \
+            --header "X-API-KEY: ${RHEL_API_KEY}" \
             --header 'Cache-Control: no-cache' \
             --header 'Content-Type: application/json' \
-            --data {} \
-            "https://connect.redhat.com/api/v2/projects/${PROJECT_ID}/containers/${DIGEST}/tags/${VERSION}/publish")
-    STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+            --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"publish\" }" \
+            "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
 
-    # Result message
-    if [ "${STATUS}" == "OK" ]; then
-        echo "Done."
-        return 0
-    else
-        ERROR=$(echo "${RESPONSE}" | jq -r '.data.errors[0]')
-        if [[ "${ERROR}" == 'Container image is already published'* ]]; then
-            echo "Image is already published. Skipped."
+    echo "Created a image request, please check if the image is published."
+}
+
+wait_for_container_publish()
+{
+    local RHEL_PROJECT_ID=$1
+    local VERSION=$2
+    local RHEL_API_KEY=$3
+    local TIMEOUT_IN_MINS=$4
+
+    local NOF_RETRIES=$(( $TIMEOUT_IN_MINS * 2 ))
+    # Wait until the image is published
+    for i in `seq 1 ${NOF_RETRIES}`; do
+        local IS_PUBLISHED=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.total')
+
+        if [[ $IS_PUBLISHED == "1" ]]; then
+            echo "Image is published, exiting."
             return 0
         else
-            echo "Error, result message: ${RESPONSE}"
+            echo "Image is still not published, waiting..."
+        fi
+
+        sleep 30
+
+        if [[ $i == $NOF_RETRIES ]]; then
+            echo "Timeout! Publish could not be finished"
             return 42
         fi
-    fi
+    done
 }
