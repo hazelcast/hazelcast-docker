@@ -1,6 +1,6 @@
 image:
-  repository: HZ_EE_RHEL_REPOSITORY
-  tag: HZ_EE_VERSION
+  repository: SCAN_REPOSITORY
+  tag: RELEASE_VERSION
   pullSecrets:
     - PULL_SECRET
 cluster:
@@ -14,5 +14,5 @@ mancenter:
   enabled: true
   image:
     pullPolicy: Always
-    repository: "registry.connect.redhat.com/hazelcast/management-center-4-rhel8"
+    repository: "registry.connect.redhat.com/hazelcast/management-center-MC_MAJOR_VERSION-rhel8"
     tag: HZ_MC_VERSION
