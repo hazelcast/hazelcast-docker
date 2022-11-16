@@ -21,10 +21,8 @@ jobs:
       run:
         shell: bash
     env:
+      REQUIRED_HZ_MAJOR_VERSION: 5
       SCAN_REGISTRY: "quay.io"
-      SCAN_REGISTRY_USER: ${{ secrets.SCAN_REGISTRY_USER }}
-      SCAN_REGISTRY_PASSWORD: ${{ secrets.SCAN_REGISTRY_PASSWORD }}
-      RHEL_PROJECT_ID: ${{ secrets.RHEL_PROJECT_ID }}
       TIMEOUT_IN_MINS: 60
       HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
       OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
@@ -53,6 +51,19 @@ jobs:
              RELEASE_VERSION=${{ env.RELEASE_VERSION }}
           fi
           echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
+      - name: Check HZ major version
+        run: |
+          HZ_MAJOR_VERSION=$(echo "${HZ_VERSION:0:1}")
+          if [[ "$HZ_MAJOR_VERSION" != "$REQUIRED_HZ_MAJOR_VERSION" ]]; then
+            echo "Major version must be ${REQUIRED_HZ_MAJOR_VERSION} but detected: ${HZ_MAJOR_VERSION}"
+            exit 1
+          fi
+          echo "HZ_MAJOR_VERSION=${HZ_MAJOR_VERSION}" >> $GITHUB_ENV
+      - name: Set scan registry secrets
+        run: |
+          echo "SCAN_REGISTRY_USER=${{ secrets[format('SCAN_REGISTRY_USER_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
+          echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
+          echo "RHEL_PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
       - name: Checkout to Management Center Openshift
         uses: actions/checkout@v3
         with:
@@ -63,7 +74,7 @@ jobs:
       - name: Set Management Center Version to be used in the tests
         working-directory: management-center-openshift
         run: |
-          FILTERED_TAGS=$(git tag --list "v${HZ_EE_MAJOR_VERSION}*" |  grep -E -v '.*(BETA|-).*' )
+          FILTERED_TAGS=$(git tag --list "v${HZ_MAJOR_VERSION}*" |  grep -E -v '.*(BETA|-).*' )
           LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
           echo $LATEST_TAG
           echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
