@@ -33,6 +33,7 @@ jobs:
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
+      PROJECT_NAME: hztest-${{ github.run_id }}-${{ github.run_attempt }}
 
     runs-on: ubuntu-latest
     steps:
@@ -113,10 +114,9 @@ jobs:
       - name: Deploy Hazelcast Cluster
         run: |
           WORKDIR=$(pwd)/.github/scripts
-          PROJECT=hztest-${{ github.run_id }}-${{ github.run_attempt }}
           .github/scripts/smoke-test.sh \
                         "$WORKDIR" \
-                        "$PROJECT"  \
+                        "$PROJECT_NAME"  \
                         "$OCP_LOGIN_USERNAME"  \
                         "$OCP_LOGIN_PASSWORD" \
                         "$OCP_CLUSTER_URL" \
@@ -134,8 +134,6 @@ jobs:
 
       - name: Validate Cluster Size
         run: |
-          PROJECT=hztest-${{ github.run_id }}-${{ github.run_attempt }}
-          HZ_NAME=$PROJECT
           NAME=hazelcast-enterprise
 
           source .github/scripts/cluster-verification.sh
@@ -144,18 +142,29 @@ jobs:
 
           verify_cluster_size $CLUSTER_SIZE
 
-          echo "Waiting for ${HZ_NAME}-${NAME}-mancenter-0 pod to be ready"
-          oc wait --for=condition=Ready --timeout=120s pod ${HZ_NAME}-${NAME}-mancenter-0
+          echo "Waiting for ${PROJECT_NAME}-${NAME}-mancenter-0 pod to be ready"
+          oc wait --for=condition=Ready --timeout=120s pod ${PROJECT_NAME}-${NAME}-mancenter-0
 
           verify_management_center $CLUSTER_SIZE
         env:
           CLUSTER_SIZE: 3
 
+      - name: Get OpenShift events
+        if: ${{ always() }}
+        run: |
+          kubectl get events -n ${PROJECT_NAME} > openshift-events.log
+
+      - name: Store OpenShift events as artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: openshift-events.log
+          path: openshift-events.log
+
       - name: Clean up After Test
         if: always()
         run: |
-          PROJECT=hztest-${{ github.run_id }}-${{ github.run_attempt }}
-          .github/scripts/clean-up.sh $PROJECT
+          .github/scripts/clean-up.sh $PROJECT_NAME
 
       - name: Publish the Hazelcast Enterprise image
         run: |
