@@ -87,16 +87,17 @@ publish_the_image()
     local IMAGE_ID=$(echo "$IMAGE" | jq -r '.data[0]._id')
 
     # Publish the image
-    echo "Publishing the image..."
+    echo "Publishing the image $IMAGE_ID..."
     RESPONSE=$( \
         curl --silent \
+            --retry 5 --retry-all-errors \
             --request POST \
             --header "X-API-KEY: ${RHEL_API_KEY}" \
             --header 'Cache-Control: no-cache' \
             --header 'Content-Type: application/json' \
             --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"publish\" }" \
             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
-
+    echo "Response: $RESPONSE"
     echo "Created a image request, please check if the image is published."
 }
 
