@@ -27,7 +27,7 @@ function test_docker_image() {
 }
 
 function install_clc() {
-  CLC_URL="https://github.com/hazelcast/hazelcast-commandline-client/releases/download/${CLC_VERSION}/hazelcast-clc_${CLV_VERSION}_linux_amd64.tar.gz"
+  CLC_URL="https://github.com/hazelcast/hazelcast-commandline-client/releases/download/${CLC_VERSION}/hazelcast-clc_${CLC_VERSION}_linux_amd64.tar.gz"
   curl -L $CLC_URL | tar xzf - --strip-components=1 -C /usr/local/bin
   chmod +x /usr/local/bin/clc
 }
