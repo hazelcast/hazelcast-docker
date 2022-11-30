@@ -1,0 +1,41 @@
+name: Build PR
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+env:
+  test_container_name: hazelcast-oss-test
+  docker_log_file: docker-hazelcast-oss-test.log
+
+jobs:
+  build-pr-oss:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build OSS image
+        run: |
+          docker buildx build --load --tag hazelcast-oss:test hazelcast-oss
+
+      - name: Run smoke test against OSS image
+        timeout-minutes: 2
+        run: |
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name }}
+
+      - name: Get docker logs
+        if: ${{ always() }}
+        run: |
+          docker logs ${{ env.test_container_name }} > ${{ env.docker_log_file }}
+
+      - name: Store docker logs as artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.docker_log_file }}
+          path: ${{ env.docker_log_file }}
