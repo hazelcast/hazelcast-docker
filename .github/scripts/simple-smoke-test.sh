@@ -3,7 +3,7 @@
 set -e
 set -o pipefail
 
-export CLC_VERSION=v5.2.0-beta3-preview1
+export CLC_VERSION=v5.2.0-beta3
 
 function test_docker_image() {
     local image=$1
@@ -13,10 +13,10 @@ function test_docker_image() {
     local key="some-key"
     local expected="some-value"
     echo "Putting value '$expected' for key '$key'"
-    clc map put -n some-map $key $expected
+    clc map set -n some-map $key $expected --log.path stderr
     echo "Getting value for key '$key'"
     local actual
-    actual=$(clc map get -n some-map $key)
+    actual=$(clc map get -n some-map $key --log.path stderr)
     echo "Stopping container $container_name}"
     docker stop "$container_name"
 
