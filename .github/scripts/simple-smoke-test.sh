@@ -3,7 +3,7 @@
 set -e
 set -o pipefail
 
-export CLC_VERSION=v5.2.0-beta3-preview1
+export CLC_VERSION=v5.2.0-beta3
 
 function test_docker_image() {
     local image=$1
