@@ -13,7 +13,7 @@ function test_docker_image() {
     local key="some-key"
     local expected="some-value"
     echo "Putting value '$expected' for key '$key'"
-    clc map put -n some-map $key $expected
+    clc map set -n some-map $key $expected
     echo "Getting value for key '$key'"
     local actual
     actual=$(clc map get -n some-map $key)
