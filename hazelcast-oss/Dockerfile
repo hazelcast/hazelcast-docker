@@ -1,4 +1,4 @@
-FROM alpine:3.17.0
+FROM alpine:3.17.1
 
 # Versions of Hazelcast
 ARG HZ_VERSION=5.0.5-SNAPSHOT
