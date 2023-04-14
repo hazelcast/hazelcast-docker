@@ -76,28 +76,32 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
-          TAGS=""
-          for tag in $(.github/scripts/get-tags-to-push.sh ${{ env.RELEASE_VERSION }})
+          TAGS_TO_PUSH=$(.github/scripts/get-tags-to-push.sh ${{ env.RELEASE_VERSION }})
+          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+          TAGS_ARG=""
+          for tag in ${TAGS_TO_PUSH[@]}
           do
-             TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:${tag}${{ matrix.suffix }}"
+             TAGS_ARG="${TAGS_ARG} --tag ${{ env.DOCKER_ORG }}/hazelcast:${tag}${{ matrix.suffix }}"
           done
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
-            ${TAGS} \
+            ${TAGS_ARG} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le hazelcast-oss
 
       - name: Build/Push EE image
         run: |
-          TAGS=""
-          for tag in $(.github/scripts/get-tags-to-push.sh ${{ env.RELEASE_VERSION }})
+          TAGS_TO_PUSH=$(.github/scripts/get-tags-to-push.sh ${{ env.RELEASE_VERSION }})
+          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+          TAGS_ARG=""
+          for tag in ${TAGS_TO_PUSH[@]}
           do
-             TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${tag}${{ matrix.suffix }}"
+             TAGS_ARG="${TAGS_ARG} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${tag}${{ matrix.suffix }}"
           done
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
-            ${TAGS} \
+            ${TAGS_ARG} \
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
 
   post-push:
