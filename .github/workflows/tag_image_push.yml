@@ -81,9 +81,6 @@ jobs:
           do
              TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:${tag}${{ matrix.suffix }}"
           done
-          if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
-            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest${{ matrix.suffix }}"
-          fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
@@ -97,9 +94,6 @@ jobs:
           do
              TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${tag}${{ matrix.suffix }}"
           done
-          if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
-            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:latest${{ matrix.suffix }}"
-          fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
