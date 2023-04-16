@@ -15,6 +15,12 @@ function verlte() {
 
 function get_tags_to_push() {
   VERSION_TO_RELEASE=$1
+
+  if [[ "$VERSION_TO_RELEASE" =~ .*BETA.* ]]; then
+    echo "$VERSION_TO_RELEASE"
+    return
+  fi
+
   MINOR_VERSION_TO_RELEASE=${VERSION_TO_RELEASE%.*}
   MAJOR_VERSION_TO_RELEASE=${MINOR_VERSION_TO_RELEASE%.*}
 
