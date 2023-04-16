@@ -39,7 +39,7 @@ log_header "Tests for get_tags_to_push"
 assert_tags_to_push "5.2.0" "5.2.0"
 assert_tags_to_push "5.2.1" "5.2.1"
 assert_tags_to_push "5.1.99" "5.1.99 5.1"
-assert_tags_to_push "5.99.0" "5.99.0 5.99 5 latest" #this needs adjustment when we release 6.0
+assert_tags_to_push "4.99.0" "4.99.0 4.99 4"
 assert_tags_to_push "99.0.0" "99.0.0 99.0 99 latest"
 assert_tags_to_push "5.3.0-BETA-1" "5.3.0-BETA-1"
 assert_tags_to_push "5.99.0-BETA-1" "5.99.0-BETA-1"
