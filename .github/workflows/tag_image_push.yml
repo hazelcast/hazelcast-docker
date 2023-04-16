@@ -76,7 +76,8 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
-          TAGS_TO_PUSH=$(.github/scripts/get-tags-to-push.sh ${{ env.RELEASE_VERSION }})
+          . .github/scripts/get-tags-to-push.sh 
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }})
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -91,7 +92,8 @@ jobs:
 
       - name: Build/Push EE image
         run: |
-          TAGS_TO_PUSH=$(.github/scripts/get-tags-to-push.sh ${{ env.RELEASE_VERSION }})
+          . .github/scripts/get-tags-to-push.sh 
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }})
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
