@@ -14,6 +14,15 @@ on:
       RELEASE_VERSION:
         description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
         required: false
+      EDITIONS:
+        description: 'Editions to build'
+        required: true
+        default: 'All'
+        type: choice
+        options:
+          - All
+          - OSS
+          - EE
 
 jobs:
   push:
@@ -21,6 +30,7 @@ jobs:
     env:
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
+      EDITIONS: ${{ github.event.inputs.EDITIONS || 'All' }}
     steps:
       - name: Set HZ version as environment variable
         run: |
@@ -67,6 +77,7 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build/Push OSS image
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
         run: |
           TAGS="--tag hazelcast/hazelcast:${{ env.RELEASE_VERSION }}"
           if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
@@ -78,7 +89,7 @@ jobs:
             --platform=linux/arm64,linux/amd64,linux/ppc64le hazelcast-oss
 
       - name: Update Docker Hub Description of OSS image
-        if: env.PUSH_LATEST == 'yes'
+        if: env.PUSH_LATEST == 'yes' && (env.EDITIONS == 'All' || env.EDITIONS == 'OSS' )
         uses: peter-evans/dockerhub-description@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -88,6 +99,7 @@ jobs:
           readme-filepath: ./README.md
 
       - name: Build/Push EE image
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
         run: |
           TAGS="--tag hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}"
           if [[ "${{ env.PUSH_LATEST }}" == "yes" ]]; then
@@ -99,7 +111,7 @@ jobs:
             --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
 
       - name: Update Docker Hub Description of EE image
-        if: env.PUSH_LATEST == 'yes'
+        if: env.PUSH_LATEST == 'yes' && (env.EDITIONS == 'All' || env.EDITIONS == 'EE' )
         uses: peter-evans/dockerhub-description@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -109,14 +121,14 @@ jobs:
           readme-filepath: ./README.md
 
       - name: Scan Hazelcast image by Azure (Trivy + Dockle)
-        if: always()
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
         uses: Azure/container-scan@v0
         with:
           image-name: hazelcast/hazelcast:${{ env.RELEASE_VERSION }}
           severity-threshold: MEDIUM
 
       - name: Scan Hazelcast image by Snyk
-        if: always()
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -125,14 +137,14 @@ jobs:
           args: --file=hazelcast-oss/Dockerfile --policy-path=.github/containerscan --severity-threshold=medium
 
       - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
-        if: always()
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
         uses: Azure/container-scan@v0
         with:
           image-name: hazelcast/hazelcast-enterprise:${{ env.RELEASE_VERSION }}
           severity-threshold: MEDIUM
 
       - name: Scan Hazelcast Enterprise image by Snyk
-        if: always()
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -144,3 +156,4 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
