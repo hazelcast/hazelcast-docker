@@ -8,9 +8,9 @@ on:
         required: true
 
 jobs:
-  get-supported-versions:
+  get-latest-patch-versions:
     runs-on: ubuntu-latest
-    name: Get supported versions
+    name: Get latest patch versions
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     env:
@@ -22,20 +22,22 @@ jobs:
         with:
           fetch-depth: 0
       - id: set-matrix
-        name: Get supported versions
+        name: Get latest patch versions
         run: |
-          . .github/scripts/get-supported-versions.sh
-          versions=$(get_supported_versions "${MINIMAL_SUPPORTED_VERSION:-$DEFAULT_MINIMAL_SUPPORTED_VERSION}" | jq -R . | jq -c -s .)
-          echo "Found supported versions: $versions"
+          . .github/scripts/version.functions.sh
+          MIN_VERSION=${MINIMAL_SUPPORTED_VERSION:-$DEFAULT_MINIMAL_SUPPORTED_VERSION}
+          echo "Getting latest patch versions starting from $MIN_VERSION"
+          versions=$(printf '%s\n' $(get_latest_patch_versions "${MIN_VERSION}") | jq -R . | jq -c -s .)
+          echo "Found latest patch versions: $versions"
           echo "matrix={\"version\":$versions}" >> $GITHUB_OUTPUT
 
   trigger-rebuilds:
     runs-on: ubuntu-latest
-    name: Rebuild ${{ matrix.version }} HZ OSS if base image changed
-    needs: get-supported-versions
+    name: Rebuild ${{ matrix.version }} if base image changed
+    needs: get-latest-patch-versions
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.get-supported-versions.outputs.matrix) }}
+      matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
