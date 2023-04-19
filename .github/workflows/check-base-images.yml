@@ -70,27 +70,15 @@ jobs:
       - name: Rebuild ${{ matrix.version }} OSS image
         if: env.OSS_NEEDS_REBUILD == 'yes'
         run: |
-          . .github/scripts/log.functions.sh
-          if cat v${{ matrix.version }}/.github/workflows/tag_image_push.yml | grep -q "EDITIONS:"; then 
-            echo "EDITIONS flag supported, rebuilding only OSS image"
-            EXTRA_FLAGS="-f EDITIONS=OSS"
-          else
-            log_warn "EDITIONS flag NOT supported, rebuilding OSS and EE images"
-          fi
-          gh workflow run tag_image_push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }} ${EXTRA_FLAGS}
+          echo "Rebuilding ${{ matrix.version }} OSS image"
+          gh workflow run tag_image_push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }} -f EDITIONS=OSS
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Rebuild ${{ matrix.version }} EE image
         if: env.EE_NEEDS_REBUILD == 'yes'
         run: |
-          . .github/scripts/log.functions.sh
-          if cat v${{ matrix.version }}/.github/workflows/tag_image_push.yml | grep -q "EDITIONS:"; then 
-          echo "EDITIONS flag supported, rebuilding only EE image"
-            EXTRA_FLAGS="-f EDITIONS=EE"
-          else
-            log_warn "EDITIONS flag NOT supported, rebuilding OSS and EE images"
-          fi
-          gh workflow run tag_image_push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }} ${EXTRA_FLAGS}
+          echo "Rebuilding ${{ matrix.version }} EE image"
+          gh workflow run tag_image_push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }} -f EDITIONS=EE
           gh workflow run tag_image_push_rhel.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }}
         env:
           GH_TOKEN: ${{ github.token }}
