@@ -50,22 +50,35 @@ jobs:
       - name: Check if ${{ matrix.version }} base images updated
         run: |
           . .github/scripts/base-image-updated.sh
+          . .github/scripts/packages-updated.sh
           . .github/scripts/log.functions.sh
           echo "Checking OSS ${{ matrix.version }} image"
           if base_image_updated hazelcast/hazelcast:${{ matrix.version }} v${{ matrix.version }}/hazelcast-oss/Dockerfile; then
             echo "OSS_NEEDS_REBUILD=yes" >> $GITHUB_ENV
             log_info "Image OSS ${{ matrix.version }} needs rebuild"
           else
-            echo "OSS_NEEDS_REBUILD=no" >> $GITHUB_ENV
             log_info "Image OSS ${{ matrix.version }} is up-to-date"
+          fi
+          echo "Checking system package upgrades for OSS ${{ matrix.version }} image"
+          if packages_updated_oss hazelcast/hazelcast:${{ matrix.version }}; then
+            echo "OSS_NEEDS_REBUILD=yes" >> $GITHUB_ENV
+            log_info "System package upgrades for OSS ${{ matrix.version }} image available"
+          else
+            log_info "System packages for OSS ${{ matrix.version }} image are up-to-date"
           fi
           echo "Checking EE ${{ matrix.version }} image"
           if base_image_updated hazelcast/hazelcast-enterprise:${{ matrix.version }} v${{ matrix.version }}/hazelcast-enterprise/Dockerfile; then 
             echo "EE_NEEDS_REBUILD=yes" >> $GITHUB_ENV
             log_info "Image EE ${{ matrix.version }} needs rebuild"
           else
-            echo "EE_NEEDS_REBUILD=no" >> $GITHUB_ENV
             log_info "Image EE ${{ matrix.version }} is up-to-date"
+          fi
+          echo "Checking system package upgrades for EE ${{ matrix.version }} image"
+          if packages_updated_ee hazelcast/hazelcast-enterprise:${{ matrix.version }}; then
+            echo "EE_NEEDS_REBUILD=yes" >> $GITHUB_ENV
+            log_info "System package upgrades for EE ${{ matrix.version }} image available"
+          else
+            log_info "System packages for EE ${{ matrix.version }} image are up-to-date"
           fi
       - name: Rebuild ${{ matrix.version }} OSS image
         if: env.OSS_NEEDS_REBUILD == 'yes'
