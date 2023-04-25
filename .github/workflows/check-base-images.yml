@@ -1,10 +1,97 @@
 name: Check base images
+
 on:
   workflow_dispatch:
+    inputs:
+      MINIMAL_SUPPORTED_VERSION:
+        description: 'Minimal supported version from which we should start checking images, e.g. 5.1.1, 5.0.1, 4.2.3. Default values is 4.2'
+        required: true
 
 jobs:
-  greet:
+  get-latest-patch-versions:
     runs-on: ubuntu-latest
+    name: Get latest patch versions
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    env:
+      MINIMAL_SUPPORTED_VERSION: ${{ github.event.inputs.MINIMAL_SUPPORTED_VERSION }}
+      DEFAULT_MINIMAL_SUPPORTED_VERSION: 4.2
     steps:
-    - name: Send greeting
-      run: echo "Hello World!"
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - id: set-matrix
+        name: Get latest patch versions
+        run: |
+          . .github/scripts/version.functions.sh
+          MIN_VERSION=${MINIMAL_SUPPORTED_VERSION:-$DEFAULT_MINIMAL_SUPPORTED_VERSION}
+          echo "Getting latest patch versions starting from $MIN_VERSION"
+          versions=$(printf '%s\n' $(get_latest_patch_versions "${MIN_VERSION}") | jq -R . | jq -c -s .)
+          echo "Found latest patch versions: $versions"
+          echo "matrix={\"version\":$versions}" >> $GITHUB_OUTPUT
+
+  trigger-rebuilds:
+    runs-on: ubuntu-latest
+    name: Rebuild ${{ matrix.version }} if base image changed
+    needs: get-latest-patch-versions
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Checkout version ${{ matrix.version }}
+        uses: actions/checkout@v3
+        with:
+          ref: v${{ matrix.version }}
+          path: v${{ matrix.version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check if ${{ matrix.version }} base images updated
+        run: |
+          . .github/scripts/base-image-updated.sh
+          . .github/scripts/packages-updated.sh
+          . .github/scripts/log.functions.sh
+          echo "Checking OSS ${{ matrix.version }} image"
+          if base_image_updated hazelcast/hazelcast:${{ matrix.version }} v${{ matrix.version }}/hazelcast-oss/Dockerfile; then
+            echo "OSS_NEEDS_REBUILD=yes" >> $GITHUB_ENV
+            log_info "Image OSS ${{ matrix.version }} needs rebuild"
+          else
+            log_info "Image OSS ${{ matrix.version }} is up-to-date"
+          fi
+          echo "Checking system package upgrades for OSS ${{ matrix.version }} image"
+          if packages_updated_oss hazelcast/hazelcast:${{ matrix.version }}; then
+            echo "OSS_NEEDS_REBUILD=yes" >> $GITHUB_ENV
+            log_info "System package upgrades for OSS ${{ matrix.version }} image available"
+          else
+            log_info "System packages for OSS ${{ matrix.version }} image are up-to-date"
+          fi
+          echo "Checking EE ${{ matrix.version }} image"
+          if base_image_updated hazelcast/hazelcast-enterprise:${{ matrix.version }} v${{ matrix.version }}/hazelcast-enterprise/Dockerfile; then 
+            echo "EE_NEEDS_REBUILD=yes" >> $GITHUB_ENV
+            log_info "Image EE ${{ matrix.version }} needs rebuild"
+          else
+            log_info "Image EE ${{ matrix.version }} is up-to-date"
+          fi
+          echo "Checking system package upgrades for EE ${{ matrix.version }} image"
+          if packages_updated_ee hazelcast/hazelcast-enterprise:${{ matrix.version }}; then
+            echo "EE_NEEDS_REBUILD=yes" >> $GITHUB_ENV
+            log_info "System package upgrades for EE ${{ matrix.version }} image available"
+          else
+            log_info "System packages for EE ${{ matrix.version }} image are up-to-date"
+          fi
+      - name: Rebuild ${{ matrix.version }} OSS image
+        if: env.OSS_NEEDS_REBUILD == 'yes'
+        run: |
+          echo "Rebuilding ${{ matrix.version }} OSS image"
+          gh workflow run tag_image_push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }} -f EDITIONS=OSS
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Rebuild ${{ matrix.version }} EE image
+        if: env.EE_NEEDS_REBUILD == 'yes'
+        run: |
+          echo "Rebuilding ${{ matrix.version }} EE image"
+          gh workflow run tag_image_push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }} -f EDITIONS=EE
+          gh workflow run tag_image_push_rhel.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }}
+        env:
+          GH_TOKEN: ${{ github.token }}
