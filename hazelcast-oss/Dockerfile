@@ -27,7 +27,9 @@ EXPOSE 5701
 COPY *.jar get-hz-dist-zip.sh ${HZ_HOME}/
 
 # Install
-RUN echo "Installing new APK packages" \
+RUN echo "Upgrading APK packages" \
+    && apk upgrade --no-cache \
+    && echo "Installing new APK packages" \
     && apk add --no-cache openjdk11-jre-headless bash curl libxml2-utils zip unzip \
     && echo "Downloading Hazelcast${HZ_VARIANT} distribution zip..." \
     && HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-dist-zip.sh) \
