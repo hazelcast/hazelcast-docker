@@ -82,14 +82,29 @@ jobs:
 
       - name: Build the Hazelcast Enterprise image
         run: |
+          . .github/scripts/get-tags-to-push.sh 
+          TAGS_TO_PUSH=$(get_tags_to_push $RELEASE_VERSION)
+          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+          TAGS_ARG=""
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+             TAGS_ARG="${TAGS_ARG} --tag ${SCAN_REPOSITORY}:${tag}"
+          done
+          echo "TAGS_TO_PUSH=${TAGS_TO_PUSH}" >> $GITHUB_ENV
+          
+          echo "TAGS_ARG=$TAGS_ARG"
           docker build \
                 --build-arg HZ_VERSION=${HZ_VERSION} \
-                --tag ${RHEL_IMAGE} hazelcast-enterprise
+                ${TAGS_ARG} hazelcast-enterprise
 
       - name: Log in to Red Hat Scan Registry and Push the Image
         run: |
           docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
-          docker push ${RHEL_IMAGE}
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+            echo "Pushing ${SCAN_REPOSITORY}:${tag}"
+            docker push ${SCAN_REPOSITORY}:${tag}
+          done
 
       - name: Install preflight tool
         run: |
@@ -173,3 +188,4 @@ jobs:
 
           publish_the_image "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
           wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
+          sync_tags "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
