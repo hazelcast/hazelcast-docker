@@ -71,6 +71,8 @@ publish_the_image()
     local VERSION=$2
     local RHEL_API_KEY=$3
 
+    echo "Starting publishing the image for $VERSION"
+
     local IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
     local IMAGE_EXISTS=$(echo $IMAGE | jq -r '.total')
     if [[ $IMAGE_EXISTS == "1" ]]; then
@@ -86,7 +88,6 @@ publish_the_image()
 
     local IMAGE_ID=$(echo "$IMAGE" | jq -r '.data[0]._id')
 
-    # Publish the image
     echo "Publishing the image $IMAGE_ID..."
     RESPONSE=$( \
         curl --silent \
@@ -98,7 +99,45 @@ publish_the_image()
             --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"publish\" }" \
             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
     echo "Response: $RESPONSE"
-    echo "Created a image request, please check if the image is published."
+    echo "Created a publish request, please check if the image is published."
+}
+
+
+sync_tags()
+{
+    local RHEL_PROJECT_ID=$1
+    local VERSION=$2
+    local RHEL_API_KEY=$3
+
+    echo "Starting sync tags for $VERSION"
+
+    local IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+    local IMAGE_EXISTS=$(echo $IMAGE | jq -r '.total')
+    if [[ $IMAGE_EXISTS != "0" ]]; then
+        local SCAN_STATUS=$(echo $IMAGE | jq -r '.data[0].scan_status')
+        if [[ $SCAN_STATUS != "passed" ]]; then
+            echo "Image you are trying to publish did not pass the certification test, its status is \"${SCAN_STATUS}\""
+            return 1
+        fi
+    else
+        echo "Image you are trying to publish does not exist."
+        return 1
+    fi
+
+    local IMAGE_ID=$(echo "$IMAGE" | jq -r '.data[0]._id')
+
+    echo "Syncing tags of the image $IMAGE_ID..."
+    RESPONSE=$( \
+        curl --silent \
+            --retry 5 --retry-all-errors \
+            --request POST \
+            --header "X-API-KEY: ${RHEL_API_KEY}" \
+            --header 'Cache-Control: no-cache' \
+            --header 'Content-Type: application/json' \
+            --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"sync-tags\" }" \
+            "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
+    echo "Response: $RESPONSE"
+    echo "Created a sync-tags request, please check if the tags image are in sync."
 }
 
 wait_for_container_publish()
