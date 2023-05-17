@@ -23,6 +23,8 @@ on:
           - All
           - OSS
           - EE
+env:
+  test_container_name: hazelcast-oss-test
 
 jobs:
   push:
@@ -48,6 +50,7 @@ jobs:
              HZ_VERSION=${{ env.HZ_VERSION }}
           fi
           echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE=docker-hazelcast-oss-test${{ matrix.suffix }}.log" >> $GITHUB_ENV
 
       - name: Set Release version as environment variable
         run: |
@@ -84,7 +87,34 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build/Push OSS image
+      - name: Build Test OSS image
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
+        run: |
+          docker buildx build --load \
+            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --tag hazelcast-oss:test \
+            hazelcast-oss
+
+      - name: Run smoke test against OSS image
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
+        timeout-minutes: 2
+        run: |
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name }}
+
+      - name: Get docker logs
+        if: ${{ always() }}
+        run: |
+          docker logs ${{ env.test_container_name }} > ${{ env.DOCKER_LOG_FILE }}
+
+      - name: Store docker logs as artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.DOCKER_LOG_FILE }}
+          path: ${{ env.DOCKER_LOG_FILE }}
+
+      - name: Build and Push OSS image
         if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
         run: |
           . .github/scripts/get-tags-to-push.sh 
@@ -145,6 +175,7 @@ jobs:
           readme-filepath: ./README.md
 
       - name: Create release
+        if: github.event_name == 'push'
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
