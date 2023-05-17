@@ -175,6 +175,7 @@ jobs:
           readme-filepath: ./README.md
 
       - name: Create release
+        if: github.event_name == 'push'
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
