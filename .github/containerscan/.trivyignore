@@ -1,1 +1,4 @@
 # Add ignored CVEs in new lines below
+
+#See https://github.com/hazelcast/hazelcast/issues/20807 and https://issues.apache.org/jira/browse/HADOOP-18197
+CVE-2022-3171
