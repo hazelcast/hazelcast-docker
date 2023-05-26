@@ -1,0 +1,4 @@
+# Add ignored checkpoints in new lines below
+
+# Caused by the EE upstream image: redhat/ubi8-minimal
+CIS-DI-0009
