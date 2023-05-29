@@ -28,6 +28,7 @@ jobs:
   push:
     runs-on: ubuntu-latest
     env:
+      DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
       EDITIONS: ${{ github.event.inputs.EDITIONS || 'All' }}
