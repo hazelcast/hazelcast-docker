@@ -1,8 +1,6 @@
 dependency-tree: true
 exit-code: 1
 ignorefile: .github/containerscan/.trivyignore
-severity:
-  - CRITICAL
-  - HIGH
 vulnerability:
   ignore-unfixed: true
+debug: true
