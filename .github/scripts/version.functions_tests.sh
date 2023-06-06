@@ -65,9 +65,9 @@ function assert_latest_patch_versions_not_contain {
 }
 
 log_header "Tests for get_latest_patch_version"
-assert_latest_patch_version "4.2.1" "4.2.7"
-assert_latest_patch_version "4.2" "4.2.7"
-assert_latest_patch_version "4.2" "4.2.7"
+assert_latest_patch_version "4.2.1" "4.2.8"
+assert_latest_patch_version "4.2" "4.2.8"
+assert_latest_patch_version "4.2" "4.2.8"
 assert_latest_patch_version "4.0" "4.0.6"
 assert_latest_patch_version "4.1-BETA-1" "4.1.10"
 assert_latest_patch_version "4.1" "4.1.10"
