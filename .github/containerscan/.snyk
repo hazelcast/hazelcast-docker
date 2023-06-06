@@ -1,2 +1,9 @@
-version: v1.5.0
-patch: {}
+ignore:
+  SNYK-JAVA-COMGOOGLEPROTOBUF-2331703:
+    - '*':
+        reason: See https://github.com/hazelcast/hazelcast/issues/20807 and https://issues.apache.org/jira/browse/HADOOP-18197
+        expires: 2023-11-01T00:00:00.000Z
+  SNYK-JAVA-COMGOOGLEPROTOBUF-3167772:
+    - '*':
+        reason: See https://github.com/hazelcast/hazelcast/issues/20807 and https://issues.apache.org/jira/browse/HADOOP-18197
+        expires: 2023-11-01T00:00:00.000Z
