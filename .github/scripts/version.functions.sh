@@ -7,11 +7,11 @@ function get_supported_versions() {
 
 function get_minor_versions() {
   local MINIMAL_VERSION=$1
-  get_supported_versions "$MINIMAL_VERSION" | cut -c1,2,3 | uniq
+  get_supported_versions "$MINIMAL_VERSION" | cut -d'-' -f1 |  cut  -d'.' -f1,2 | uniq
 }
 
 function get_latest_patch_version() {
-  local MINOR_VERSION=${1:0:3}
+  local MINOR_VERSION=$(echo "$1" | cut  -d'-' -f1 |  cut  -d'.' -f1,2)
   get_supported_versions "" | grep "$MINOR_VERSION" | tail -n 1
 }
 
