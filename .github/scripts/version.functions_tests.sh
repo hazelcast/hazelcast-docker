@@ -74,6 +74,7 @@ assert_latest_patch_version "4.1" "4.1.10"
 assert_latest_patch_version "3.9" "3.9.4"
 
 log_header "Tests for get_minor_versions"
+assert_minor_versions_contain "3.12" "3.12"
 assert_minor_versions_contain "4.2" "4.2"
 assert_minor_versions_contain "4.2" "5.0"
 assert_minor_versions_contain "4.2" "5.1"
