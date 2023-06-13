@@ -6,3 +6,4 @@ severity:
   - HIGH
 vulnerability:
   ignore-unfixed: true
+debug: true
