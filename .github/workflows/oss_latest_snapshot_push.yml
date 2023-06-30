@@ -57,7 +57,7 @@ jobs:
           if [[ "${{ matrix.jdk }}" != "17" ]]; then
             PLATFORMS="${PLATFORMS},linux/ppc64le"
           fi
-          docker buildx build --load \
+          docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
