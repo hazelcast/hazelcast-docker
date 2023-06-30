@@ -15,11 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        jdk: [ '11', '17' ]
+        variant: [ 'slim','' ]
         include:
-         - variant: slim
-           suffix: '-slim'
-         - variant: ''
-           suffix: ''
+          - variant: slim
+            suffix: '-slim'
+          - variant: ''
+            suffix: ''
     env:
       DOCKER_ORG: hazelcast
     steps:
@@ -39,13 +41,21 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
-          TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
+          DEFAULT_JDK=11
+          if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+            TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
+          fi
+          TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}"
+            if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+              TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}"
+            fi
+            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
           fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
             $TAGS \
             --platform=linux/arm64,linux/amd64,linux/ppc64le hazelcast-oss
