@@ -4,6 +4,7 @@ FROM redhat/ubi8-minimal:8.8
 ARG HZ_VERSION=5.4.0-SNAPSHOT
 # Variant - empty for full, "slim" for slim
 ARG HZ_VARIANT=""
+ARG JDK_VERSION="11"
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
@@ -40,7 +41,7 @@ COPY *.jar get-hz-ee-dist-zip.sh hazelcast-*.zip ${HZ_HOME}/
 RUN echo "Installing new packages" \
     && microdnf update --nodocs \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-8-appstream-rpms --enablerepo=ubi-8-baseos-rpms \
-        --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip tar \
+        --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
         HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-ee-dist-zip.sh); \
         echo "Downloading Hazelcast${HZ_VARIANT} distribution zip from $(echo $HAZELCAST_ZIP_URL | sed "s/?.*//g")..."; \
