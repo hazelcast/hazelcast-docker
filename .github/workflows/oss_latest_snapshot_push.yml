@@ -52,7 +52,7 @@ jobs:
             fi
             TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
           fi
-          docker buildx build --push \
+          docker buildx build --load \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
