@@ -123,8 +123,8 @@ jobs:
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          docker logs ${{ env.test_container_name_oss }} > ${{ env.DOCKER_LOG_FILE_OSS }}
-          docker logs ${{ env.test_container_name_ee }} > ${{ env.DOCKER_LOG_FILE_EE }}
+          docker logs ${{ env.test_container_name_oss }} > ${{ env.DOCKER_LOG_FILE_OSS }} || true
+          docker logs ${{ env.test_container_name_ee }} > ${{ env.DOCKER_LOG_FILE_EE }} || true
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
