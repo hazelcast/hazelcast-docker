@@ -44,7 +44,7 @@ COPY licenses /licenses
 RUN echo "Installing new packages" \
     && microdnf update --nodocs \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-8-appstream-rpms --enablerepo=ubi-8-baseos-rpms \
-        --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip tar \
+        --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip tar tzdata-java \
     && echo "Downloading Hazelcast and related JARs" \
     && mkdir -p "${HZ_HOME}/lib" \
     && cd "${HZ_HOME}/lib" \
