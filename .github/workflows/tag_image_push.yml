@@ -24,7 +24,8 @@ on:
           - OSS
           - EE
 env:
-  test_container_name: hazelcast-oss-test
+  test_container_name_oss: hazelcast-oss-test
+  test_container_name_ee: hazelcast-ee-test
 
 jobs:
   push:
@@ -50,7 +51,8 @@ jobs:
              HZ_VERSION=${{ env.HZ_VERSION }}
           fi
           echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
-          echo "DOCKER_LOG_FILE=docker-hazelcast-oss-test${{ matrix.suffix }}.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${{ matrix.suffix }}.log" >> $GITHUB_ENV
 
       - name: Set Release version as environment variable
         run: |
@@ -100,19 +102,38 @@ jobs:
         if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name }}
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
+
+      - name: Build Test EE image
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
+        run: |
+          docker buildx build --load \
+            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --tag hazelcast-ee:test \
+            hazelcast-enterprise
+
+      - name: Run smoke test against EE image
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
+        timeout-minutes: 2
+        run: |
+          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }}
 
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          docker logs ${{ env.test_container_name }} > ${{ env.DOCKER_LOG_FILE }}
+          docker logs ${{ env.test_container_name_oss }} > ${{ env.DOCKER_LOG_FILE_OSS }} || true
+          docker logs ${{ env.test_container_name_ee }} > ${{ env.DOCKER_LOG_FILE_EE }} || true
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.DOCKER_LOG_FILE }}
-          path: ${{ env.DOCKER_LOG_FILE }}
+          name: docker-logs
+          path: | 
+            ${{ env.DOCKER_LOG_FILE_OSS }}
+            ${{ env.DOCKER_LOG_FILE_EE }}
 
       - name: Build and Push OSS image
         if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
