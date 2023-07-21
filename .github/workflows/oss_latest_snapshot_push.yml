@@ -9,6 +9,8 @@ on:
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
         required: true
+env:
+  test_container_name_oss: hazelcast-oss-test
 
 jobs:
   push:
@@ -33,6 +35,34 @@ jobs:
         uses: docker/setup-buildx-action@v2.2.1
         with:
           version: v0.5.1
+
+      - name: Build Test OSS image
+        run: |
+          docker buildx build --load \
+            --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --tag hazelcast-oss:test \
+            hazelcast-oss
+
+      - name: Run smoke test against OSS image
+        timeout-minutes: 2
+        run: |
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
+
+      - name: Get docker logs
+        if: ${{ always() }}
+        run: |
+          DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}.log
+          echo "DOCKER_LOG_FILE_OSS=${DOCKER_LOG_FILE_OSS}" >> $GITHUB_ENV
+          docker logs ${{ env.test_container_name_oss }} > ${DOCKER_LOG_FILE_OSS} || true
+
+      - name: Store docker logs as artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-logs
+          path: |
+            ${{ env.DOCKER_LOG_FILE_OSS }}
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
