@@ -23,6 +23,9 @@ on:
           - All
           - OSS
           - EE
+env:
+  test_container_name_oss: hazelcast-oss-test
+  test_container_name_ee: hazelcast-ee-test
 
 jobs:
   push:
@@ -41,6 +44,8 @@ jobs:
              HZ_VERSION=${{ env.HZ_VERSION }}
           fi
           echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test.log" >> $GITHUB_ENV
 
       - name: Set Release version as environment variable
         run: |
@@ -67,17 +72,61 @@ jobs:
           echo ${{ env.PUSH_LATEST }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2.0.0
+        uses: docker/setup-qemu-action@v2.2.0
 
       - name:  Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.0.0
+        uses: docker/setup-buildx-action@v2.2.1
         with:
           version: v0.5.1
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build/Push OSS image
+      - name: Build Test OSS image
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
+        run: |
+          docker buildx build --load \
+            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --tag hazelcast-oss:test \
+            hazelcast-oss
+
+      - name: Run smoke test against OSS image
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
+        timeout-minutes: 2
+        run: |
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
+
+      - name: Build Test EE image
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
+        run: |
+          docker buildx build --load \
+            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --tag hazelcast-ee:test \
+            hazelcast-enterprise
+
+      - name: Run smoke test against EE image
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
+        timeout-minutes: 2
+        run: |
+          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }}
+
+      - name: Get docker logs
+        if: ${{ always() }}
+        run: |
+          docker logs ${{ env.test_container_name_oss }} > ${{ env.DOCKER_LOG_FILE_OSS }} || true
+          docker logs ${{ env.test_container_name_ee }} > ${{ env.DOCKER_LOG_FILE_EE }} || true
+
+      - name: Store docker logs as artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-logs
+          path: | 
+            ${{ env.DOCKER_LOG_FILE_OSS }}
+            ${{ env.DOCKER_LOG_FILE_EE }}
+
+      - name: Build and Push OSS image
         if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
         run: |
           . .github/scripts/get-tags-to-push.sh 
@@ -162,6 +211,7 @@ jobs:
           args: --file=hazelcast-enterprise/Dockerfile --policy-path=.github/containerscan --severity-threshold=medium
 
       - name: Create release
+        if: github.event_name == 'push'
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
