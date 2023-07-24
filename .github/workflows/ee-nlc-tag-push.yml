@@ -57,6 +57,7 @@ jobs:
       - name: Run smoke test against EE image
         timeout-minutes: 2
         run: |
+          export HZ_INSTANCETRACKING_FILENAME=instance-tracking.txt
           .github/scripts/simple-smoke-test.sh ${NLC_IMAGE_NAME}:${RELEASE_VERSION} ${{ env.test_container_name_ee }}
 
       - name: Get docker logs
