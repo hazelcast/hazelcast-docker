@@ -9,6 +9,8 @@ on:
       HZ_EE_REVISION:
         description: 'Commit id of Hazelcast Enterprise snapshot jar'
         required: true
+env:
+  test_container_name_ee: hazelcast-ee-test
 
 jobs:
   push:
@@ -49,6 +51,26 @@ jobs:
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
             --tag ${NLC_IMAGE_NAME}:${HZ_VERSION} hazelcast-enterprise
+
+      - name: Run smoke test against EE image
+        timeout-minutes: 2
+        run: |
+          .github/scripts/simple-smoke-test.sh ${NLC_IMAGE_NAME}:${HZ_VERSION} ${{ env.test_container_name_ee }}
+
+      - name: Get docker logs
+        if: ${{ always() }}
+        run: |
+          DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test.log
+          echo "DOCKER_LOG_FILE_EE=${DOCKER_LOG_FILE_EE}" >> $GITHUB_ENV
+          docker logs ${{ env.test_container_name_ee }} > ${DOCKER_LOG_FILE_EE}
+
+      - name: Store docker logs as artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-logs
+          path: |
+            ${{ env.DOCKER_LOG_FILE_EE }}
 
       - name: Push EE image
         run: docker push ${NLC_IMAGE_NAME}:${HZ_VERSION} 
