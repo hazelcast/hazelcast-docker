@@ -1,4 +1,4 @@
-FROM redhat/ubi8-minimal:8.7
+FROM redhat/ubi8-minimal:8.8
 
 # Versions of Hazelcast
 ARG HZ_VERSION=5.1.8-SNAPSHOT
@@ -8,6 +8,7 @@ ARG HZ_VARIANT=""
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
+ARG HAZELCAST_ZIP_URL=""
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -39,11 +40,13 @@ COPY *.jar get-hz-ee-dist-zip.sh hazelcast-*.zip ${HZ_HOME}/
 RUN echo "Installing new packages" \
     && microdnf update --nodocs \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-8-appstream-rpms --enablerepo=ubi-8-baseos-rpms \
-        --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip tar \
-    && echo "Downloading Hazelcast${HZ_VARIANT} distribution zip..." \
+        --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip tar tzdata-java \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
         HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-ee-dist-zip.sh); \
+        echo "Downloading Hazelcast${HZ_VARIANT} distribution zip from $(echo $HAZELCAST_ZIP_URL | sed "s/?.*//g")..."; \
         curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
+    else \
+           echo "Using local hazelcast-enterprise-distribution.zip"; \
        fi \
     && unzip -qq ${HZ_HOME}/hazelcast-enterprise-distribution.zip 'hazelcast-*/**' -d ${HZ_HOME}/tmp/ \
     && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
