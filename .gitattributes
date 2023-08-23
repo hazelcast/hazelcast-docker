@@ -1,0 +1,2 @@
+# linux line-endings
+*.sh        text eol=lf
