@@ -42,7 +42,9 @@ RUN echo "Upgrading APK packages" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Cleaning APK packages and redundant files/folders" \
     && apk del libxml2-utils zip unzip \
-    && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-dist-zip.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp
+    && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-dist-zip.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp \
+    # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
+    && chmod +x ${HZ_HOME}/bin/*
 
 COPY log4j2.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
