@@ -57,7 +57,9 @@ RUN echo "Installing new packages" \
     && echo "Removing cached package data and unnecessary tools" \
     && microdnf remove zip unzip \
     && microdnf -y clean all \
-    && rm -rf ${HZ_HOME}/get-hz-ee-dist-zip.sh ${HZ_HOME}/hazelcast-enterprise-distribution.zip ${HZ_HOME}/tmp
+    && rm -rf ${HZ_HOME}/get-hz-ee-dist-zip.sh ${HZ_HOME}/hazelcast-enterprise-distribution.zip ${HZ_HOME}/tmp \
+    # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
+    && chmod +x ${HZ_HOME}/bin/*
 
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
