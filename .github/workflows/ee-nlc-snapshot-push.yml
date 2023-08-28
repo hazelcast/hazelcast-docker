@@ -24,10 +24,10 @@ jobs:
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -46,18 +46,26 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${NLC_REPO_TOKEN}" | docker login -u ${NLC_REPO_USERNAME} ${NLC_REPOSITORY} --password-stdin
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2.2.0
+
+      - name:  Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.2.1
+        with:
+          version: v0.5.1
+
       - name: Build EE image
         run: |
-          docker build \
+          docker buildx build --load \
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
-            --tag ${NLC_IMAGE_NAME}:${HZ_VERSION} hazelcast-enterprise
+            --tag hazelcast-nlc:test hazelcast-enterprise
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
         run: |
           export HZ_INSTANCETRACKING_FILENAME=instance-tracking.txt
-          .github/scripts/simple-smoke-test.sh ${NLC_IMAGE_NAME}:${HZ_VERSION} ${{ env.test_container_name_ee }}
+          .github/scripts/simple-smoke-test.sh hazelcast-nlc:test ${{ env.test_container_name_ee }}
 
       - name: Get docker logs
         if: ${{ always() }}
@@ -74,5 +82,10 @@ jobs:
           path: |
             ${{ env.DOCKER_LOG_FILE_EE }}
 
-      - name: Push EE image
-        run: docker push ${NLC_IMAGE_NAME}:${HZ_VERSION} 
+      - name: Build/Push EE image
+        run: |
+          docker buildx build --push \
+            --build-arg HZ_VERSION=${HZ_VERSION} \
+            --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
+            --tag ${NLC_IMAGE_NAME}:${HZ_VERSION} \
+            --platform=linux/arm64,linux/amd64 hazelcast-enterprise
