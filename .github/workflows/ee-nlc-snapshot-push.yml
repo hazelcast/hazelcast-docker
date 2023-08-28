@@ -54,7 +54,7 @@ jobs:
 
       - name: Build EE image
         run: |
-          docker build \
+          docker buildx build --load \
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \

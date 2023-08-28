@@ -57,7 +57,7 @@ jobs:
 
       - name: Build EE image
         run: |
-          docker build \
+          docker buildx build --load \
             --build-arg HZ_VERSION=${RELEASE_VERSION} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --tag hazelcast-nlc:test hazelcast-enterprise
