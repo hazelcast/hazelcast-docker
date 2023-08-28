@@ -9,7 +9,7 @@ function test_docker_image() {
     local image=$1
     local container_name=$2
     echo "Starting container '$container_name' from image '$image'"
-    docker run -it --name "$container_name" -e HZ_LICENSEKEY -d -p5701:5701 "$image"
+    docker run -it --name "$container_name" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "$image"
     local key="some-key"
     local expected="some-value"
     echo "Putting value '$expected' for key '$key'"
