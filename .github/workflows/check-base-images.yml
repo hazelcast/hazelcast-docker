@@ -37,6 +37,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Rebuild ${{ matrix.version }} if base image changed
     needs: get-latest-patch-versions
+    env:
+      NLC_REPOSITORY: ${{ secrets.NLC_REPOSITORY }}
+      NLC_REPO_USERNAME: ${{ secrets.NLC_REPO_USERNAME }}
+      NLC_REPO_TOKEN: ${{ secrets.NLC_REPO_TOKEN }}
+      NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
@@ -49,6 +54,8 @@ jobs:
           ref: v${{ matrix.version }}
           path: v${{ matrix.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to NLC Docker Repository
+        run: echo "${NLC_REPO_TOKEN}" | docker login -u ${NLC_REPO_USERNAME} ${NLC_REPOSITORY} --password-stdin
       - name: Check if ${{ matrix.version }} base images updated
         run: |
           . .github/scripts/base-image-updated.sh
@@ -82,6 +89,20 @@ jobs:
           else
             log_info "System packages for EE ${{ matrix.version }} image are up-to-date"
           fi
+          echo "Checking EE NLC ${{ matrix.version }} image"
+          if base_image_updated ${NLC_IMAGE_NAME}:${{ matrix.version }} v${{ matrix.version }}/hazelcast-enterprise/Dockerfile; then 
+            echo "EE_NLC_NEEDS_REBUILD=yes" >> $GITHUB_ENV
+            log_info "Image EE NLC ${{ matrix.version }} needs rebuild"
+          else
+            log_info "Image EE NLC ${{ matrix.version }} is up-to-date"
+          fi
+          echo "Checking system package upgrades for EE NLC ${{ matrix.version }} image"
+          if packages_updated_ee ${NLC_IMAGE_NAME}:${{ matrix.version }}; then
+            echo "EE_NLC_NEEDS_REBUILD=yes" >> $GITHUB_ENV
+            log_info "System package upgrades for EE NLC ${{ matrix.version }} image available"
+          else
+            log_info "System packages for EE NLC ${{ matrix.version }} image are up-to-date"
+          fi
       - name: Rebuild ${{ matrix.version }} OSS image
         if: env.OSS_NEEDS_REBUILD == 'yes'
         run: |
@@ -95,6 +116,12 @@ jobs:
           echo "Rebuilding ${{ matrix.version }} EE image"
           gh workflow run tag_image_push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }} -f EDITIONS=EE
           gh workflow run tag_image_push_rhel.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Rebuild ${{ matrix.version }} EE NLC image
+        if: env.EE_NLC_NEEDS_REBUILD == 'yes'
+        run: |
+          echo "Rebuilding ${{ matrix.version }} EE NLC image"
           gh workflow run ee-nlc-tag-push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }}
         env:
           GH_TOKEN: ${{ github.token }}
