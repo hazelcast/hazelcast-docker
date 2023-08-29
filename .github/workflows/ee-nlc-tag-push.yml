@@ -6,11 +6,11 @@ on:
       - "!*"
     tags:
       - "v5.*"
-    workflow_dispatch:
-      inputs:
-        HZ_VERSION:
-          description: 'Version of Hazelcast to build the image for, e.g. 5.3.2, 5.1.1, 5.0.1'
-          required: true
+  workflow_dispatch:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to build the image for, e.g. 5.3.2, 5.1.1, 5.0.1'
+        required: true
 
 env:
   test_container_name_ee: hazelcast-ee-test
