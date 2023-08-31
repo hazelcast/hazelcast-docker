@@ -8,6 +8,9 @@
 # The slim is an artifact with a classifier, need to add `-` there
 if [[ -n "${HZ_VARIANT}" ]]; then SUFFIX="-${HZ_VARIANT}"; fi
 
+# Use predefined $HAZELCAST_ZIP_URL if set
+if [[ -n "${HAZELCAST_ZIP_URL}" ]]; then echo "$HAZELCAST_ZIP_URL"; exit; fi
+
 if [[ "${HZ_VERSION}" == *"SNAPSHOT"* ]]
 then
     curl -O -fsSL https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/${HZ_VERSION}/maven-metadata.xml
