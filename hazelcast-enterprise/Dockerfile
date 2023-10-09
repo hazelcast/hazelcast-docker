@@ -1,4 +1,4 @@
-FROM redhat/ubi8-minimal:8.8
+FROM redhat/ubi9-minimal:9.2
 
 # Versions of Hazelcast
 ARG HZ_VERSION=5.4.0-SNAPSHOT
@@ -39,7 +39,7 @@ COPY *.jar get-hz-ee-dist-zip.sh hazelcast-*.zip ${HZ_HOME}/
 # Install
 RUN echo "Installing new packages" \
     && microdnf update --nodocs \
-    && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-8-appstream-rpms --enablerepo=ubi-8-baseos-rpms \
+    && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
         --disableplugin=subscription-manager install shadow-utils java-11-openjdk-headless zip tar tzdata-java \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
         HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-ee-dist-zip.sh); \
