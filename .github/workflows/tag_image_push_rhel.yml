@@ -66,7 +66,7 @@ jobs:
           echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
           echo "RHEL_PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
       - name: Checkout to Management Center Openshift
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: hazelcast/management-center-openshift
           path: management-center-openshift
@@ -81,7 +81,7 @@ jobs:
           echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
 
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
