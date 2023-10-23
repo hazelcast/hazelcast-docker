@@ -42,6 +42,7 @@ assert_tags_to_push "5.1.99" "5.1.99 5.1"
 assert_tags_to_push "4.99.0" "4.99.0 4.99 4"
 assert_tags_to_push "99.0.0" "99.0.0 99.0 99 latest"
 assert_tags_to_push "5.3.0-BETA-1" "5.3.0-BETA-1"
+assert_tags_to_push "5.4.0-DEVEL-9" "5.4.0-DEVEL-9"
 assert_tags_to_push "5.99.0-BETA-1" "5.99.0-BETA-1"
 assert_tags_to_push "99.0.0-BETA-1" "99.0.0-BETA-1"
 
