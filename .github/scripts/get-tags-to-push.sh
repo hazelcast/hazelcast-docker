@@ -2,7 +2,7 @@
 
 function find_last_matching_version() {
   FILTER=$1
-  git tag | grep -v BETA | grep '^v' | cut -c2- | grep "^$FILTER" | tail -n 1
+  git tag | grep -v BETA | grep -v DEVEL | grep '^v' | cut -c2- | grep "^$FILTER" | tail -n 1
 }
 
 function get_latest_version() {
@@ -16,7 +16,7 @@ function verlte() {
 function get_tags_to_push() {
   VERSION_TO_RELEASE=$1
 
-  if [[ "$VERSION_TO_RELEASE" =~ .*BETA.* ]]; then
+  if [[ "$VERSION_TO_RELEASE" =~ .*BETA.*|.*DEVEL.* ]]; then
     echo "$VERSION_TO_RELEASE"
     return
   fi
