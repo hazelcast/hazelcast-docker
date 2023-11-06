@@ -12,7 +12,7 @@ function get_minor_versions() {
 
 function get_latest_patch_version() {
   local MINOR_VERSION=$(echo "$1" | cut  -d'-' -f1 |  cut  -d'.' -f1,2)
-  get_supported_versions "" | grep "$MINOR_VERSION" | tail -n 1
+  get_supported_versions "" | grep "^$MINOR_VERSION" | tail -n 1
 }
 
 function get_latest_patch_versions() {
