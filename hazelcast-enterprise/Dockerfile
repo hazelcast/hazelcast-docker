@@ -1,7 +1,7 @@
 FROM redhat/ubi8-minimal:8.7
 
 # Versions of Hazelcast
-ARG HZ_VERSION=5.3.5
+ARG HZ_VERSION=5.3.6-SNAPSHOT
 # Variant - empty for full, "slim" for slim
 ARG HZ_VARIANT=""
 
