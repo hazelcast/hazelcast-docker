@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        jdk: [ '11', '17', '21' ]
         include:
          - variant: slim
            suffix: '-slim'
@@ -95,6 +96,7 @@ jobs:
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -110,6 +112,7 @@ jobs:
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --tag hazelcast-ee:test \
             hazelcast-enterprise
 
@@ -142,15 +145,27 @@ jobs:
           TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }})
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
+          DEFAULT_JDK=11  # Set the default JDK version
           for tag in ${TAGS_TO_PUSH[@]}
           do
-             TAGS_ARG="${TAGS_ARG} --tag ${{ env.DOCKER_ORG }}/hazelcast:${tag}${{ matrix.suffix }}"
+            # Add a tag without JDK version for default JDK
+            if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+                TAGS_ARG="${TAGS_ARG} --tag ${{ env.DOCKER_ORG }}/hazelcast:${tag}${{ matrix.suffix }}"
+            fi
+            # Add a tag with JDK version for all JDKs
+            TAGS_ARG="${TAGS_ARG} --tag ${{ env.DOCKER_ORG }}/hazelcast:${tag}${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
           done
+          PLATFORMS="linux/arm64,linux/amd64"
+          # no JDK17 for alpine ppc64le: https://github.com/alpinelinux/aports/commit/b048defcdb41950e18262d382fab8822dc3bd8ee
+          if [[ "${{ matrix.jdk }}" != "17" ]]; then
+            PLATFORMS="${PLATFORMS},linux/ppc64le"
+          fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             ${TAGS_ARG} \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le hazelcast-oss
+            --platform={$PLATFORMS} hazelcast-oss
 
       - name: Build/Push EE image
         if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
@@ -159,15 +174,28 @@ jobs:
           TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }})
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
+          DEFAULT_JDK=11  # Set the default JDK version
           for tag in ${TAGS_TO_PUSH[@]}
           do
-             TAGS_ARG="${TAGS_ARG} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${tag}${{ matrix.suffix }}"
+            # Add a tag without JDK version for default JDK
+            if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+                TAGS_ARG="${TAGS_ARG} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${tag}${{ matrix.suffix }}" 
+            fi
+            # Add a tag with JDK version for all JDKs 
+            TAGS_ARG="${TAGS_ARG} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${tag}${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
           done
+          
+          PLATFORMS="linux/arm64,linux/amd64,linux/s390x"
+          # no JDK17 for alpine ppc64le: https://github.com/alpinelinux/aports/commit/b048defcdb41950e18262d382fab8822dc3bd8ee
+          if [[ "${{ matrix.jdk }}" != "17" ]]; then
+            PLATFORMS="${PLATFORMS},linux/ppc64le"
+          fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             ${TAGS_ARG} \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
+            --platform={$PLATFORMS} hazelcast-enterprise
 
   post-push:
     runs-on: ubuntu-latest

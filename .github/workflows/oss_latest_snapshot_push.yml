@@ -16,12 +16,15 @@ jobs:
   push:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
+        jdk: [ '11', '17', '21' ]
+        variant: [ 'slim','' ]
         include:
-         - variant: slim
-           suffix: '-slim'
-         - variant: ''
-           suffix: ''
+          - variant: slim
+            suffix: '-slim'
+          - variant: ''
+            suffix: ''
     env:
       DOCKER_ORG: hazelcast
     steps:
@@ -41,6 +44,7 @@ jobs:
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -69,13 +73,26 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
-          TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
+          DEFAULT_JDK=11
+          if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+            TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
+          fi
+          TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}"
+            if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+              TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}"
+            fi
+            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
+          fi
+          PLATFORMS="linux/arm64,linux/amd64"
+          # no JDK17 for alpine ppc64le: https://github.com/alpinelinux/aports/commit/b048defcdb41950e18262d382fab8822dc3bd8ee
+          if [[ "${{ matrix.jdk }}" != "17" ]]; then
+            PLATFORMS="${PLATFORMS},linux/ppc64le"
           fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
             $TAGS \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le hazelcast-oss
+            --platform=${PLATFORMS} hazelcast-oss
