@@ -15,6 +15,10 @@ env:
 jobs:
   push:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: [ '11', '17', '21' ]
     env:
       HZ_VERSION : ${{ github.event.inputs.HZ_VERSION }}
       NLC_REPOSITORY: ${{ secrets.NLC_REPOSITORY }}
@@ -57,6 +61,7 @@ jobs:
           docker buildx build --load \
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
             --tag hazelcast-nlc:test hazelcast-enterprise
 
@@ -85,6 +90,7 @@ jobs:
         run: |
           docker buildx build --push \
             --build-arg HZ_VERSION=${HZ_VERSION} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
             --tag ${NLC_IMAGE_NAME}:${HZ_VERSION} \

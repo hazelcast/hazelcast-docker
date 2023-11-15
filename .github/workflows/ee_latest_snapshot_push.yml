@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        jdk: [ '11', '17', '21' ]
         include:
          - variant: slim
            suffix: '-slim'
@@ -39,6 +40,7 @@ jobs:
       - name: Build Test EE image
         run: |
           docker buildx build --load \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --tag hazelcast-ee:test \
@@ -70,13 +72,26 @@ jobs:
 
       - name: Build/Push EE image
         run: |
-          TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
+          DEFAULT_JDK=11
+          if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+            TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
+          fi
+          TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:latest-snapshot${{ matrix.suffix }}"
+            if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+              TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:latest-snapshot${{ matrix.suffix }}"
+            fi
+            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:latest-snapshot${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
+          fi
+          PLATFORMS="linux/arm64,linux/amd64,linux/s390x"
+          # no JDK17 for alpine ppc64le: https://github.com/alpinelinux/aports/commit/b048defcdb41950e18262d382fab8822dc3bd8ee
+          if [[ "${{ matrix.jdk }}" != "17" ]]; then
+            PLATFORMS="${PLATFORMS},linux/ppc64le"
           fi
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
             $TAGS \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
+            --platform=${PLATFORMS} hazelcast-enterprise

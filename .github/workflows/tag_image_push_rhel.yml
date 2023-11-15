@@ -34,6 +34,9 @@ jobs:
       PROJECT_NAME: hztest-${{ github.run_id }}-${{ github.run_attempt }}
 
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        jdk: [ '11', '17', '21' ]
     steps:
       - name: Set HZ version as environment variable
         run: |
@@ -97,15 +100,21 @@ jobs:
           TAGS_TO_PUSH=$(get_tags_to_push $RELEASE_VERSION)
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
+          DEFAULT_JDK=11  # Set the default JDK version
           for tag in ${TAGS_TO_PUSH[@]}
           do
-             TAGS_ARG="${TAGS_ARG} --tag ${SCAN_REPOSITORY}:${tag}"
+             if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+               TAGS_ARG="${TAGS_ARG} --tag ${SCAN_REPOSITORY}:${tag}"
+             fi
+             # Add a tag with JDK version for all JDKs
+             TAGS_ARG="${TAGS_ARG} --tag ${SCAN_REPOSITORY}:${tag}-jdk${{ matrix.jdk }}"
           done
           echo "TAGS_TO_PUSH=${TAGS_TO_PUSH}" >> $GITHUB_ENV
           
           echo "TAGS_ARG=$TAGS_ARG"
           docker build \
                 --build-arg HZ_VERSION=${HZ_VERSION} \
+                --build-arg JDK_VERSION=${{ matrix.jdk }} \
                 ${TAGS_ARG} hazelcast-enterprise
 
       - name: Log in to Red Hat Scan Registry and Push the Image
