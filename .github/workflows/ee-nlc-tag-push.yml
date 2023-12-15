@@ -73,19 +73,11 @@ jobs:
 
       - name: Build EE image
         run: |
-          DEFAULT_JDK=11
-          
-          if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
-          TAGS="--tag ${{ env.NLC_IMAGE_NAME }}-:${{ github.event.inputs.HZ_VERSION }}"
-          fi
-          TAGS="${TAGS} --tag ${{ env.NLC_IMAGE_NAME }}-jdk${{ matrix.jdk }}:${{ github.event.inputs.HZ_VERSION }}"
-          
           docker buildx build --load \
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
-            ${TAGS} \ 
-            hazelcast-enterprise
+            --tag hazelcast-nlc:test hazelcast-enterprise
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
@@ -96,7 +88,7 @@ jobs:
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test.log
+          DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test-jdk${{ matrix.jdk }}.log
           echo "DOCKER_LOG_FILE_EE=${DOCKER_LOG_FILE_EE}" >> $GITHUB_ENV
           docker logs ${{ env.test_container_name_ee }} > ${DOCKER_LOG_FILE_EE}
 
@@ -104,15 +96,21 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: docker-logs
+          name: docker-logs-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_EE }}
 
       - name: Build/Push EE image
         run: |
+          DEFAULT_JDK=11 
+          if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+          TAGS="--tag ${{ env.NLC_IMAGE_NAME }}-:${{ github.event.inputs.HZ_VERSION }}"
+          fi
+          TAGS="${TAGS} --tag ${{ env.NLC_IMAGE_NAME }}:${{ github.event.inputs.HZ_VERSION }}-jdk${{ matrix.jdk }}"    
+
           docker buildx build --push \
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
-            --tag ${NLC_IMAGE_NAME}:${HZ_VERSION}  \
+            $TAGS  \
             --platform=linux/arm64,linux/amd64 hazelcast-enterprise

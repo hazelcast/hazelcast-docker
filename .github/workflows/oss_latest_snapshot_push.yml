@@ -56,7 +56,7 @@ jobs:
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}.log
+          DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log
           echo "DOCKER_LOG_FILE_OSS=${DOCKER_LOG_FILE_OSS}" >> $GITHUB_ENV
           docker logs ${{ env.test_container_name_oss }} > ${DOCKER_LOG_FILE_OSS}
 
@@ -64,7 +64,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: docker-logs
+          name: docker-logs-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_OSS }}
 

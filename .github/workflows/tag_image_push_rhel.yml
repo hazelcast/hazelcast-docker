@@ -187,14 +187,14 @@ jobs:
       - name: Get OpenShift events
         if: ${{ always() }}
         run: |
-          kubectl get events -n ${PROJECT_NAME} > openshift-events.log
+          kubectl get events -n ${PROJECT_NAME} > openshift-events-jdk${{ matrix.jdk }}.log
 
       - name: Store OpenShift events as artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: openshift-events.log
-          path: openshift-events.log
+          name: openshift-events-jdk${{ matrix.jdk }}.log
+          path: openshift-events-jdk${{ matrix.jdk }}.log
 
       - name: Clean up After Test
         if: always()

@@ -52,8 +52,8 @@ jobs:
              HZ_VERSION=${{ env.HZ_VERSION }}
           fi
           echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
-          echo "DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}.log" >> $GITHUB_ENV
-          echo "DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${{ matrix.suffix }}.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
 
       - name: Set Release version as environment variable
         run: |
@@ -133,7 +133,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: docker-logs
+          name: docker-logs-jdk${{ matrix.jdk }}
           path: | 
             ${{ env.DOCKER_LOG_FILE_OSS }}
             ${{ env.DOCKER_LOG_FILE_EE }}
