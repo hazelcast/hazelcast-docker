@@ -73,11 +73,19 @@ jobs:
 
       - name: Build EE image
         run: |
+          DEFAULT_JDK=11
+          
+          if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
+          TAGS="--tag ${{ env.NLC_IMAGE_NAME }}-:${{ github.event.inputs.HZ_VERSION }}"
+          fi
+          TAGS="${TAGS} --tag ${{ env.NLC_IMAGE_NAME }}-jdk${{ matrix.jdk }}:${{ github.event.inputs.HZ_VERSION }}"
+          
           docker buildx build --load \
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
-            --tag hazelcast-nlc:test hazelcast-enterprise
+            ${TAGS} \ 
+            hazelcast-enterprise
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
