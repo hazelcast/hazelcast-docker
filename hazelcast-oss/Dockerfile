@@ -1,7 +1,7 @@
 FROM alpine:3
 
 # Versions of Hazelcast
-ARG HZ_VERSION=5.4.0-SNAPSHOT
+ARG HZ_VERSION=5.4.0-BETA-1-SNAPSHOT
 # Variant - empty for full, "slim" for slim
 ARG HZ_VARIANT=""
 
