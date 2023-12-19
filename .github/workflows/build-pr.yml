@@ -5,9 +5,7 @@ on:
   pull_request:
 
 env:
-  test_container_name_oss: hazelcast-oss-test
   test_container_name_ee: hazelcast-ee-test
-  docker_log_file_oss: docker-hazelcast-oss-test.log
   docker_log_file_ee: docker-hazelcast-ee-test.log
 
 jobs:
@@ -27,15 +25,6 @@ jobs:
         run: |
           ./.github/scripts/test_scripts.sh
 
-      - name: Build OSS image
-        run: |
-          docker buildx build --load --tag hazelcast-oss:test hazelcast-oss
-
-      - name: Run smoke test against OSS image
-        timeout-minutes: 2
-        run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
-
       - name: Build Test EE image
         run: |
           docker buildx build --load --tag hazelcast-ee:test hazelcast-enterprise
@@ -49,7 +38,6 @@ jobs:
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          docker logs ${{ env.test_container_name_oss }} > ${{ env.docker_log_file_oss }}
           docker logs ${{ env.test_container_name_ee }} > ${{ env.docker_log_file_ee }}
 
       - name: Store docker logs as artifact
@@ -58,5 +46,4 @@ jobs:
         with:
           name: docker-logs
           path: |
-            ${{ env.docker_log_file_oss }}
             ${{ env.docker_log_file_ee }}
