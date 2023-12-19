@@ -17,7 +17,7 @@ on:
       EDITIONS:
         description: 'Editions to build'
         required: true
-        default: 'All'
+        default: 'EE'
         type: choice
         options:
           - All
