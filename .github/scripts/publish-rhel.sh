@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail ${RUNNER_DEBUG:+-x}
+
 get_image()
 {
     local PUBLISHED=$1
