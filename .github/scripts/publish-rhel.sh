@@ -117,14 +117,8 @@ sync_tags()
 
     local IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
     local IMAGE_EXISTS=$(echo $IMAGE | jq -r '.total')
-    if [[ $IMAGE_EXISTS != "0" ]]; then
-        local SCAN_STATUS=$(echo $IMAGE | jq -r '.data[0].scan_status')
-        if [[ $SCAN_STATUS != "passed" ]]; then
-            echo "Image you are trying to publish did not pass the certification test, its status is \"${SCAN_STATUS}\""
-            return 1
-        fi
-    else
-        echo "Image you are trying to publish does not exist."
+    if [[ $IMAGE_EXISTS == "0" ]]; then
+        echo "Image you are trying to sync does not exist."
         return 1
     fi
 
