@@ -93,8 +93,8 @@ jobs:
           do
             TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
-         
-          PLATFORMS="linux/arm64,linux/amd64,linux/ppc64le"
+          
+          PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
