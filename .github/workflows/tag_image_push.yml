@@ -33,11 +33,12 @@ jobs:
     strategy:
       matrix:
         jdk: [ '11', '17', '21' ]
+        variant: [ 'slim','' ]
         include:
-         - variant: slim
-           suffix: '-slim'
-         - variant: ''
-           suffix: ''
+          - variant: slim
+            suffix: '-slim'
+          - variant: ''
+            suffix: ''
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
