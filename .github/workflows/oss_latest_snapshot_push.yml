@@ -27,6 +27,7 @@ jobs:
             suffix: ''
     env:
       DOCKER_ORG: hazelcast
+      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -42,7 +43,7 @@ jobs:
       - name: Build Test OSS image
         run: |
           docker buildx build --load \
-            --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --tag hazelcast-oss:test \
@@ -73,26 +74,31 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
-          DEFAULT_JDK=11
-          if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
-            TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
-          fi
-          TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
+          . .github/scripts/get-tags-to-push.sh 
+          . .github/scripts/docker.functions.sh
+          
+          VERSIONS=("$HZ_VERSION")
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            if [[ "${{ matrix.jdk }}" == "$DEFAULT_JDK" ]]; then
-              TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}"
-            fi
-            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}-jdk${{ matrix.jdk }}"
+          VERSIONS+=(latest-snapshot)
           fi
-          PLATFORMS="linux/arm64,linux/amd64"
-          # no JDK17 for alpine ppc64le: https://github.com/alpinelinux/aports/commit/b048defcdb41950e18262d382fab8822dc3bd8ee
-          if [[ "${{ matrix.jdk }}" != "17" ]]; then
-            PLATFORMS="${PLATFORMS},linux/ppc64le"
-          fi
+          
+          DOCKER_DIR=hazelcast-oss
+          IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
+          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+
+          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[@]}" "${{ matrix.variant }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+          TAGS_ARG=""
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
+          done
+         
+          PLATFORMS="linux/arm64,linux/amd64,linux/ppc64le"
           docker buildx build --push \
-            --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
             $TAGS \
-            --platform=${PLATFORMS} hazelcast-oss
+            --platform=${PLATFORMS} $DOCKER_DIR

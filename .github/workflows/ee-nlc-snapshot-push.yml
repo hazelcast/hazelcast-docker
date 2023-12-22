@@ -88,10 +88,26 @@ jobs:
 
       - name: Build/Push EE image
         run: |
+          . .github/scripts/get-tags-to-push.sh 
+          . .github/scripts/docker.functions.sh
+          
+          DOCKER_DIR=hazelcast-enterprise
+          IMAGE_NAME=${NLC_IMAGE_NAME}
+          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          
+          TAGS_TO_PUSH=$(augment_with_suffixed_tags "$HZ_VERSION" "" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+          TAGS_ARG=""
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
+          done
+
+          PLATFORMS="linux/arm64,linux/amd64"
           docker buildx build --push \
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
-            --tag ${NLC_IMAGE_NAME}:${HZ_VERSION} \
-            --platform=linux/arm64,linux/amd64 hazelcast-enterprise
+            ${TAGS_ARG} \
+            --platform={$PLATFORMS} $DOCKER_DIR
