@@ -110,4 +110,4 @@ jobs:
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
             ${TAGS_ARG} \
-            --platform={$PLATFORMS} $DOCKER_DIR
+            --platform=${PLATFORMS} $DOCKER_DIR

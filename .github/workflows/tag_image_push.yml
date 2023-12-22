@@ -163,7 +163,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             ${TAGS_ARG} \
-            --platform={$PLATFORMS} $DOCKER_DIR
+            --platform=${PLATFORMS} $DOCKER_DIR
 
       - name: Build/Push EE image
         if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
@@ -189,7 +189,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             ${TAGS_ARG} \
-            --platform={$PLATFORMS} $DOCKER_DIR
+            --platform=${PLATFORMS} $DOCKER_DIR
 
   post-push:
     runs-on: ubuntu-latest

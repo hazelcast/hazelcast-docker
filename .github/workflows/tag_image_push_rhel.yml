@@ -131,7 +131,7 @@ jobs:
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             ${TAGS_ARG} \
-            --platform={$PLATFORMS} $DOCKER_DIR
+            --platform=${PLATFORMS} $DOCKER_DIR
 
       - name: Install preflight tool
         run: |
