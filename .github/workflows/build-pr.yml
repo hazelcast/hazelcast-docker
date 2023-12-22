@@ -11,9 +11,9 @@ env:
   docker_log_file_ee: docker-hazelcast-ee-test.log
 
 jobs:
-  build-pr-oss:
+  build-pr:
     runs-on: ubuntu-latest
-
+    name: Build with default JDK
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -60,3 +60,61 @@ jobs:
           path: |
             ${{ env.docker_log_file_oss }}
             ${{ env.docker_log_file_ee }}
+
+  build-pr-custom-jdk:
+    runs-on: ubuntu-latest
+    name: Build with jdk-${{ matrix.jdk }}
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: [ '11', '17', '21' ]
+    env:
+      docker_log_file_oss: docker-hazelcast-oss-test-jdk${{ matrix.jdk }}.log
+      docker_log_file_ee: docker-hazelcast-ee-test-jdk${{ matrix.jdk }}.log
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build OSS image
+        run: |
+          docker buildx build --load \
+          --build-arg JDK_VERSION=${{ matrix.jdk }} \
+          --tag hazelcast-oss:test hazelcast-oss
+
+      - name: Run smoke test against OSS image
+        timeout-minutes: 2
+        run: |
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
+
+      - name: Build Test EE image
+        run: |
+          docker buildx build --load \
+          --build-arg JDK_VERSION=${{ matrix.jdk }} \
+          --tag hazelcast-ee:test hazelcast-enterprise
+
+      - name: Run smoke test against EE image
+        timeout-minutes: 2
+        run: |
+          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }}
+
+      - name: Get docker logs
+        if: ${{ always() }}
+        run: |
+          docker logs ${{ env.test_container_name_oss }} > ${{ env.docker_log_file_oss }}
+          docker logs ${{ env.test_container_name_ee }} > ${{ env.docker_log_file_ee }}
+
+      - name: Store docker logs as artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-logs
+          path: |
+            ${{ env.docker_log_file_oss }}
+            ${{ env.docker_log_file_ee }}
+
