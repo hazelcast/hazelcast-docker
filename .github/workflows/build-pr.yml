@@ -68,9 +68,6 @@ jobs:
       fail-fast: false
       matrix:
         jdk: [ '11', '17', '21' ]
-    env:
-      docker_log_file_oss: docker-hazelcast-oss-test-jdk${{ matrix.jdk }}.log
-      docker_log_file_ee: docker-hazelcast-ee-test-jdk${{ matrix.jdk }}.log
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -113,7 +110,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: docker-logs
+          name: docker-logs-jdk${{ matrix.jdk }}
           path: |
             ${{ env.docker_log_file_oss }}
             ${{ env.docker_log_file_ee }}
