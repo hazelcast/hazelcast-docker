@@ -99,5 +99,5 @@ jobs:
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
-            TAGS_ARG \
+            ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
