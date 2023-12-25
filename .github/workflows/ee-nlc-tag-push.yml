@@ -107,7 +107,7 @@ jobs:
           
           DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${NLC_IMAGE_NAME}
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)
+          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
           TAGS_TO_PUSH=$(augment_with_suffixed_tags "$HZ_VERSION" "" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
