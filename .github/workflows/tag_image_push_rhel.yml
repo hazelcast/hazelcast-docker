@@ -31,7 +31,7 @@ jobs:
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
-      PROJECT_NAME: hztest-${{ github.run_id }}-${{ github.run_attempt }}
+      PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
 
     runs-on: ubuntu-latest
     strategy:
