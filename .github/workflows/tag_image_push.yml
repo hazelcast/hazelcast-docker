@@ -134,7 +134,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-jdk${{ matrix.jdk }}
+          name: docker-logs${{ matrix.suffix }}-jdk${{ matrix.jdk }}
           path: | 
             ${{ env.DOCKER_LOG_FILE_OSS }}
             ${{ env.DOCKER_LOG_FILE_EE }}
