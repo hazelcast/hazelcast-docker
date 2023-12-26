@@ -16,14 +16,18 @@ jobs:
   push:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
+        jdk: [ '11', '17', '21' ]
+        variant: [ 'slim','' ]
         include:
-         - variant: slim
-           suffix: '-slim'
-         - variant: ''
-           suffix: ''
+          - variant: slim
+            suffix: '-slim'
+          - variant: ''
+            suffix: ''
     env:
       DOCKER_ORG: hazelcast
+      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -39,8 +43,9 @@ jobs:
       - name: Build Test OSS image
         run: |
           docker buildx build --load \
-            --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -52,7 +57,7 @@ jobs:
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}.log
+          DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log
           echo "DOCKER_LOG_FILE_OSS=${DOCKER_LOG_FILE_OSS}" >> $GITHUB_ENV
           docker logs ${{ env.test_container_name_oss }} > ${DOCKER_LOG_FILE_OSS}
 
@@ -60,7 +65,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: docker-logs
+          name: docker-logs-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_OSS }}
 
@@ -69,13 +74,31 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
-          TAGS="--tag ${{ env.DOCKER_ORG }}/hazelcast:${{ github.event.inputs.HZ_VERSION }}${{ matrix.suffix }}"
+          . .github/scripts/get-tags-to-push.sh 
+          . .github/scripts/docker.functions.sh
+          
+          VERSIONS=("$HZ_VERSION")
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            TAGS="${TAGS} --tag ${{ env.DOCKER_ORG }}/hazelcast:latest-snapshot${{ matrix.suffix }}"
+          VERSIONS+=(latest-snapshot)
           fi
+          
+          DOCKER_DIR=hazelcast-oss
+          IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
+          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+
+          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[@]}" "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+          TAGS_ARG=""
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
+          done
+          
+          PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
-            --build-arg HZ_VERSION=${{ github.event.inputs.HZ_VERSION }} \
+            --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
-            $TAGS \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le hazelcast-oss
+            $TAGS_ARG \
+            --platform=${PLATFORMS} $DOCKER_DIR

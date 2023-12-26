@@ -31,9 +31,13 @@ jobs:
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
-      PROJECT_NAME: hztest-${{ github.run_id }}-${{ github.run_attempt }}
+      PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
 
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: [ '11', '17', '21' ]
     steps:
       - name: Set HZ version as environment variable
         run: |
@@ -52,6 +56,7 @@ jobs:
              RELEASE_VERSION=${{ env.RELEASE_VERSION }}
           fi
           echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
+
       - name: Check HZ major version
         run: |
           HZ_MAJOR_VERSION=$(echo "${HZ_VERSION:0:1}")
@@ -60,11 +65,13 @@ jobs:
             exit 1
           fi
           echo "HZ_MAJOR_VERSION=${HZ_MAJOR_VERSION}" >> $GITHUB_ENV
+
       - name: Set scan registry secrets
         run: |
           echo "SCAN_REGISTRY_USER=${{ secrets[format('SCAN_REGISTRY_USER_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
           echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
           echo "RHEL_PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
+
       - name: Checkout to Management Center Openshift
         uses: actions/checkout@v4
         with:
@@ -89,33 +96,43 @@ jobs:
         run: |
           SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}
           echo "SCAN_REPOSITORY=${SCAN_REPOSITORY}" >> $GITHUB_ENV
-          echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${RELEASE_VERSION}" >> $GITHUB_ENV
+          echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${RELEASE_VERSION}-jdk${{ matrix.jdk }}" >> $GITHUB_ENV
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.0.0
+
+      - name:  Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: v0.5.1
+
+      - name: Log in to Red Hat Scan Registry
+        run: |
+          docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
 
       - name: Build the Hazelcast Enterprise image
         run: |
           . .github/scripts/get-tags-to-push.sh 
-          TAGS_TO_PUSH=$(get_tags_to_push $RELEASE_VERSION)
+          . .github/scripts/docker.functions.sh
+
+          DOCKER_DIR=hazelcast-enterprise
+          IMAGE_NAME=${SCAN_REPOSITORY}
+          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
           do
-             TAGS_ARG="${TAGS_ARG} --tag ${SCAN_REPOSITORY}:${tag}"
+            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
-          echo "TAGS_TO_PUSH=${TAGS_TO_PUSH}" >> $GITHUB_ENV
-          
-          echo "TAGS_ARG=$TAGS_ARG"
-          docker build \
-                --build-arg HZ_VERSION=${HZ_VERSION} \
-                ${TAGS_ARG} hazelcast-enterprise
 
-      - name: Log in to Red Hat Scan Registry and Push the Image
-        run: |
-          docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
-          for tag in ${TAGS_TO_PUSH[@]}
-          do
-            echo "Pushing ${SCAN_REPOSITORY}:${tag}"
-            docker push ${SCAN_REPOSITORY}:${tag}
-          done
+          PLATFORMS="linux/amd64"
+          docker buildx build --push \
+            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
+            ${TAGS_ARG} \
+            --platform=${PLATFORMS} $DOCKER_DIR
 
       - name: Install preflight tool
         run: |
@@ -132,7 +149,7 @@ jobs:
 
       - name: Wait for Scan to Complete
         run: |
-          VERSION=${RELEASE_VERSION}
+          VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
 
           wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
@@ -178,14 +195,14 @@ jobs:
       - name: Get OpenShift events
         if: ${{ always() }}
         run: |
-          kubectl get events -n ${PROJECT_NAME} > openshift-events.log
+          kubectl get events -n ${PROJECT_NAME} > openshift-events-jdk${{ matrix.jdk }}.log
 
       - name: Store OpenShift events as artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: openshift-events.log
-          path: openshift-events.log
+          name: openshift-events-jdk${{ matrix.jdk }}.log
+          path: openshift-events-jdk${{ matrix.jdk }}.log
 
       - name: Clean up After Test
         if: always()
@@ -194,7 +211,7 @@ jobs:
 
       - name: Publish the Hazelcast Enterprise image
         run: |
-          VERSION=${RELEASE_VERSION}
+          VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
 
           publish_the_image "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"

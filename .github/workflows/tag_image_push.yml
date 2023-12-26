@@ -32,11 +32,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        jdk: [ '11', '17', '21' ]
+        variant: [ 'slim','' ]
         include:
-         - variant: slim
-           suffix: '-slim'
-         - variant: ''
-           suffix: ''
+          - variant: slim
+            suffix: '-slim'
+          - variant: ''
+            suffix: ''
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
@@ -51,8 +53,8 @@ jobs:
              HZ_VERSION=${{ env.HZ_VERSION }}
           fi
           echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
-          echo "DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}.log" >> $GITHUB_ENV
-          echo "DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${{ matrix.suffix }}.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
 
       - name: Set Release version as environment variable
         run: |
@@ -95,6 +97,7 @@ jobs:
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -110,6 +113,7 @@ jobs:
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --tag hazelcast-ee:test \
             hazelcast-enterprise
 
@@ -130,7 +134,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: docker-logs
+          name: docker-logs-jdk${{ matrix.jdk }}
           path: | 
             ${{ env.DOCKER_LOG_FILE_OSS }}
             ${{ env.DOCKER_LOG_FILE_EE }}
@@ -139,35 +143,53 @@ jobs:
         if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
         run: |
           . .github/scripts/get-tags-to-push.sh 
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }})
+          . .github/scripts/docker.functions.sh
+          
+          DOCKER_DIR=hazelcast-oss
+          IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
+          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
           do
-             TAGS_ARG="${TAGS_ARG} --tag ${{ env.DOCKER_ORG }}/hazelcast:${tag}${{ matrix.suffix }}"
+            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
+          
+          PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             ${TAGS_ARG} \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le hazelcast-oss
+            --platform=${PLATFORMS} $DOCKER_DIR
 
       - name: Build/Push EE image
         if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
         run: |
           . .github/scripts/get-tags-to-push.sh 
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }})
+          . .github/scripts/docker.functions.sh
+          
+          DOCKER_DIR=hazelcast-enterprise
+          IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
+          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
           do
-             TAGS_ARG="${TAGS_ARG} --tag ${{ env.DOCKER_ORG }}/hazelcast-enterprise:${tag}${{ matrix.suffix }}"
+            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
+          
+          PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             ${TAGS_ARG} \
-            --platform=linux/arm64,linux/amd64,linux/ppc64le,linux/s390x hazelcast-enterprise
+            --platform=${PLATFORMS} $DOCKER_DIR
 
   post-push:
     runs-on: ubuntu-latest

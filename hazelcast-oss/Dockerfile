@@ -7,6 +7,7 @@ ARG HZ_VARIANT=""
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
+ARG JDK_VERSION="11"
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -29,7 +30,7 @@ COPY *.jar get-hz-dist-zip.sh hazelcast-*.zip ${HZ_HOME}/
 RUN echo "Upgrading APK packages" \
     && apk upgrade --no-cache \
     && echo "Installing new APK packages" \
-    && apk add --no-cache openjdk11-jre-headless bash curl libxml2-utils zip unzip \
+    && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl libxml2-utils zip unzip \
     && if [[ ! -f ${HZ_HOME}/hazelcast-distribution.zip ]]; then \
        HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-dist-zip.sh); \
        echo "Downloading Hazelcast${HZ_VARIANT} distribution zip from ${HAZELCAST_ZIP_URL}..."; \
