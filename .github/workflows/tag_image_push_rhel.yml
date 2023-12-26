@@ -127,7 +127,7 @@ jobs:
             TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
 
-          PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
+          PLATFORMS="linux/amd64"
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
