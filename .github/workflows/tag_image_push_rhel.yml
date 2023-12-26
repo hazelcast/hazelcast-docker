@@ -149,7 +149,7 @@ jobs:
 
       - name: Wait for Scan to Complete
         run: |
-          VERSION=${RELEASE_VERSION}
+          VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
 
           wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
@@ -211,7 +211,7 @@ jobs:
 
       - name: Publish the Hazelcast Enterprise image
         run: |
-          VERSION=${RELEASE_VERSION}
+          VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
 
           publish_the_image "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
