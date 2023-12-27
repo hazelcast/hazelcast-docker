@@ -74,6 +74,7 @@ jobs:
 
       - name: Build/Push OSS image
         run: |
+          set -eEuo pipefail ${RUNNER_DEBUG:+-x}
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
           
