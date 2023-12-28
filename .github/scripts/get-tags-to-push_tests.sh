@@ -38,12 +38,12 @@ function assert_get_version_only_tags_to_push {
 }
 
 function assert_augment_with_suffixed_tags {
-  local INITIAL_TAGS=$1
+  local INITIAL_TAGS=($1)
   local SUFFIX=$2
   local CURRENT_JDK=$3
   local DEFAULT_JDK=$4
   local EXPECTED_TAGS_TO_PUSH=$5
-  local ACTUAL_TAGS_TO_PUSH=$(augment_with_suffixed_tags "$INITIAL_TAGS" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
+  local ACTUAL_TAGS_TO_PUSH=$(augment_with_suffixed_tags "${INITIAL_TAGS[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
   assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "Suffixed tags to push for (tags=$INITIAL_TAGS suffix=$SUFFIX current_jdk=$CURRENT_JDK default_jdk=$DEFAULT_JDK) should be equal to: $EXPECTED_TAGS_TO_PUSH " || TESTS_RESULT=$?
 }
 
@@ -76,6 +76,8 @@ assert_augment_with_suffixed_tags "1.2.3 latest" "" "17" "11" "1.2.3-jdk17 lates
 assert_augment_with_suffixed_tags "1.2.3" "-slim" "11" "11" "1.2.3-slim 1.2.3-slim-jdk11"
 assert_augment_with_suffixed_tags "1.2.3" "-slim" "17" "11" "1.2.3-slim-jdk17"
 assert_augment_with_suffixed_tags "1.2.3 latest" "-slim" "17" "11" "1.2.3-slim-jdk17 latest-slim-jdk17"
+tags_array=(1.2.3 latest)
+assert_augment_with_suffixed_tags "${tags_array[*]}" "-slim" "17" "11" "1.2.3-slim-jdk17 latest-slim-jdk17"
 assert_augment_with_suffixed_tags "1.2.3 1.2" "-slim" "17" "11" "1.2.3-slim-jdk17 1.2-slim-jdk17"
 
 log_header "Tests for get_tags_to_push"

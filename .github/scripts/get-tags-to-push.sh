@@ -62,7 +62,7 @@ function get_tags_to_push() {
   local CURRENT_JDK=$3
   local DEFAULT_JDK=$4
   local VERSION_ONLY_TAGS_TO_PUSH=$(get_version_only_tags_to_push "$VERSION_TO_RELEASE")
-  augment_with_suffixed_tags "$VERSION_ONLY_TAGS_TO_PUSH" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK"
+  augment_with_suffixed_tags "${VERSION_ONLY_TAGS_TO_PUSH[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK"
 }
 
 function augment_with_suffixed_tags() {
