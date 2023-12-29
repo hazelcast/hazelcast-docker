@@ -19,9 +19,7 @@ get_formatted_latest_docker_tags() {
   done
 
   local LATEST_TAGS=$(echo "${TAGS}" | jq -sr '.[] | select(
-  any(.tags[]; match("^5\\..(-|$)|latest")) and
-  all(.tags[]; test("BETA|DEVEL") | not) and
-  any(.tags[]; test("-SNAPSHOT") | not)
+  any(.tags[]; match("^5\\..(-slim)?$|latest"))
 )')
 
   echo "${LATEST_TAGS}"| jq -sr '.[] | " - " + (.tags | sort_by(.) | join(", "))' | sort -V
