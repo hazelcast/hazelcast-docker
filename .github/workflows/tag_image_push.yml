@@ -187,6 +187,9 @@ jobs:
     env:
       EDITIONS: ${{ github.event.inputs.EDITIONS || 'All' }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
       - name: Generate Docker Hub Description
         run: |
           .github/scripts/generate-docker-hub-description.sh
