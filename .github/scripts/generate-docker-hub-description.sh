@@ -25,8 +25,6 @@ get_formatted_latest_docker_tags() {
   echo "${LATEST_TAGS}"| jq -sr '.[] | " - " + (.tags | sort_by(.) | join(", "))' | sort -V
 }
 
-cp README.md README-docker.md
-
 fill_readme_with_tags() {
    local filename=$1
    local repo_name=$2
@@ -47,5 +45,6 @@ fill_readme_with_tags() {
    rm "$tags_file"
 }
 
+cp README.md README-docker.md
 fill_readme_with_tags README-docker.md "hazelcast/hazelcast" "### Hazelcast Versions"
 fill_readme_with_tags README-docker.md "hazelcast/hazelcast-enterprise" "### Hazelcast Enterprise Versions"
