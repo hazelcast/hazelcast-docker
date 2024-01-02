@@ -70,16 +70,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check if latest tag should be pushed
-        run: |
-          FILTERED_TAGS=$(git tag --list "v*" |  grep -E -v '*BETA*' )
-          LATEST_TAG=$((IFS=$'\n' && echo "${FILTERED_TAGS[*]}") | sort | tail -n 1)
-          echo "PUSH_LATEST=$([[ "$LATEST_TAG" = "${GITHUB_REF:10}" ]] && echo yes || echo no)" >> $GITHUB_ENV
-
-      - name: Print Push Latest
-        run: |
-          echo ${{ env.PUSH_LATEST }}
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.0.0
 
@@ -197,25 +187,31 @@ jobs:
     env:
       EDITIONS: ${{ github.event.inputs.EDITIONS || 'All' }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Generate Docker Hub Description
+        run: |
+          .github/scripts/generate-docker-hub-description.sh
       - name: Update Docker Hub Description of OSS image
-        if: env.PUSH_LATEST == 'yes' && (env.EDITIONS == 'All' || env.EDITIONS == 'OSS' )
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: hazelcast/hazelcast
           short-description: Hazelcast Docker Image
-          readme-filepath: ./README.md
+          readme-filepath: ./README-docker.md
 
       - name: Update Docker Hub Description of EE image
-        if: env.PUSH_LATEST == 'yes' && (env.EDITIONS == 'All' || env.EDITIONS == 'EE' )
+        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: hazelcast/hazelcast-enterprise
           short-description: Hazelcast Enterprise Docker Image
-          readme-filepath: ./README.md
+          readme-filepath: ./README-docker.md
 
       - name: Create release
         if: github.event_name == 'push'
