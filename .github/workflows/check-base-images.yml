@@ -20,7 +20,7 @@ jobs:
       DEFAULT_MINIMAL_SUPPORTED_VERSION: 4.2
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - id: set-matrix
@@ -47,9 +47,9 @@ jobs:
       matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout version ${{ matrix.version }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: v${{ matrix.version }}
           path: v${{ matrix.version }}
