@@ -7,7 +7,7 @@ ARG HZ_VARIANT=""
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
-ARG JDK_VERSION="11"
+ARG JDK_VERSION="17"
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
