@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk: [ '11', '17', '21' ]
+        jdk: [ '17', '21' ]
     env:
       HZ_VERSION : ${{ github.event.inputs.HZ_VERSION }}
       NLC_REPOSITORY: ${{ secrets.NLC_REPOSITORY }}
