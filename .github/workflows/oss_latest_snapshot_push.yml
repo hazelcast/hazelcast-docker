@@ -13,12 +13,16 @@ env:
   test_container_name_oss: hazelcast-oss-test
 
 jobs:
+  jdks:
+    uses: ./.github/workflows/get-supported-jdks.yaml
+
   push:
     runs-on: ubuntu-latest
+    needs: jdks
     strategy:
       fail-fast: false
       matrix:
-        jdk: [ '17', '21' ]
+        jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
         variant: [ 'slim','' ]
         include:
           - variant: slim
