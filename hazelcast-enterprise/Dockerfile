@@ -4,7 +4,7 @@ FROM redhat/ubi9-minimal:9.3
 ARG HZ_VERSION=5.4.0-SNAPSHOT
 # Variant - empty for full, "slim" for slim
 ARG HZ_VARIANT=""
-ARG JDK_VERSION="17"
+ARG JDK_VERSION="21"
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
