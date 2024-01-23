@@ -32,6 +32,11 @@ jobs:
           versions=$(printf '%s\n' $(get_latest_patch_versions "${MIN_VERSION}") | jq -R . | jq -c -s .)
           echo "Found latest patch versions: $versions"
           echo "matrix={\"version\":$versions}" >> $GITHUB_OUTPUT
+      - name: Slack notification
+        uses: .github/actions/slack-notification
+        if: failure()
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
 
   trigger-rebuilds:
     runs-on: ubuntu-latest
@@ -125,3 +130,8 @@ jobs:
           gh workflow run ee-nlc-tag-push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }}
         env:
           GH_TOKEN: ${{ github.token }}
+      - name: Slack notification
+        uses: .github/actions/slack-notification
+        if: failure()
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}

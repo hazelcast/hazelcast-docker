@@ -14,7 +14,7 @@ env:
 
 jobs:
   jdks:
-    uses: ./.github/workflows/get-supported-jdks.yaml
+    uses: .github/workflows/get-supported-jdks.yaml
 
   push:
     runs-on: ubuntu-latest
@@ -107,3 +107,8 @@ jobs:
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
             $TAGS_ARG \
             --platform=${PLATFORMS} $DOCKER_DIR
+      - name: Slack notification
+        uses: .github/actions/slack-notification
+        if: failure()
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
