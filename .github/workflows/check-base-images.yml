@@ -33,7 +33,7 @@ jobs:
           echo "Found latest patch versions: $versions"
           echo "matrix={\"version\":$versions}" >> $GITHUB_OUTPUT
       - name: Slack notification
-        uses: .github/actions/slack-notification
+        uses: ./.github/actions/slack-notification
         if: failure()
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
@@ -131,7 +131,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Slack notification
-        uses: .github/actions/slack-notification
+        uses: ./.github/actions/slack-notification
         if: failure()
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}

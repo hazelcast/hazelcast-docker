@@ -17,7 +17,7 @@ on:
         required: false
 jobs:
   jdks:
-    uses: .github/workflows/get-supported-jdks.yaml
+    uses: ./.github/workflows/get-supported-jdks.yaml
 
   build:
     defaults:
@@ -223,7 +223,7 @@ jobs:
           sync_tags "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
 
       - name: Slack notification
-        uses: .github/actions/slack-notification
+        uses: ./.github/actions/slack-notification
         if: failure()
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}

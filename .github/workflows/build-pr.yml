@@ -62,7 +62,7 @@ jobs:
             ${{ env.docker_log_file_ee }}
 
   jdks:
-    uses: .github/workflows/get-supported-jdks.yaml
+    uses: ./.github/workflows/get-supported-jdks.yaml
 
   build-pr-custom-jdk:
     runs-on: ubuntu-latest
