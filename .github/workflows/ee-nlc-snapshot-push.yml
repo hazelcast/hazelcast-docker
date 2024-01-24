@@ -115,3 +115,8 @@ jobs:
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
+      - name: Slack notification
+        uses: ./.github/actions/slack-notification
+        if: failure()
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}

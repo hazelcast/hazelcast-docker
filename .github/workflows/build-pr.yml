@@ -25,7 +25,7 @@ jobs:
 
       - name: Test scripts
         run: |
-          ./.github/scripts/test_scripts.sh
+          .github/scripts/test_scripts.sh
 
       - name: Build OSS image
         run: |

@@ -185,6 +185,12 @@ jobs:
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
+      - name: Slack notification
+        uses: ./.github/actions/slack-notification
+        if: failure()
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+
   post-push:
     runs-on: ubuntu-latest
     needs: push
@@ -223,3 +229,9 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
+
+      - name: Slack notification
+        uses: ./.github/actions/slack-notification
+        if: failure()
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
