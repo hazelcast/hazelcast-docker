@@ -16,7 +16,7 @@ function test_docker_image() {
     clc map set -n some-map $key $expected --log.path stderr
     echo "Getting value for key '$key'"
     local actual
-    actual=$(clc map get -n some-map $key --log.path stderr)
+    actual=$(clc map get --format delimited -n some-map $key --log.path stderr)
     echo "Stopping container $container_name}"
     docker stop "$container_name"
 
@@ -27,9 +27,9 @@ function test_docker_image() {
 }
 
 function install_clc() {
-  CLC_URL="https://github.com/hazelcast/hazelcast-commandline-client/releases/download/${CLC_VERSION}/hazelcast-clc_${CLC_VERSION}_linux_amd64.tar.gz"
-  curl -L $CLC_URL | tar xzf - --strip-components=1 -C /usr/local/bin
-  chmod +x /usr/local/bin/clc
+  curl https://hazelcast.com/clc/install.sh | bash
+  . ~/.bashrc
+  clc config add default cluster.name=dev cluster.address=localhost
 }
 
 install_clc
