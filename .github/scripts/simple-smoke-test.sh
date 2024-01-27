@@ -3,8 +3,6 @@
 set -e
 set -o pipefail
 
-export CLC_VERSION=v5.2.0-beta3
-
 function test_docker_image() {
     local image=$1
     local container_name=$2
@@ -28,7 +26,7 @@ function test_docker_image() {
 
 function install_clc() {
   curl https://hazelcast.com/clc/install.sh | bash
-  . ~/.bashrc
+  export PATH=$PATH:$HOME/.hazelcast/bin
   clc config add default cluster.name=dev cluster.address=localhost
 }
 
