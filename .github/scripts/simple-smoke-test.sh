@@ -11,7 +11,11 @@ function test_docker_image() {
     local key="some-key"
     local expected="some-value"
     echo "Putting value '$expected' for key '$key'"
-    clc map set -n some-map $key $expected --log.path stderr
+    while ! clc --timeout 5s map set -n some-map $key $expected --log.path stderr
+    do
+      echo "Retrying..."
+      sleep 3
+    done
     echo "Getting value for key '$key'"
     local actual
     actual=$(clc map get --format delimited -n some-map $key --log.path stderr)
