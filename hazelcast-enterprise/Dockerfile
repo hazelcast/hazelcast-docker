@@ -1,7 +1,7 @@
 FROM redhat/ubi9-minimal:9.3
 
 # Versions of Hazelcast
-ARG HZ_VERSION=5.4.0-BETA-2-SNAPSHOT
+ARG HZ_VERSION=5.4.0-BETA-2
 # Variant - empty for full, "slim" for slim
 ARG HZ_VARIANT=""
 ARG JDK_VERSION="21"
