@@ -49,7 +49,9 @@ wait_for_container_scan()
         local SCAN_STATUS=$(echo "$IMAGE" | jq -r '.data[0].container_grades.status')
         local IMAGE_CERTIFIED=$(echo "$IMAGE" | jq -r '.data[0].certified')
 
-        if [[ $SCAN_STATUS == "in progress" ]]; then
+        if [[ $SCAN_STATUS == "pending" ]]; then
+            echo "Scanning pending, waiting..."
+        elif [[ $SCAN_STATUS == "in progress" ]]; then
             echo "Scanning in progress, waiting..."
         elif [[ $SCAN_STATUS == "null" ]];  then
             echo "Image is still not present in the registry!"
