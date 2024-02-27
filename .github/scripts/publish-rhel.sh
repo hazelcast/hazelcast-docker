@@ -46,7 +46,9 @@ wait_for_container_scan()
         local IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
         local SCAN_STATUS=$(echo "$IMAGE" | jq -r '.data[0].scan_status')
 
-        if [[ $SCAN_STATUS == "in progress" ]]; then
+        if [[ $SCAN_STATUS == "pending" ]]; then
+            echo "Scanning pending, waiting..."
+        elif [[ $SCAN_STATUS == "in progress" ]]; then
             echo "Scanning in progress, waiting..."
         elif [[ $SCAN_STATUS == "null" ]];  then
             echo "Image is still not present in the registry!"
