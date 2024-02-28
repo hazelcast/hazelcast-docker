@@ -11,7 +11,11 @@ if [[ -n "${HZ_VARIANT}" ]]; then SUFFIX="-${HZ_VARIANT}"; fi
 if [[ "${HZ_VERSION}" == *"SNAPSHOT"* ]]
 then
     curl -O -fsSL https://oss.sonatype.org/content/repositories/snapshots/com/hazelcast/hazelcast-distribution/${HZ_VERSION}/maven-metadata.xml
-    version=$(xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[1]/value/text()" maven-metadata.xml)
+    classifier_filter="not(classifier)"
+    if [ -n "$HZ_VARIANT" ]; then
+        classifier_filter="classifier='$HZ_VARIANT'"
+    fi
+    version=$(xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='zip' and $classifier_filter]/value/text()" maven-metadata.xml)
 
     url="https://oss.sonatype.org/content/repositories/snapshots/com/hazelcast/hazelcast-distribution/${HZ_VERSION}/hazelcast-distribution-${version}${SUFFIX}.zip"
     rm maven-metadata.xml
