@@ -1,234 +1,43 @@
 name: Build OS and EE image
 
 on:
-  push:
-    branches:
-      - "!*"
-    tags:
-      - "v5.*"
   workflow_dispatch:
     inputs:
-      HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
+      SRC_IMAGE_NAME:
+        description: 'Name of the source image including tag'
         required: true
-      RELEASE_VERSION:
-        description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
-        required: false
-      EDITIONS:
-        description: 'Editions to build'
+      TARGET_IMAGE_NAME:
+        description: 'Name of the target image including tag'
         required: true
-        default: 'All'
-        type: choice
-        options:
-          - All
-          - OSS
-          - EE
-env:
-  test_container_name_oss: hazelcast-oss-test
-  test_container_name_ee: hazelcast-ee-test
+
 
 jobs:
-  jdks:
-    uses: ./.github/workflows/get-supported-jdks.yaml
-
-  push:
+  copy-image:
     runs-on: ubuntu-latest
-    needs: jdks
-    strategy:
-      matrix:
-        jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
-        variant: [ 'slim','' ]
-        include:
-          - variant: slim
-            suffix: '-slim'
-          - variant: ''
-            suffix: ''
     env:
-      DOCKER_ORG: hazelcast
-      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
-      EDITIONS: ${{ github.event.inputs.EDITIONS || 'All' }}
+      QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
+      QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
+      SRC_IMAGE_NAME: ${{ github.event.inputs.SRC_IMAGE_NAME }}
+      TARGET_IMAGE_NAME: ${{ github.event.inputs.TARGET_IMAGE_NAME }}
+
     steps:
-      - name: Set HZ version as environment variable
-        run: |
-          if [ -z "${{ env.HZ_VERSION }}" ]; then
-             HZ_VERSION=${GITHUB_REF:11}
-          else
-             HZ_VERSION=${{ env.HZ_VERSION }}
-          fi
-          echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
-          echo "DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
-          echo "DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
-
-      - name: Set Release version as environment variable
-        run: |
-          if [ -z "${{ env.RELEASE_VERSION }}" ]; then
-             RELEASE_VERSION=${{ env.HZ_VERSION }}
-          else
-             RELEASE_VERSION=${{ env.RELEASE_VERSION }}
-          fi
-          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
-
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.0.0
-
-      - name:  Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          version: v0.5.1
+      - name: Login to quay.io Docker registry
+        run: echo "${QUAY_TOKEN}" | docker login -u "${QUAY_USERNAME}" --password-stdin quay.io
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build Test OSS image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
-        run: |
-          docker buildx build --load \
-            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-            --build-arg HZ_VARIANT=${{ matrix.variant }} \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --tag hazelcast-oss:test \
-            hazelcast-oss
+      - name: Pull the source image
+        run: docker pull "${SRC_IMAGE_NAME}"
 
-      - name: Run smoke test against OSS image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
-        timeout-minutes: 2
-        run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
+      - name: Tag the target image
+        run: docker tag "${SRC_IMAGE_NAME}" "${TARGET_IMAGE_NAME}"
 
-      - name: Build Test EE image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
-        run: |
-          docker buildx build --load \
-            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-            --build-arg HZ_VARIANT=${{ matrix.variant }} \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --tag hazelcast-ee:test \
-            hazelcast-enterprise
-
-      - name: Run smoke test against EE image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
-        timeout-minutes: 2
-        run: |
-          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }}
-
-      - name: Get docker logs
-        if: ${{ always() }}
-        run: |
-          docker logs ${{ env.test_container_name_oss }} > ${{ env.DOCKER_LOG_FILE_OSS }} || true
-          docker logs ${{ env.test_container_name_ee }} > ${{ env.DOCKER_LOG_FILE_EE }} || true
-
-      - name: Store docker logs as artifact
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-logs${{ matrix.suffix }}-jdk${{ matrix.jdk }}
-          path: | 
-            ${{ env.DOCKER_LOG_FILE_OSS }}
-            ${{ env.DOCKER_LOG_FILE_EE }}
-
-      - name: Build and Push OSS image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
-        run: |
-          . .github/scripts/get-tags-to-push.sh 
-          . .github/scripts/docker.functions.sh
-          
-          DOCKER_DIR=hazelcast-oss
-          IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
-          
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
-          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
-          TAGS_ARG=""
-          for tag in ${TAGS_TO_PUSH[@]}
-          do
-            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
-          done
-          
-          PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
-          docker buildx build --push \
-            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HZ_VARIANT=${{ matrix.variant }} \
-            ${TAGS_ARG} \
-            --platform=${PLATFORMS} $DOCKER_DIR
-
-      - name: Build/Push EE image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
-        run: |
-          . .github/scripts/get-tags-to-push.sh 
-          . .github/scripts/docker.functions.sh
-          
-          DOCKER_DIR=hazelcast-enterprise
-          IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
-          
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
-          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
-          TAGS_ARG=""
-          for tag in ${TAGS_TO_PUSH[@]}
-          do
-            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
-          done
-          
-          PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
-          docker buildx build --push \
-            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HZ_VARIANT=${{ matrix.variant }} \
-            ${TAGS_ARG} \
-            --platform=${PLATFORMS} $DOCKER_DIR
-
-      - name: Slack notification
-        uses: ./.github/actions/slack-notification
-        if: failure()
-        with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-
-  post-push:
-    runs-on: ubuntu-latest
-    needs: push
-    env:
-      EDITIONS: ${{ github.event.inputs.EDITIONS || 'All' }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: .github
-      - name: Generate Docker Hub Description
-        run: |
-          .github/scripts/generate-docker-hub-description.sh
-      - name: Update Docker Hub Description of OSS image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
-        uses: peter-evans/dockerhub-description@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: hazelcast/hazelcast
-          short-description: Hazelcast Docker Image
-          readme-filepath: ./README-docker.md
-
-      - name: Update Docker Hub Description of EE image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
-        uses: peter-evans/dockerhub-description@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: hazelcast/hazelcast-enterprise
-          short-description: Hazelcast Enterprise Docker Image
-          readme-filepath: ./README-docker.md
-
-      - name: Create release
-        if: github.event_name == 'push'
-        uses: ncipollo/release-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          allowUpdates: true
+      - name: Push the target image
+        run: docker push "${TARGET_IMAGE_NAME}"
 
       - name: Slack notification
         uses: ./.github/actions/slack-notification
