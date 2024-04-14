@@ -85,8 +85,19 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+      - name: Check if OSS should be built
+        run: |
+          . .github/scripts/os_build.functions.sh
+          
+          os_hz_version=$(awk -F= '/^ARG HZ_VERSION=/{print $2}' hazelcast-oss/Dockerfile  | sed 's/"//g')
+          ee_hz_version=$(awk -F= '/^ARG HZ_VERSION=/{print $2}' hazelcast-enterprise/Dockerfile  | sed 's/"//g')
+          editions=${{ env.EDITIONS }}
+          triggered_by=${{ github.event_name }}
+          SHOULD_BUILD_OSS = $(should_build_os "$os_hz_version" "$ee_hz_version" "$triggered_by" "$editions")
+          echo "SHOULD_BUILD_OSS=${SHOULD_BUILD_OSS}" >> $GITHUB_ENV
+
       - name: Build Test OSS image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
+        if: env.SHOULD_BUILD_OSS == 'yes'
         run: |
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
@@ -96,7 +107,7 @@ jobs:
             hazelcast-oss
 
       - name: Run smoke test against OSS image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
+        if: env.SHOULD_BUILD_OSS == 'yes'
         timeout-minutes: 2
         run: |
           .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
@@ -134,7 +145,7 @@ jobs:
             ${{ env.DOCKER_LOG_FILE_EE }}
 
       - name: Build and Push OSS image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
+        if: env.SHOULD_BUILD_OSS == 'yes'
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
