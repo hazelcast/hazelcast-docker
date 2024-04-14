@@ -17,7 +17,7 @@ on:
       EDITIONS:
         description: 'Editions to build'
         required: true
-        default: 'All'
+        default: 'EE'
         type: choice
         options:
           - All
@@ -47,7 +47,7 @@ jobs:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
-      EDITIONS: ${{ github.event.inputs.EDITIONS || 'All' }}
+      EDITIONS: ${{ github.event.inputs.EDITIONS || 'EE' }}
     steps:
       - name: Set HZ version as environment variable
         run: |
@@ -195,7 +195,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: push
     env:
-      EDITIONS: ${{ github.event.inputs.EDITIONS || 'All' }}
+      EDITIONS: ${{ github.event.inputs.EDITIONS || 'EE' }}
     steps:
       - uses: actions/checkout@v4
         with:
