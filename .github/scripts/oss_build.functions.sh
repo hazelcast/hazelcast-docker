@@ -26,6 +26,25 @@ assert_same_minor_version() {
   fi
 }
 
+# Checks if we should build the OSS docker image.
+# Returns "yes" if we should build it or "no" if we shouldn't.
+# If the workflow was triggered by "push" (usually tag push) we two conditions:
+#  - both (OSS and EE) HZ versions are final release (non-BETA/DEVEL/SNAPSHOT)
+#  - both (OSS and EE) HZ versions are equal
+#
+# The reasoning:
+# - For minor releases we will have the same version set (OSS=`6.6.0` and EE=`6.6.0`) which means
+# we should build both editions.
+#
+# - For patch releases we will increment only EE version (i.e. OSS="6.6.0" and EE=`6.6.1`) which means we should build EE only
+#
+# - If for some reason we will have to build an emergency OSS patch release we should change OSS version
+# as well (i.e. OSS="6.6.1" and EE=`6.6.1`) this will mean we should build both editions
+#
+# - If the workflows was triggered manually by `workflow_dispatch` we assume that the caller knows what they're doing
+# so we return "yes" for "All" and "OSS" editions
+#
+# Check test cases in `oss_build.functions_tests.sh` to see the examples
 should_build_oss() {
 
   local oss_version=$1
