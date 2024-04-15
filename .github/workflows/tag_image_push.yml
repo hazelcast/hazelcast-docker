@@ -89,11 +89,11 @@ jobs:
         run: |
           . .github/scripts/oss_build.functions.sh
           
-          os_hz_version=$(awk -F= '/^ARG HZ_VERSION=/{print $2}' hazelcast-oss/Dockerfile  | sed 's/"//g')
+          oss_hz_version=$(awk -F= '/^ARG HZ_VERSION=/{print $2}' hazelcast-oss/Dockerfile  | sed 's/"//g')
           ee_hz_version=$(awk -F= '/^ARG HZ_VERSION=/{print $2}' hazelcast-enterprise/Dockerfile  | sed 's/"//g')
           editions=${{ env.EDITIONS }}
           triggered_by=${{ github.event_name }}
-          SHOULD_BUILD_OSS = $(should_build_os "$os_hz_version" "$ee_hz_version" "$triggered_by" "$editions")
+          SHOULD_BUILD_OSS = $(should_build_oss "$oss_hz_version" "$ee_hz_version" "$triggered_by" "$editions")
           echo "SHOULD_BUILD_OSS=${SHOULD_BUILD_OSS}" >> $GITHUB_ENV
 
       - name: Build Test OSS image

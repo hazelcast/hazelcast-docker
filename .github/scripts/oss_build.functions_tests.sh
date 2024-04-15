@@ -54,7 +54,7 @@ function assert_should_build_os {
   local triggered_by=$3
   local editions=$4
   local expected_should_build_os=$5
-  local actual=$(should_build_os "$os_version" "$ee_version" "$triggered_by" "$editions")
+  local actual=$(should_build_oss "$os_version" "$ee_version" "$triggered_by" "$editions")
   assert_eq "$expected_should_build_os" "$actual" "For OS=$os_version EE=$ee_version triggered_by=$triggered_by editions=$editions we should$( [ "$expected_should_build_os" = "no" ] && echo " NOT") build OS" || TESTS_RESULT=$?
 }
 
@@ -72,7 +72,7 @@ assert_is_numeric "0-BETA-1" 1
 assert_is_numeric "0-DEVEL-9" 1
 assert_is_numeric "0-SNAPSHOT" 1
 
-log_header "Tests for should_build_os"
+log_header "Tests for should_build_oss"
 assert_should_build_os "5.0.0" "5.0.0" "push" "All" "yes"
 assert_should_build_os "5.0.0" "5.0.0" "push" "OSS" "yes"
 assert_should_build_os "5.0.0" "5.0.0" "push" "EE" "yes"

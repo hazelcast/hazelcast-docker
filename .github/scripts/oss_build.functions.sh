@@ -26,7 +26,7 @@ assert_same_minor_version() {
   fi
 }
 
-should_build_os() {
+should_build_oss() {
 
   local oss_version=$1
   local ee_version=$2
