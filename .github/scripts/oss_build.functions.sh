@@ -2,18 +2,18 @@
 
 set -euo pipefail
 
-get_patch_part() {
+function get_patch_part() {
   local version=$1
   local patch_part=$(echo "$version" | awk -F'.' '{print $3}')
   echo "$patch_part"
 }
 
-is_numeric() {
+function is_numeric() {
   local str=$1
   [[ $str =~ ^[0-9]+$ ]]
 }
 
-assert_same_minor_version() {
+function assert_same_minor_version() {
   local oss_version=$1
   local ee_version=$2
 
@@ -45,7 +45,7 @@ assert_same_minor_version() {
 # so we return "yes" for "All" and "OSS" editions
 #
 # Check test cases in `oss_build.functions_tests.sh` to see the examples
-should_build_oss() {
+function should_build_oss() {
 
   local oss_version=$1
   local ee_version=$2
