@@ -28,7 +28,7 @@ function assert_same_minor_version() {
 
 # Checks if we should build the OSS docker image.
 # Returns "yes" if we should build it or "no" if we shouldn't.
-# If the workflow was triggered by "push" (usually tag push) we two conditions:
+# If the workflow was triggered by "push" (usually tag push) we should build an OSS image only with these conditions fulfilled:
 #  - both (OSS and EE) HZ versions are final release (non-BETA/DEVEL/SNAPSHOT)
 #  - both (OSS and EE) HZ versions are equal
 #
