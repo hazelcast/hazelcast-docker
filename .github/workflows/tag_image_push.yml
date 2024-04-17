@@ -88,9 +88,10 @@ jobs:
       - name: Check if OSS should be built
         run: |
           . .github/scripts/oss_build.functions.sh
+          . .github/scripts/docker.functions.sh
           
-          oss_hz_version=$(awk -F= '/^ARG HZ_VERSION=/{print $2}' hazelcast-oss/Dockerfile  | sed 's/"//g')
-          ee_hz_version=$(awk -F= '/^ARG HZ_VERSION=/{print $2}' hazelcast-enterprise/Dockerfile  | sed 's/"//g')
+          oss_hz_version=$(get_dockerfile_arg_value hazelcast-oss/Dockerfile HZ_VERSION)
+          ee_hz_version=$(get_dockerfile_arg_value hazelcast-enterprise/Dockerfile HZ_VERSION)
           editions=${{ env.EDITIONS }}
           triggered_by=${{ github.event_name }}
           SHOULD_BUILD_OSS = $(should_build_oss "$oss_hz_version" "$ee_hz_version" "$triggered_by" "$editions")
