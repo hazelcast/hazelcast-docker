@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -eu
-function findScriptDir() {
+function find_script_dir() {
   CURRENT=$PWD
 
   DIR=$(dirname "$0")
@@ -16,11 +16,12 @@ function findScriptDir() {
       TARGET_FILE=$(basename "$TARGET_FILE")
   done
 
-  SCRIPT_DIR=$(pwd -P)
+  local SCRIPT_DIR=$(pwd -P)
   cd "$CURRENT" || exit
+  echo "$SCRIPT_DIR"
 }
 
-findScriptDir
+SCRIPT_DIR=$(find_script_dir)
 
 . "$SCRIPT_DIR"/assert.sh/assert.sh
 . "$SCRIPT_DIR"/oss_build.functions.sh
