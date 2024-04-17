@@ -128,4 +128,10 @@ assert_should_build_os "5.4.0-DEVEL-9" "5.4.0-DEVEL-9" "workflow_dispatch" "All"
 assert_should_build_os "5.4.0-DEVEL-9" "5.4.0-DEVEL-9" "workflow_dispatch" "OSS" "yes"
 assert_should_build_os "5.4.0-DEVEL-9" "5.4.0-DEVEL-9" "workflow_dispatch" "EE" "no"
 
+# large version number tests
+assert_should_build_os "11.11.33" "11.22.33" "push" "All" "Error: OSS and EE version must have same minor version"
+assert_should_build_os "11.22.33" "22.22.33" "push" "All" "Error: OSS and EE version must have same minor version"
+assert_should_build_os "11.22.33" "11.22.33" "push" "All" "yes"
+assert_should_build_os "11.22.33" "11.22.00" "push" "All" "no"
+
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
