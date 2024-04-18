@@ -23,13 +23,13 @@ ENV HZ_HOME="${HZ_HOME}" \
     LANG=C.UTF-8 \
     PATH=${HZ_HOME}/bin:$PATH
 
-LABEL name="Hazelcast IMDG Enterprise" \
+LABEL name="Hazelcast Enterprise" \
       maintainer="info@hazelcast.com" \
       vendor="Hazelcast, Inc." \
       version="${HZ_VERSION}" \
       release="1" \
-      summary="Hazelcast IMDG Enterprise Image" \
-      description="Hazelcast IMDG Enterprise Image"
+      summary="Hazelcast Enterprise Image" \
+      description="Hazelcast Enterprise Image"
 
 # Expose port
 EXPOSE 5701
