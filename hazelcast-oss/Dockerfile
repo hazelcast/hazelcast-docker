@@ -30,7 +30,7 @@ COPY *.jar get-hz-dist-zip.sh hazelcast-*.zip ${HZ_HOME}/
 RUN echo "Upgrading APK packages" \
     && apk upgrade --no-cache \
     && echo "Installing new APK packages" \
-    && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl libxml2-utils zip unzip \
+    && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl zip unzip \
     && if [[ ! -f ${HZ_HOME}/hazelcast-distribution.zip ]]; then \
        HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-dist-zip.sh); \
        echo "Downloading Hazelcast${HZ_VARIANT} distribution zip from ${HAZELCAST_ZIP_URL}..."; \
@@ -45,7 +45,7 @@ RUN echo "Upgrading APK packages" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Cleaning APK packages and redundant files/folders" \
-    && apk del libxml2-utils zip unzip \
+    && apk del zip unzip \
     && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-dist-zip.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp \
     # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
     && chmod +x ${HZ_HOME}/bin/*
