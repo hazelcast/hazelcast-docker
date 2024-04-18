@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 
 # This is a simple script imitating what maven does for snapshot versions. We are not using maven because currently Docker Buildx and QEMU on Github Actions
 # don't work with Java on architectures ppc64le and s390x. When the problem is fixed we will revert back to using maven.

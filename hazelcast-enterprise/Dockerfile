@@ -9,7 +9,7 @@ ARG JDK_VERSION="21"
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
-ARG HAZELCAST_ZIP_URL=""
+ARG HAZELCAST_ZIP_URL="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.5.0/hazelcast-enterprise-distribution-5.5.0.zip"
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
