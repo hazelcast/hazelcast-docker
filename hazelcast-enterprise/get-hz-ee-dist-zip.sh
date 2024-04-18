@@ -13,7 +13,7 @@ if [[ -n "${HAZELCAST_ZIP_URL}" ]]; then echo "$HAZELCAST_ZIP_URL"; exit; fi
 
 if [[ "${HZ_VERSION}" == *"SNAPSHOT"* ]]
 then
-    curl -O -fsSL https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/${HZ_VERSION}/maven-metadata.xml
+    curl -O -fsSL https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/"${HZ_VERSION}"/maven-metadata.xml
     classifier_filter="not(classifier)"
     if [ -n "$HZ_VARIANT" ]; then
         classifier_filter="classifier='$HZ_VARIANT'"
@@ -26,4 +26,4 @@ else
     url="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/${HZ_VERSION}/hazelcast-enterprise-distribution-${HZ_VERSION}${SUFFIX}.zip"
 fi
 
-echo $url
+echo "$url"
