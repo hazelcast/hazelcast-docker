@@ -50,6 +50,7 @@ jobs:
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
+            --build-arg HAZELCAST_ZIP_URL=$(hazelcast-oss/get-hz-dist-zip.sh) \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -105,6 +106,7 @@ jobs:
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
+            --build-arg HAZELCAST_ZIP_URL=$(hazelcast-oss/get-hz-dist-zip.sh) \
             $TAGS_ARG \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification

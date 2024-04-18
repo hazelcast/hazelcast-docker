@@ -43,7 +43,6 @@ RUN echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
         --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
-        HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-ee-dist-zip.sh); \
         echo "Downloading Hazelcast${HZ_VARIANT} distribution zip from $(echo $HAZELCAST_ZIP_URL | sed "s/?.*//g")..."; \
         curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
     else \
@@ -58,7 +57,7 @@ RUN echo "Installing new packages" \
     && echo "Removing cached package data and unnecessary tools" \
     && microdnf -y remove zip unzip \
     && microdnf -y clean all \
-    && rm -rf ${HZ_HOME}/get-hz-ee-dist-zip.sh ${HZ_HOME}/hazelcast-enterprise-distribution.zip ${HZ_HOME}/tmp \
+    && rm -rf ${HZ_HOME}/hazelcast-enterprise-distribution.zip ${HZ_HOME}/tmp \
     # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
     && chmod +x ${HZ_HOME}/bin/*
 

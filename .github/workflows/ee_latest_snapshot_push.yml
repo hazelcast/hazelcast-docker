@@ -49,6 +49,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg HAZELCAST_ZIP_URL=$(hazelcast-enterprise/get-hz-ee-dist-zip.sh) \
             --tag hazelcast-ee:test \
             hazelcast-enterprise
 
@@ -104,6 +105,7 @@ jobs:
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
+            --build-arg HAZELCAST_ZIP_URL=$(hazelcast-oss/get-hz-dist-zip.sh) \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification
