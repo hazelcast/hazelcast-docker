@@ -38,7 +38,7 @@ function packages_updated_oss() {
 function packages_updated_ee() {
   local IMAGE=$1
   docker pull "$IMAGE"
-  local OUTPUT=$(docker run --user 0 --rm $IMAGE sh -c 'microdnf upgrade --nodocs')
+  local OUTPUT=$(docker run --user 0 --rm $IMAGE sh -c 'microdnf -y upgrade --nodocs')
   echo "$OUTPUT"
   PACKAGE_UPGRADES=$(echo "$OUTPUT" | grep --count Upgrading)
   if [ "$PACKAGE_UPGRADES" -ne 0 ]; then
