@@ -59,6 +59,15 @@ function assert_should_build_os {
   assert_eq "$expected_should_build_os" "$actual" "For OS=$os_version EE=$ee_version triggered_by=$triggered_by editions=$editions we should$( [ "$expected_should_build_os" = "no" ] && echo " NOT") build OS" || TESTS_RESULT=$?
 }
 
+function assert_get_hz_dist_zip {
+  local hz_variant=$1
+  local hz_version=$2
+  local suffix=$3
+  local expected_url=$4
+  local actual_url=$(get_hz_dist_zip "$hz_variant" "$hz_version" "$suffix")
+  assert_eq "$expected_url" "$actual_url" "Expected URL for variant \"$hz_variant\", version \"$hz_version\", suffix \"$suffix\"" || TESTS_RESULT=$?
+}
+
 log_header "Tests for get_patch_part"
 assert_get_patch_part "5.2.0" "0"
 assert_get_patch_part "5.2.1" "1"
@@ -133,5 +142,8 @@ assert_should_build_os "11.11.33" "11.22.33" "push" "All" "Error: OSS and EE ver
 assert_should_build_os "11.22.33" "22.22.33" "push" "All" "Error: OSS and EE version must have same minor version"
 assert_should_build_os "11.22.33" "11.22.33" "push" "All" "yes"
 assert_should_build_os "11.22.33" "11.22.00" "push" "All" "no"
+
+log_header "Tests for assert_get_hz_dist_zip"
+assert_get_hz_dist_zip slim 5.4.0 -slim https://repo1.maven.org/maven2/com/hazelcast/hazelcast-distribution/5.4.0/hazelcast-distribution-5.4.0-slim.zip
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"

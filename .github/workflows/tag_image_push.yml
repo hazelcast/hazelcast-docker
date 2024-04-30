@@ -100,11 +100,12 @@ jobs:
       - name: Build Test OSS image
         if: env.SHOULD_BUILD_OSS == 'yes'
         run: |
+          . .github/scripts/oss_build.functions.sh
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(.github/scripts/get-hz-dist-zip.sh) \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip) \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -117,11 +118,12 @@ jobs:
       - name: Build Test EE image
         if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
         run: |
+          . .github/scripts/ee_build.functions.sh
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(.github/scripts/get-hz-ee-dist-zip.sh) \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip) \
             --tag hazelcast-ee:test \
             hazelcast-enterprise
 
@@ -152,6 +154,7 @@ jobs:
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
+          . .github/scripts/oss_build.functions.sh
           
           DOCKER_DIR=hazelcast-oss
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
@@ -170,7 +173,7 @@ jobs:
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
-            --build-arg HAZELCAST_ZIP_URL=$(.github/scripts/get-hz-dist-zip.sh) \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip) \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
@@ -179,6 +182,7 @@ jobs:
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
+          . .github/scripts/ee_build.functions.sh
           
           DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
@@ -197,7 +201,7 @@ jobs:
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VARIANT=${{ matrix.variant }} \
-            --build-arg HAZELCAST_ZIP_URL=$(.github/scripts/get-hz-ee-dist-zip.sh) \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip) \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 

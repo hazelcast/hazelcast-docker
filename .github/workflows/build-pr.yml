@@ -29,8 +29,9 @@ jobs:
 
       - name: Build OSS image
         run: |
+          . .github/scripts/oss_build.functions.sh
           docker buildx build \
-          --build-arg HAZELCAST_ZIP_URL=$(.github/scripts/get-hz-dist-zip.sh) \
+          --build-arg HAZELCAST_ZIP_URL=$(.github/scripts/get_hz_dist_zip.sh) \
           --load --tag hazelcast-oss:test hazelcast-oss
 
       - name: Run smoke test against OSS image
@@ -40,8 +41,9 @@ jobs:
 
       - name: Build Test EE image
         run: |
+          . .github/scripts/ee_build.functions.sh
           docker buildx build \
-          --build-arg HAZELCAST_ZIP_URL=$(.github/scripts/get-hz-ee-dist-zip.sh) \
+          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip) \
           --load --tag hazelcast-ee:test hazelcast-enterprise
 
       - name: Run smoke test against EE image
@@ -87,9 +89,10 @@ jobs:
 
       - name: Build OSS image
         run: |
+          . .github/scripts/oss_build.functions.sh
           docker buildx build --load \
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
-          --build-arg HAZELCAST_ZIP_URL=$(.github/scripts/get-hz-dist-zip.sh) \
+          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip) \
           --tag hazelcast-oss:test hazelcast-oss
 
       - name: Run smoke test against OSS image
@@ -99,9 +102,10 @@ jobs:
 
       - name: Build Test EE image
         run: |
+          . .github/scripts/ee_build.functions.sh
           docker buildx build --load \
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
-          --build-arg HAZELCAST_ZIP_URL=$(.github/scripts/get-hz-ee-dist-zip.sh) \
+          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip) \
           --tag hazelcast-ee:test hazelcast-enterprise
 
       - name: Run smoke test against EE image
