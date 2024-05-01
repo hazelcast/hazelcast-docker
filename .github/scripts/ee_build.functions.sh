@@ -14,9 +14,6 @@ function get_hz_dist_zip() {
   # The slim is an artifact with a classifier, need to add `-` there
   if [[ -n "${hz_variant}" ]]; then suffix="-${hz_variant}"; fi
 
-  # Use predefined $HAZELCAST_ZIP_URL if set
-  if [[ -n "${HAZELCAST_ZIP_URL:-}" ]]; then echo "$HAZELCAST_ZIP_URL"; exit; fi
-
   if [[ "${hz_version}" == *"SNAPSHOT"* ]]
   then
       curl -O -fsSL https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/"${hz_version}"/maven-metadata.xml
