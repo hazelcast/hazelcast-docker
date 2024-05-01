@@ -1,13 +1,13 @@
 FROM redhat/ubi9-minimal:9.3
 
 # Versions of Hazelcast
-ARG HZ_VERSION=5.5.0-SNAPSHOT
+ARG HZ_VERSION=5.4.0
 ARG JDK_VERSION="21"
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
-ARG HAZELCAST_ZIP_URL="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.5.0/hazelcast-enterprise-distribution-5.5.0.zip"
+ARG HAZELCAST_ZIP_URL="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.4.0/hazelcast-enterprise-distribution-5.4.0.zip"
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
