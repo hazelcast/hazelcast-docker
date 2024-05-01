@@ -31,7 +31,7 @@ jobs:
         run: |
           . .github/scripts/oss_build.functions.sh
           docker buildx build \
-          --build-arg HAZELCAST_ZIP_URL=$(.github/scripts/get_hz_dist_zip.sh) \
+          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip) \
           --load --tag hazelcast-oss:test hazelcast-oss
 
       - name: Run smoke test against OSS image
