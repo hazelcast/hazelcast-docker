@@ -47,7 +47,8 @@ RUN echo "Installing new packages" \
         --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
         echo "Downloading Hazelcast distribution zip from $($HAZELCAST_ZIP_URL}..."; \
-        curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
+        mkdir --parents ${HZ_HOME}; \
+        curl -sfL ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
     else \
            echo "Using local hazelcast-enterprise-distribution.zip"; \
     fi \

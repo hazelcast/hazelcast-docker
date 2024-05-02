@@ -31,7 +31,8 @@ RUN echo "Upgrading APK packages" \
     && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl zip unzip \
     && if [[ ! -f ${HZ_HOME}/hazelcast-distribution.zip ]]; then \
        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
-       curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-distribution.zip; \
+       mkdir --parents ${HZ_HOME}; \
+       curl -sfL ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-distribution.zip; \
     else \
            echo "Using local hazelcast-distribution.zip"; \
     fi \
