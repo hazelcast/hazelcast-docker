@@ -46,7 +46,7 @@ RUN echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
         --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
-        echo "Downloading Hazelcast distribution zip from $(echo $HAZELCAST_ZIP_URL | sed "s/?.*//g")..."; \
+        echo "Downloading Hazelcast distribution zip from $($HAZELCAST_ZIP_URL}..."; \
         curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
     else \
            echo "Using local hazelcast-enterprise-distribution.zip"; \
