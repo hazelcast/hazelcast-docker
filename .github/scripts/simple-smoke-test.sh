@@ -8,8 +8,10 @@ function test_docker_image() {
     local image=$1
     local container_name=$2
 
-    # Always clean up the docker container
-    trap 'docker container rm --force "$container_name"' EXIT
+    if [ "$(docker ps --all --quiet --filter name="$container_name")" ]; then
+      echo "Removing existing '$container_name' container"
+      docker container rm --force "$container_name"
+    fi
 
     echo "Starting container '$container_name' from image '$image'"
     docker run -it --name "$container_name" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "$image"
