@@ -3,7 +3,6 @@
 set -e
 set -o pipefail
 
-
 function test_docker_image() {
     local image=$1
     local container_name=$2
@@ -26,6 +25,8 @@ function test_docker_image() {
     echo "Getting value for key '$key'"
     local actual
     actual=$(clc map get --format delimited -n some-map $key --log.path stderr)
+    echo "Stopping container $container_name}"
+    docker stop "$container_name"
 
     if [ "$expected" != "$actual" ]; then
         echo "Expected to read '${expected}' but got '${actual}'"
