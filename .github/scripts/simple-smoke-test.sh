@@ -3,9 +3,14 @@
 set -e
 set -o pipefail
 
+
 function test_docker_image() {
     local image=$1
     local container_name=$2
+
+    # Always clean up the docker container
+    trap 'docker stop "$container_name"' EXIT
+
     echo "Starting container '$container_name' from image '$image'"
     docker run -it --name "$container_name" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "$image"
     local key="some-key"
@@ -19,8 +24,6 @@ function test_docker_image() {
     echo "Getting value for key '$key'"
     local actual
     actual=$(clc map get --format delimited -n some-map $key --log.path stderr)
-    echo "Stopping container $container_name}"
-    docker stop "$container_name"
 
     if [ "$expected" != "$actual" ]; then
         echo "Expected to read '${expected}' but got '${actual}'"
