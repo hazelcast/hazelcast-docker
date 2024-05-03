@@ -9,7 +9,7 @@ function test_docker_image() {
     local container_name=$2
 
     # Always clean up the docker container
-    trap 'docker stop "$container_name"' EXIT
+    trap 'docker container rm --force "$container_name"' EXIT
 
     echo "Starting container '$container_name' from image '$image'"
     docker run -it --name "$container_name" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "$image"
