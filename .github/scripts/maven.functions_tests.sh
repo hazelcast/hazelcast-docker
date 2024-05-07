@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -eu
+
 function find_script_dir() {
   CURRENT=$PWD
 
@@ -29,14 +30,25 @@ SCRIPT_DIR=$(find_script_dir)
 TESTS_RESULT=0
 
 function assert_get_latest_version {
-  local group=$1
+  local groupId=$1
   local artifactId=$2
   local expected_version=$3
-  local actual_version=$(get_latest_version "$group" "$artifactId")
-  assert_eq "$expected_version" "$actual_version" "Expected for lastest version of $group:$artifactId to be equal to $expected_version " || TESTS_RESULT=$?
+  local actual_version=$(get_latest_version "$groupId" "$artifactId")
+  assert_eq "$expected_version" "$actual_version" "Latest version of $groupId:$artifactId expected to be equal to $expected_version " || TESTS_RESULT=$?
+}
+
+function assert_get_latest_url_without_extension {
+  local groupId=$1
+  local artifactId=$2
+  local expected_url=$3
+  local actual_url=$(get_latest_url_without_extension "$groupId" "$artifactId")
+  assert_eq "$expected_url" "$actual_url" "Latest URL of $groupId:$artifactId expected to be equal to $expected_url " || TESTS_RESULT=$?
 }
 
 log_header "Tests for get_latest_version"
 assert_get_latest_version com.google.guava listenablefuture 9999.0-empty-to-avoid-conflict-with-guava
+
+log_header "Tests for get_latest_url_without_extension"
+get_latest_url_without_extension com.google.guava listenablefuture https://repo1.maven.org/maven2/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"

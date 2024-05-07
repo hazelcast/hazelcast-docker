@@ -3,9 +3,7 @@ FROM alpine:3
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
 ARG JDK_VERSION="21"
-# TODO Will this be upgraded post-release?
-# Should we have a script that gets the latest version instead?
-ARG HAZELCAST_ZIP_URL="https://repo1.maven.org/maven2/com/hazelcast/hazelcast-distribution/5.4.0/hazelcast-distribution-5.4.0.zip"
+ARG HAZELCAST_ZIP_URL=
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -22,7 +20,7 @@ ENV HZ_HOME="${HZ_HOME}" \
 # Expose port
 EXPOSE 5701
 
-COPY *.jar hazelcast-*.zip ${HZ_HOME}/
+COPY *.jar hazelcast-*.zip maven.functions.sh ${HZ_HOME}/
 
 # Install
 RUN echo "Upgrading APK packages" \
@@ -30,6 +28,10 @@ RUN echo "Upgrading APK packages" \
     && echo "Installing new APK packages" \
     && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl zip unzip \
     && if [[ ! -f ${HZ_HOME}/hazelcast-distribution.zip ]]; then \
+       if [ -z ${HAZELCAST_ZIP_URL} ]; then \
+            source ${HZ_HOME}/maven.functions.sh \
+            HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-distribution)".jar; \
+       fi \
        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
        mkdir --parents ${HZ_HOME}; \
        curl -sfL ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-distribution.zip; \

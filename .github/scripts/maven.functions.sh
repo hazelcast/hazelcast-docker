@@ -1,15 +1,18 @@
 #!/bin/bash
 
-set -x
 set -euo pipefail
 
 function get_latest_version() {
-  local group=$1
+  local groupId=$1
   local artifactId=$2
 
-  curl -O -fsSL https://repo1.maven.org/maven2/"${group//./\/}"/"${artifactId}"/maven-metadata.xml
-  version=$(xmllint --xpath "string(/metadata/versioning/release)" maven-metadata.xml)
+  curl -fsSL https://repo1.maven.org/maven2/"${groupId//./\/}"/"${artifactId}"/maven-metadata.xml | xmllint --xpath "string(/metadata/versioning/release)" -
+}
 
-  echo "${version}"
-  rm maven-metadata.xml
+function get_latest_url_without_extension() {
+  local groupId=$1
+  local artifactId=$2
+
+  latest_version=$(get_latest_version "${groupId}" "${artifactId}")
+  echo "https://repo1.maven.org/maven2/${groupId//./\/}/${artifactId}/${latest_version}/${artifactId}-${latest_version}"
 }
