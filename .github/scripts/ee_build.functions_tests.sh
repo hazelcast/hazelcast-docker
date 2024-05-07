@@ -37,7 +37,7 @@ function assert_get_hz_dist_zip {
   assert_eq "$expected_url" "$actual_url" "Expected URL for variant \"$hz_variant\", version \"$hz_version\", suffix \"$suffix\"" || TESTS_RESULT=$?
 }
 
-log_header "Tests for assert_get_hz_dist_zip"
+log_header "Tests for get_hz_dist_zip"
 assert_get_hz_dist_zip slim 5.4.0 -slim https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.4.0/hazelcast-enterprise-distribution-5.4.0-slim.zip
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"

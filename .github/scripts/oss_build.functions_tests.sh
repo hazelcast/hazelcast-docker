@@ -143,7 +143,7 @@ assert_should_build_os "11.22.33" "22.22.33" "push" "All" "Error: OSS and EE ver
 assert_should_build_os "11.22.33" "11.22.33" "push" "All" "yes"
 assert_should_build_os "11.22.33" "11.22.00" "push" "All" "no"
 
-log_header "Tests for assert_get_hz_dist_zip"
+log_header "Tests for get_hz_dist_zip"
 assert_get_hz_dist_zip slim 5.4.0 -slim https://repo1.maven.org/maven2/com/hazelcast/hazelcast-distribution/5.4.0/hazelcast-distribution-5.4.0-slim.zip
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
