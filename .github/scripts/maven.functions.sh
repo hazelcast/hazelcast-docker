@@ -2,7 +2,16 @@
 
 set -euo pipefail
 
-# TODO DOCS
+# Prints the latest version in the Maven repository
+#
+# Parameters:
+#   group_id        e.g. com.google.guava
+#   artifact_id     e.g. guava
+#   repository_url  e.g.  https://repo1.maven.org
+#
+# Prints the latest released version of the given artifact in the provided Maven repository
+# E.G. `33.2.0-jre`
+
 function get_latest_version() {
   local group_id=$1
   local artifact_id=$2
@@ -11,7 +20,15 @@ function get_latest_version() {
   curl --fail --silent --show-error --location "${repository_url}/${group_id//./\/}/${artifact_id}/maven-metadata.xml" | xmllint --xpath "string(/metadata/versioning/release)" -
 }
 
-# TODO DOCS
+# Prints a URL to the latest version in the Maven repository, without a file extension
+#
+# Parameters:
+#   group_id        e.g. com.google.guava
+#   artifact_id     e.g. guava
+#   repository_url  e.g.  https://repo1.maven.org
+#
+# Prints a URL to the latest released version of a given artifact in the Maven repository, without a file extension, assuming a "typical" naming format
+# E.G. `https://repo1.maven.org/maven2/com/google/guava/guava/33.2.0-jre/guava-33.2.0-jre`
 function get_latest_url_without_extension() {
   local group_id=$1
   local artifact_id=$2
