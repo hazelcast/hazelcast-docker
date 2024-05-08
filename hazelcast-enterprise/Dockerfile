@@ -8,7 +8,7 @@ ARG JDK_VERSION="21"
 ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
 # Optional, defaults to latest released version
-ARG HAZELCAST_ZIP_URL=
+ARG HAZELCAST_ZIP_URL=""
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
