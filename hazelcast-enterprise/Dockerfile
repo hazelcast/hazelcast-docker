@@ -46,7 +46,7 @@ RUN echo "Installing new packages" \
             source ${HZ_HOME}/maven.functions.sh; \
             HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-enterprise-distribution https://repository.hazelcast.com/release)".zip; \
         fi; \
-        echo "Downloading Hazelcast distribution zip from $($HAZELCAST_ZIP_URL}..."; \
+        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
         mkdir --parents ${HZ_HOME}; \
         curl -sfL ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
     else \
