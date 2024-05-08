@@ -29,7 +29,6 @@ jobs:
 
       - name: Build OSS image
         run: |
-          . .github/scripts/oss_build.functions.sh
           docker buildx build \
           --load --tag hazelcast-oss:test hazelcast-oss
 
@@ -87,9 +86,9 @@ jobs:
 
       - name: Build OSS image
         run: |
-          . .github/scripts/oss_build.functions.sh
           docker buildx build --load \
-          --build-arg JDK_VERSION=${{ matrix.jdk }} \          --tag hazelcast-oss:test hazelcast-oss
+          --build-arg JDK_VERSION=${{ matrix.jdk }} \
+          --tag hazelcast-oss:test hazelcast-oss
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
@@ -98,7 +97,6 @@ jobs:
 
       - name: Build Test EE image
         run: |
-          . .github/scripts/ee_build.functions.sh
           docker buildx build --load \
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
           --tag hazelcast-ee:test hazelcast-enterprise
