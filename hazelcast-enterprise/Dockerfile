@@ -43,7 +43,7 @@ RUN echo "Installing new packages" \
         --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
         if [ -z ${HAZELCAST_ZIP_URL} ]; then \
-            source ${HZ_HOME}/maven.functions.sh \
+            source ${HZ_HOME}/maven.functions.sh; \
             HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-enterprise-distribution https://repository.hazelcast.com/release)".jar; \
         fi \
         echo "Downloading Hazelcast distribution zip from $($HAZELCAST_ZIP_URL}..."; \
