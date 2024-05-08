@@ -3,6 +3,7 @@ FROM alpine:3
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
 ARG JDK_VERSION="21"
+# Optional, defaults to latest released version
 ARG HAZELCAST_ZIP_URL=
 
 # Runtime variables
