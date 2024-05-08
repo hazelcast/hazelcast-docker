@@ -32,6 +32,13 @@ jobs:
       DOCKER_ORG: hazelcast
       HZ_VERSION : ${{ github.event.inputs.HZ_VERSION }}
     steps:
+      - name: Install xmllint
+        run: |
+          # xmllint is not part of the default image, but required for scripts used in Docker build
+          # https://github.com/actions/runner-images/issues/423
+          sudo apt-get update
+          sudo apt-get install --yes libxml2-utils
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
