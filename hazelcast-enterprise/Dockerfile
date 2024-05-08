@@ -10,9 +10,7 @@ ARG JDK_VERSION="21"
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
-# TODO Will this be upgraded post-release?
-# Should we have a script that gets the latest version instead?
-ARG HAZELCAST_ZIP_URL="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.4.0/hazelcast-enterprise-distribution-5.4.0.zip"
+ARG HAZELCAST_ZIP_URL=
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -38,7 +36,7 @@ LABEL name="Hazelcast Enterprise" \
 EXPOSE 5701
 
 COPY licenses /licenses
-COPY *.jar hazelcast-*.zip ${HZ_HOME}/
+COPY *.jar hazelcast-*.zip maven.functions.sh ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new packages" \
@@ -46,6 +44,10 @@ RUN echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
         --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
+        if [ -z ${HAZELCAST_ZIP_URL} ]; then \
+            source ${HZ_HOME}/maven.functions.sh \
+            HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-enterprise-distribution https://repository.hazelcast.com/release)".jar; \
+        fi \
         echo "Downloading Hazelcast distribution zip from $($HAZELCAST_ZIP_URL}..."; \
         mkdir --parents ${HZ_HOME}; \
         curl -sfL ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
@@ -61,7 +63,7 @@ RUN echo "Installing new packages" \
     && echo "Removing cached package data and unnecessary tools" \
     && microdnf -y remove zip unzip \
     && microdnf -y clean all \
-    && rm -rf ${HZ_HOME}/hazelcast-enterprise-distribution.zip ${HZ_HOME}/tmp \
+    && rm -rf ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/hazelcast-enterprise-distribution.zip maven.functions.sh${HZ_HOME}/tmp \
     # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
     && chmod +x ${HZ_HOME}/bin/*
 

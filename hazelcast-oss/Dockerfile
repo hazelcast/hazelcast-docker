@@ -26,11 +26,11 @@ COPY *.jar hazelcast-*.zip maven.functions.sh ${HZ_HOME}/
 RUN echo "Upgrading APK packages" \
     && apk upgrade --no-cache \
     && echo "Installing new APK packages" \
-    && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl zip unzip \
+    && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl libxml2-utils zip unzip \
     && if [[ ! -f ${HZ_HOME}/hazelcast-distribution.zip ]]; then \
        if [ -z ${HAZELCAST_ZIP_URL} ]; then \
             source ${HZ_HOME}/maven.functions.sh \
-            HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-distribution)".jar; \
+            HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-distribution https://repo1.maven.org/maven2)".jar; \
        fi \
        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
        mkdir --parents ${HZ_HOME}; \
@@ -45,8 +45,8 @@ RUN echo "Upgrading APK packages" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Cleaning APK packages and redundant files/folders" \
-    && apk del zip unzip \
-    && rm -rf /var/cache/apk/* ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp \
+    && apk del libxml2-utils zip unzip \
+    && rm -rf /var/cache/apk/* ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp \
     # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
     && chmod +x ${HZ_HOME}/bin/*
 
