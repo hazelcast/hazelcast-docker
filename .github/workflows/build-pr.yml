@@ -29,8 +29,7 @@ jobs:
 
       - name: Build OSS image
         run: |
-          docker buildx build \
-          --load --tag hazelcast-oss:test hazelcast-oss
+          docker buildx build --load --tag hazelcast-oss:test hazelcast-oss
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
@@ -39,9 +38,7 @@ jobs:
 
       - name: Build Test EE image
         run: |
-          . .github/scripts/ee_build.functions.sh
-          docker buildx build \
-          --load --tag hazelcast-ee:test hazelcast-enterprise
+          docker buildx build --load --tag hazelcast-ee:test hazelcast-enterprise
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
@@ -121,4 +118,3 @@ jobs:
           path: |
             ${{ env.docker_log_file_oss }}
             ${{ env.docker_log_file_ee }}
-
