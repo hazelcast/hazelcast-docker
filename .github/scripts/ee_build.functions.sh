@@ -20,7 +20,7 @@ function get_hz_dist_zip() {
       if [ -n "$hz_variant" ]; then
           classifier_filter="classifier='$hz_variant'"
       fi
-      version=$(curl -fsSL https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/"${hz_version}"/maven-metadata.xml | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='zip' and $classifier_filter]/value/text()" -)
+      version=$(curl --fail --silent --show-error --location https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/"${hz_version}"/maven-metadata.xml | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='zip' and $classifier_filter]/value/text()" -)
 
       url="https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${version}${suffix}.zip"
   else
