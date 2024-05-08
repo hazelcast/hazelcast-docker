@@ -25,7 +25,9 @@ function find_script_dir() {
 SCRIPT_DIR=$(find_script_dir)
 
 . "$SCRIPT_DIR"/assert.sh/assert.sh
-. "$SCRIPT_DIR"/maven.functions.sh
+# Functions overlap, so likely only testing one implementation - but as are duplicated, *shouldn't* be an issue
+. "$SCRIPT_DIR"/../../hazelcast-oss/maven.functions.sh
+. "$SCRIPT_DIR"/../../hazelcast-enterprise/maven.functions.sh
 
 TESTS_RESULT=0
 

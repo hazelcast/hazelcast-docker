@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# THIS FILE IS DUPLICATED AND MUST BE KEPT IN SYNC MANUALLY
+# Docker requires any included script to be in the current folder, hence we must duplicate this script for OS and EE
+
 # Prints the latest version in the Maven repository
 #
 # Parameters:
