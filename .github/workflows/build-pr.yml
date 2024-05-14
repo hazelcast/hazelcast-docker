@@ -16,11 +16,7 @@ jobs:
     name: Build with default JDK
     steps:
       - name: Install xmllint
-        run: |
-          # xmllint is not part of the default image, but required for scripts used in Docker build
-          # https://github.com/actions/runner-images/issues/423
-          sudo apt-get update
-          sudo apt-get install --yes libxml2-utils
+        uses: ./.github/workflows/install-xmllint.yml
 
       - name: Checkout Code
         uses: actions/checkout@v4
