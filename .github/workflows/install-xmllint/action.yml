@@ -4,7 +4,8 @@ runs:
   using: "composite"
   steps:
     - name: Install xmllint
-      run: |          
+      shell: bash
+      run: |
         # xmllint is not part of the default image, but required for scripts used in Docker build
         # https://github.com/actions/runner-images/issues/423
         sudo apt-get update
