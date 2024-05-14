@@ -34,11 +34,11 @@ jobs:
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
     steps:
-      - name: Install xmllint
-        uses: ./.github/workflows/install-xmllint.yml
-
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Install xmllint
+        uses: ./.github/workflows/install-xmllint.yml
 
       - name: Set HZ version
         run: |

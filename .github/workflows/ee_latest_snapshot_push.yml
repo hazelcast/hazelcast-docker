@@ -32,11 +32,11 @@ jobs:
       DOCKER_ORG: hazelcast
       HZ_VERSION : ${{ github.event.inputs.HZ_VERSION }}
     steps:
-      - name: Install xmllint
-        uses: ./.github/workflows/install-xmllint.yml
-
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Install xmllint
+        uses: ./.github/workflows/install-xmllint.yml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.0.0

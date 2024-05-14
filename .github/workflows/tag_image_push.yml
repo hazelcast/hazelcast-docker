@@ -49,9 +49,6 @@ jobs:
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
       EDITIONS: ${{ github.event.inputs.EDITIONS || 'EE' }}
     steps:
-      - name: Install xmllint
-        uses: ./.github/workflows/install-xmllint.yml
-
       - name: Set HZ version as environment variable
         run: |
           if [ -z "${{ env.HZ_VERSION }}" ]; then
@@ -76,6 +73,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Install xmllint
+        uses: ./.github/workflows/install-xmllint.yml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.0.0
