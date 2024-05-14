@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install xmllint
-        uses: ./.github/workflows/install-xmllint.yml
+        uses: ./.github/workflows/install-xmllint
 
       - name: Set HZ version
         run: |
