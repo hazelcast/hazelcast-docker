@@ -1,14 +1,11 @@
 name: Install XMLLint
 
-on:
-  workflow_call:
-
-jobs:
-  install-xmllint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install xmllint
-        run: |          # xmllint is not part of the default image, but required for scripts used in Docker build
-          # https://github.com/actions/runner-images/issues/423
-          sudo apt-get update
-          sudo apt-get install --yes libxml2-utils
+runs:
+  using: "composite"
+  steps:
+    - name: Install xmllint
+      run: |          
+        # xmllint is not part of the default image, but required for scripts used in Docker build
+        # https://github.com/actions/runner-images/issues/423
+        sudo apt-get update
+        sudo apt-get install --yes libxml2-utils
