@@ -125,7 +125,7 @@ jobs:
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
-          . .github/scripts/ee_build.functions.sh
+          . .github/scripts/ee-build.functions.sh
 
           DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${SCAN_REPOSITORY}

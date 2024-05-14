@@ -44,7 +44,7 @@ function assert_same_minor_version() {
 # - If the workflows was triggered manually by `workflow_dispatch` we assume that the caller knows what they're doing
 # so we return "yes" for "All" and "OSS" editions
 #
-# Check test cases in `oss_build.functions_tests.sh` to see the examples
+# Check test cases in `oss-build.functions_tests.sh` to see the examples
 function should_build_oss() {
 
   local oss_version=$1

@@ -24,7 +24,7 @@ function find_script_dir() {
 SCRIPT_DIR=$(find_script_dir)
 
 . "$SCRIPT_DIR"/assert.sh/assert.sh
-. "$SCRIPT_DIR"/ee_build.functions.sh
+. "$SCRIPT_DIR"/ee-build.functions.sh
 
 TESTS_RESULT=0
 
