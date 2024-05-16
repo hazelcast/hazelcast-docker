@@ -111,7 +111,7 @@ jobs:
           version: v0.5.1
 
       - name: Install xmllint
-        uses: ./.github/workflows/install-xmllint
+        uses: ./.github/actions/install-xmllint
 
       - name: Log in to Red Hat Scan Registry
         run: |
