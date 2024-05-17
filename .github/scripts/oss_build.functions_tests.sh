@@ -53,10 +53,10 @@ function assert_should_build_os {
   local os_version=$1
   local ee_version=$2
   local triggered_by=$3
-  local editions=$4
+  local release_type=$4
   local expected_should_build_os=$5
-  local actual=$(should_build_oss "$os_version" "$ee_version" "$triggered_by" "$editions")
-  assert_eq "$expected_should_build_os" "$actual" "For OS=$os_version EE=$ee_version triggered_by=$triggered_by editions=$editions we should$( [ "$expected_should_build_os" = "no" ] && echo " NOT") build OS" || TESTS_RESULT=$?
+  local actual=$(should_build_oss "$os_version" "$ee_version" "$triggered_by" "$release_type")
+  assert_eq "$expected_should_build_os" "$actual" "For OS=$os_version EE=$ee_version triggered_by=$triggered_by release_type=$release_type we should$( [ "$expected_should_build_os" = "no" ] && echo " NOT") build OS" || TESTS_RESULT=$?
 }
 
 log_header "Tests for get_patch_part"

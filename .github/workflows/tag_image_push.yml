@@ -14,8 +14,8 @@ on:
       RELEASE_VERSION:
         description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
         required: false
-      EDITIONS:
-        description: 'Editions to build'
+      RELEASE_TYPE:
+        description: 'Which editions should be built'
         required: true
         default: 'EE'
         type: choice
@@ -45,9 +45,9 @@ jobs:
             suffix: ''
     env:
       DOCKER_ORG: hazelcast
-      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
-      EDITIONS: ${{ github.event.inputs.EDITIONS || 'EE' }}
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
     steps:
       - name: Set HZ version as environment variable
         run: |
@@ -92,9 +92,9 @@ jobs:
           
           oss_hz_version=$(get_dockerfile_arg_value hazelcast-oss/Dockerfile HZ_VERSION)
           ee_hz_version=$(get_dockerfile_arg_value hazelcast-enterprise/Dockerfile HZ_VERSION)
-          editions=${{ env.EDITIONS }}
+          release_type=${{ env.RELEASE_TYPE }}
           triggered_by=${{ github.event_name }}
-          SHOULD_BUILD_OSS = $(should_build_oss "$oss_hz_version" "$ee_hz_version" "$triggered_by" "$editions")
+          SHOULD_BUILD_OSS = $(should_build_oss "$oss_hz_version" "$ee_hz_version" "$triggered_by" "$release_type")
           echo "SHOULD_BUILD_OSS=${SHOULD_BUILD_OSS}" >> $GITHUB_ENV
 
       - name: Build Test OSS image
@@ -114,7 +114,7 @@ jobs:
           .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
 
       - name: Build Test EE image
-        if: env.EDITIONS == 'ALL' || env.EDITIONS == 'EE'
+        if: env.RELEASE_TYPE == 'ALL' || env.RELEASE_TYPE == 'EE'
         run: |
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
@@ -124,7 +124,7 @@ jobs:
             hazelcast-enterprise
 
       - name: Run smoke test against EE image
-        if: env.EDITIONS == 'ALL' || env.EDITIONS == 'EE'
+        if: env.RELEASE_TYPE == 'ALL' || env.RELEASE_TYPE == 'EE'
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
@@ -172,7 +172,7 @@ jobs:
             --platform=${PLATFORMS} $DOCKER_DIR
 
       - name: Build/Push EE image
-        if: env.EDITIONS == 'ALL' || env.EDITIONS == 'EE'
+        if: env.RELEASE_TYPE == 'ALL' || env.RELEASE_TYPE == 'EE'
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
@@ -207,7 +207,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: push
     env:
-      EDITIONS: ${{ github.event.inputs.EDITIONS || 'EE' }}
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -216,7 +216,7 @@ jobs:
         run: |
           .github/scripts/generate-docker-hub-description.sh
       - name: Update Docker Hub Description of OSS image
-        if: env.EDITIONS == 'ALL' || env.EDITIONS == 'OSS'
+        if: env.RELEASE_TYPE == 'ALL' || env.RELEASE_TYPE == 'OSS'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -226,7 +226,7 @@ jobs:
           readme-filepath: ./README-docker.md
 
       - name: Update Docker Hub Description of EE image
-        if: env.EDITIONS == 'ALL' || env.EDITIONS == 'EE'
+        if: env.RELEASE_TYPE == 'ALL' || env.RELEASE_TYPE == 'EE'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}

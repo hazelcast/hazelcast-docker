@@ -42,7 +42,7 @@ function assert_same_minor_version() {
 # as well (i.e. OSS="6.6.1" and EE=`6.6.1`) this will mean we should build both editions
 #
 # - If the workflows was triggered manually by `workflow_dispatch` we assume that the caller knows what they're doing
-# so we return "yes" for "ALL" and "OSS" editions
+# so we return "yes" for "ALL" and "OSS" release types
 #
 # Check test cases in `oss_build.functions_tests.sh` to see the examples
 function should_build_oss() {
@@ -50,12 +50,12 @@ function should_build_oss() {
   local oss_version=$1
   local ee_version=$2
   local triggered_by=$3
-  local editions=$4
+  local release_type=$4
 
   assert_same_minor_version "$oss_version" "$ee_version"
 
   if [[ $triggered_by == "workflow_dispatch" ]]; then
-    if [[ $editions == "ALL" || $editions == "OSS" ]]; then
+    if [[ $release_type == "ALL" || $release_type == "OSS" ]]; then
       echo "yes"
       return
     fi
