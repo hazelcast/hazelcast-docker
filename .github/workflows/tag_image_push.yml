@@ -34,7 +34,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     env:
-      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
     outputs:
       should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
