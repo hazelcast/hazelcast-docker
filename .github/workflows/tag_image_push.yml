@@ -20,7 +20,7 @@ on:
         default: 'EE'
         type: choice
         options:
-          - All
+          - ALL
           - OSS
           - EE
 env:
@@ -114,7 +114,7 @@ jobs:
           .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
 
       - name: Build Test EE image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
+        if: env.EDITIONS == 'ALL' || env.EDITIONS == 'EE'
         run: |
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
@@ -124,7 +124,7 @@ jobs:
             hazelcast-enterprise
 
       - name: Run smoke test against EE image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
+        if: env.EDITIONS == 'ALL' || env.EDITIONS == 'EE'
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
@@ -172,7 +172,7 @@ jobs:
             --platform=${PLATFORMS} $DOCKER_DIR
 
       - name: Build/Push EE image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
+        if: env.EDITIONS == 'ALL' || env.EDITIONS == 'EE'
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
@@ -216,7 +216,7 @@ jobs:
         run: |
           .github/scripts/generate-docker-hub-description.sh
       - name: Update Docker Hub Description of OSS image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'OSS'
+        if: env.EDITIONS == 'ALL' || env.EDITIONS == 'OSS'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -226,7 +226,7 @@ jobs:
           readme-filepath: ./README-docker.md
 
       - name: Update Docker Hub Description of EE image
-        if: env.EDITIONS == 'All' || env.EDITIONS == 'EE'
+        if: env.EDITIONS == 'ALL' || env.EDITIONS == 'EE'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
