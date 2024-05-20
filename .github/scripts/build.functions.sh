@@ -9,10 +9,9 @@ function should_build_oss() {
   local release_type=$1
   if [[ $release_type == "ALL" || $release_type == "OSS" ]]; then
     echo "yes"
-    return
+  else
+    echo "no"
   fi
-
-  echo "no"
 }
 
 # Checks if we should build the OSS docker image.
@@ -22,7 +21,7 @@ function should_build_ee() {
   local release_type=$1
   if [[ $release_type == "ALL" || $release_type == "EE" ]]; then
     echo "yes"
-    return
+  else
+    echo "no"
   fi
-  echo "no"
 }
