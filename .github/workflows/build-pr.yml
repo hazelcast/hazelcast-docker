@@ -23,7 +23,7 @@ jobs:
       - name: Forbid .github/release_type file
         run: |
           if [ -f ".github/release_type" ]; then
-            echo "Error: .github/release_type file is not allowed in the PRs"
+            echo "Error: .github/release_type file is not allowed in the PRs. It's used only during release creation"
             exit 1
           fi
 
