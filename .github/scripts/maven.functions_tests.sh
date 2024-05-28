@@ -25,11 +25,17 @@ function find_script_dir() {
 SCRIPT_DIR=$(find_script_dir)
 
 . "$SCRIPT_DIR"/assert.sh/assert.sh
-# Functions overlap, so likely only testing one implementation - but as are duplicated, *shouldn't* be an issue
-. "$SCRIPT_DIR"/../../hazelcast-oss/maven.functions.sh
-. "$SCRIPT_DIR"/../../hazelcast-enterprise/maven.functions.sh
 
 TESTS_RESULT=0
+
+# Functions overlap, so likely only testing one implementation - but as are duplicated, *shouldn't* be an issue
+OSS_SCRIPT="$SCRIPT_DIR"/../../hazelcast-oss/maven.functions.sh
+EE_SCRIPT="$SCRIPT_DIR"/../../hazelcast-enterprise/maven.functions.sh
+assert_eq "$(cat "$OSS_SCRIPT")" "$(cat "$EE_SCRIPT")" "Contents of $OSS_SCRIPT and $EE_SCRIPT should be the same " || TESTS_RESULT=$?
+
+. "$OSS_SCRIPT"
+. "$EE_SCRIPT"
+
 
 function assert_get_latest_version {
   local group_id=$1
