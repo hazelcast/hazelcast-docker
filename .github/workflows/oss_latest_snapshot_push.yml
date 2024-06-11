@@ -47,12 +47,19 @@ jobs:
         with:
           version: v0.5.1
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
       - name: Build Test OSS image
         run: |
           . .github/scripts/oss-build.functions.sh
           docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip ${{ matrix.variant }} ${HZ_VERSION} ${{ matrix.suffix }}) \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}" "${{ matrix.suffix }}") \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -107,7 +114,7 @@ jobs:
           docker buildx build --push \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip ${{ matrix.variant }} ${HZ_VERSION} ${{ matrix.suffix }}) \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}" "${{ matrix.suffix }}") \
             $TAGS_ARG \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification
