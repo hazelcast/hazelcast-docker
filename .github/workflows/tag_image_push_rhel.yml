@@ -42,6 +42,10 @@ jobs:
       fail-fast: false
       matrix:
         jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
+        variant: [ 'slim','' ]
+        include:
+          - variant: slim
+          - variant: ''
     steps:
       - name: Set HZ version as environment variable
         run: |
@@ -75,6 +79,15 @@ jobs:
           echo "SCAN_REGISTRY_USER=${{ secrets[format('SCAN_REGISTRY_USER_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
           echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
           echo "RHEL_PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
+
+      - name: Compute Suffix
+        run: |
+          if [ -n "${{ matrix.variant }}" ]; then
+            SUFFIX=-${{ matrix.variant }}
+          else
+            SUFFIX=
+          fi
+          echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
 
       - name: Checkout to Management Center Openshift
         uses: actions/checkout@v4
@@ -134,7 +147,7 @@ jobs:
           IMAGE_NAME=${SCAN_REPOSITORY}
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${SUFFIX}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "$SUFFIX" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
