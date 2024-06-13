@@ -25,13 +25,20 @@ jobs:
         variant: [ 'slim','' ]
         include:
           - variant: slim
-            suffix: '-slim'
           - variant: ''
-            suffix: ''
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION : ${{ github.event.inputs.HZ_VERSION }}
     steps:
+      - name: Compute Suffix
+        run: |
+          if [ -n "${{ matrix.variant }}" ]; then
+            SUFFIX=-${{ matrix.variant }}
+          else
+            SUFFIX=
+          fi
+          echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -72,7 +79,7 @@ jobs:
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log
+          DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${SUFFIX}-jdk${{ matrix.jdk }}.log
           echo "DOCKER_LOG_FILE_EE=${DOCKER_LOG_FILE_EE}" >> $GITHUB_ENV
           docker logs ${{ env.test_container_name_ee }} > ${DOCKER_LOG_FILE_EE}
 
@@ -80,7 +87,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs${{ matrix.suffix }}-jdk${{ matrix.jdk }}
+          name: docker-logs${SUFFIX}-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_EE }}
 
@@ -102,7 +109,7 @@ jobs:
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
-          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${SUFFIX}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
