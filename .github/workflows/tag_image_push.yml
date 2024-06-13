@@ -74,6 +74,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install xmllint
+        uses: ./.github/actions/install-xmllint
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2.2.0
 
@@ -82,16 +85,23 @@ jobs:
         with:
           version: v0.5.1
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Test OSS image
         if: env.RELEASE_TYPE == 'ALL' || env.RELEASE_TYPE == 'OSS'
         run: |
+          . .github/scripts/oss-build.functions.sh
           docker buildx build --load \
-            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-            --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}" "${{ matrix.suffix }}") \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -104,10 +114,11 @@ jobs:
       - name: Build Test EE image
         if: env.RELEASE_TYPE == 'ALL' || env.RELEASE_TYPE == 'EE'
         run: |
+          . .github/scripts/ee-build.functions.sh
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-            --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}" "${{ matrix.suffix }}") \
             --tag hazelcast-ee:test \
             hazelcast-enterprise
 
@@ -138,6 +149,7 @@ jobs:
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
+          . .github/scripts/oss-build.functions.sh
           
           DOCKER_DIR=hazelcast-oss
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
@@ -153,9 +165,8 @@ jobs:
           
           PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
-            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}" "${{ matrix.suffix }}") \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
@@ -164,6 +175,7 @@ jobs:
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
+          . .github/scripts/ee-build.functions.sh
           
           DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
@@ -181,7 +193,7 @@ jobs:
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}" "${{ matrix.suffix }}") \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
