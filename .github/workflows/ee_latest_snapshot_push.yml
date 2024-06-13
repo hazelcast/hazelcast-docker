@@ -35,6 +35,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Install xmllint
+        uses: ./.github/actions/install-xmllint
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2.1.0
 
@@ -43,12 +46,20 @@ jobs:
         with:
           version: v0.5.1
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
       - name: Build Test EE image
         run: |
+          . .github/scripts/ee-build.functions.sh
           docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VERSION=${HZ_VERSION} \
-            --build-arg HZ_VARIANT=${{ matrix.variant }} \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" ${HZ_VERSION} "${{ matrix.suffix }}") \
             --tag hazelcast-ee:test \
             hazelcast-enterprise
 
@@ -80,6 +91,7 @@ jobs:
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
+          . .github/scripts/oss-build.functions.sh
           
           VERSIONS=("$HZ_VERSION")
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
@@ -101,9 +113,9 @@ jobs:
           PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
             --build-arg HZ_VERSION=${HZ_VERSION} \
-            --build-arg HZ_VARIANT=${{ matrix.variant }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}" "${{ matrix.suffix }}") \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification

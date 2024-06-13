@@ -16,12 +16,29 @@ jobs:
     name: Build with default JDK
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Forbid .github/release_type file
+        run: |
+          if [ -f ".github/release_type" ]; then
+            echo "Error: .github/release_type file is not allowed in the PRs. It's used only during release creation"
+            exit 1
+          fi
+
+      - name: Install xmllint
+        uses: ./.github/actions/install-xmllint
+
       - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
 
       - name: Test scripts
         run: |
@@ -29,7 +46,16 @@ jobs:
 
       - name: Build OSS image
         run: |
-          docker buildx build --load --tag hazelcast-oss:test hazelcast-oss
+          DOCKER_PATH=hazelcast-oss
+          # Extract from Dockerfile to avoid duplicate hardcoding of the latest SNAPSHOT version
+          HZ_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' ${DOCKER_PATH}/Dockerfile)
+
+          . .github/scripts/oss-build.functions.sh
+          docker buildx build --load \
+          --build-arg HZ_VERSION=${HZ_VERSION} \
+          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION} "") \
+          --tag hazelcast-oss:test \
+          ${DOCKER_PATH}
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
@@ -38,7 +64,16 @@ jobs:
 
       - name: Build Test EE image
         run: |
-          docker buildx build --load --tag hazelcast-ee:test hazelcast-enterprise
+          DOCKER_PATH=hazelcast-enterprise
+          # Extract from Dockerfile to avoid duplicate hardcoding of the latest SNAPSHOT version
+          HZ_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' ${DOCKER_PATH}/Dockerfile)
+
+          . .github/scripts/ee-build.functions.sh
+          docker buildx build --load \
+          --build-arg HZ_VERSION=${HZ_VERSION} \
+          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION} "") \
+          --tag hazelcast-ee:test \
+          ${DOCKER_PATH}
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
@@ -54,7 +89,7 @@ jobs:
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-logs
           path: |
@@ -81,11 +116,26 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
       - name: Build OSS image
         run: |
+          DOCKER_PATH=hazelcast-oss
+          # Extract from Dockerfile to avoid duplicate hardcoding of the latest SNAPSHOT version
+          HZ_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' ${DOCKER_PATH}/Dockerfile)
+
+          . .github/scripts/oss-build.functions.sh
           docker buildx build --load \
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
-          --tag hazelcast-oss:test hazelcast-oss
+          --build-arg HZ_VERSION=${HZ_VERSION} \
+          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION} "") \
+          --tag hazelcast-oss:test \
+          ${DOCKER_PATH}
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
@@ -94,9 +144,17 @@ jobs:
 
       - name: Build Test EE image
         run: |
+          DOCKER_PATH=hazelcast-enterprise
+          # Extract from Dockerfile to avoid duplicate hardcoding of the latest SNAPSHOT version
+          HZ_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' ${DOCKER_PATH}/Dockerfile)
+
+          . .github/scripts/ee-build.functions.sh
           docker buildx build --load \
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
-          --tag hazelcast-ee:test hazelcast-enterprise
+          --build-arg HZ_VERSION=${HZ_VERSION} \
+          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION} "") \
+          --tag hazelcast-ee:test \
+          ${DOCKER_PATH}
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
@@ -112,7 +170,7 @@ jobs:
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-logs-jdk${{ matrix.jdk }}
           path: |
