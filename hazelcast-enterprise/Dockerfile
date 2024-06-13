@@ -1,14 +1,15 @@
 FROM redhat/ubi9-minimal:9.3
 
-# Versions of Hazelcast
+# Used for image metadata only
+# Describes the version of the Dockerfile, *not* the version of the bundled Hazelcast binary as this is/can be controlled externally
+# Dockerfile needs some concept of versioning so that the release pipeline can tag/archive with an appropriate label
 ARG HZ_VERSION=5.5.0-SNAPSHOT
-# Variant - empty for full, "slim" for slim
-ARG HZ_VARIANT=""
 ARG JDK_VERSION="21"
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
+# Optional, defaults to latest released version
 ARG HAZELCAST_ZIP_URL=""
 
 # Runtime variables
@@ -35,7 +36,7 @@ LABEL name="Hazelcast Enterprise" \
 EXPOSE 5701
 
 COPY licenses /licenses
-COPY *.jar get-hz-ee-dist-zip.sh hazelcast-*.zip ${HZ_HOME}/
+COPY *.jar hazelcast-*.zip maven.functions.sh ${HZ_HOME}/
 
 # Install
 RUN echo "Installing new packages" \
@@ -43,9 +44,13 @@ RUN echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
         --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
-        HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-ee-dist-zip.sh); \
-        echo "Downloading Hazelcast${HZ_VARIANT} distribution zip from $(echo $HAZELCAST_ZIP_URL | sed "s/?.*//g")..."; \
-        curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
+        if [ -z ${HAZELCAST_ZIP_URL} ]; then \
+            source ${HZ_HOME}/maven.functions.sh; \
+            HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-enterprise-distribution https://repository.hazelcast.com/release)".zip; \
+        fi; \
+        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
+        mkdir --parents ${HZ_HOME}; \
+        curl -sfL ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
     else \
            echo "Using local hazelcast-enterprise-distribution.zip"; \
     fi \
@@ -58,7 +63,7 @@ RUN echo "Installing new packages" \
     && echo "Removing cached package data and unnecessary tools" \
     && microdnf -y remove zip unzip \
     && microdnf -y clean all \
-    && rm -rf ${HZ_HOME}/get-hz-ee-dist-zip.sh ${HZ_HOME}/hazelcast-enterprise-distribution.zip ${HZ_HOME}/tmp \
+    && rm -rf ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/hazelcast-enterprise-distribution.zip maven.functions.sh${HZ_HOME}/tmp \
     # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
     && chmod +x ${HZ_HOME}/bin/*
 
