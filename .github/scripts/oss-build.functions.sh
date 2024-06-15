@@ -5,10 +5,9 @@ set -euo pipefail
 function get_hz_dist_zip() {
   local hz_variant=$1
   local hz_version=$2
-  local suffix=$3
 
   # The slim is an artifact with a classifier, need to add `-` there
-  if [[ -n "${hz_variant}" ]]; then suffix="-${hz_variant}"; fi
+  suffix=${hz_variant:+-$hz_variant}
 
   if [[ "${hz_version}" == *"SNAPSHOT"* ]]
   then
