@@ -102,9 +102,6 @@ jobs:
           . .github/scripts/oss-build.functions.sh
           
           VERSIONS=("$HZ_VERSION")
-          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-          VERSIONS+=(latest-snapshot)
-          fi
           
           DOCKER_DIR=hazelcast-oss
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
