@@ -35,7 +35,11 @@ function test_docker_image() {
 }
 
 function install_clc() {
-  curl https://hazelcast.com/clc/install.sh | bash
+  while ! curl https://hazelcast.com/clc/install.sh | bash
+    do
+      echo "Retrying clc installation..."
+      sleep 3
+    done
   export PATH=$PATH:$HOME/.hazelcast/bin
   clc config add default cluster.name=dev cluster.address=localhost
 }
