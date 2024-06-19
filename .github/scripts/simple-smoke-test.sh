@@ -35,7 +35,6 @@ function test_docker_image() {
 }
 
 function install_clc() {
-  # Use specific version as the downloading the latest version often fails: https://hazelcast.slack.com/archives/C0319N7HV8W/p1718023112329759
   while ! curl https://hazelcast.com/clc/install.sh | bash
     do
       echo "Retrying clc installation..."
