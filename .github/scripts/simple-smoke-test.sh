@@ -36,8 +36,11 @@ function test_docker_image() {
 
 function install_clc() {
   # Use specific version as the downloading the latest version often fails: https://hazelcast.slack.com/archives/C0319N7HV8W/p1718023112329759
-  local CLC_VERSION=v5.4.0
-  curl https://raw.githubusercontent.com/hazelcast/hazelcast-commandline-client/main/extras/unix/install.sh | bash -s -- --version "$CLC_VERSION"
+  while ! curl https://hazelcast.com/clc/install.sh | bash
+    do
+      echo "Retrying clc installation..."
+      sleep 3
+    done
   export PATH=$PATH:$HOME/.hazelcast/bin
   clc config add default cluster.name=dev cluster.address=localhost
 }
