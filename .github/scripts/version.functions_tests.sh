@@ -92,5 +92,7 @@ assert_latest_patch_versions_contain "4.1" "4.1.10"
 assert_latest_patch_versions_not_contain "3.12" "3.12.11"
 assert_latest_patch_versions_not_contain "4.2" "3.9.4"
 assert_latest_patch_versions_not_contain "4.2" "4.1.10"
+LATEST_5_4_DEVEL="$(git tag | sort -V | grep 'v5.4.0-DEVEL-' | tail -n 1 | cut -c2-)"
+assert_latest_patch_versions_not_contain "5.3" "$LATEST_5_4_DEVEL"
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"

@@ -1,17 +1,19 @@
 FROM alpine:3
 
-# Versions of Hazelcast
-ARG HZ_VERSION=5.4.0-SNAPSHOT
-# Variant - empty for full, "slim" for slim
-ARG HZ_VARIANT=""
+# Describes the version of the Dockerfile, *not* the version of the bundled Hazelcast binary as this is/can be controlled externally
+# Dockerfile needs some concept of versioning so that the release pipeline can tag/archive with an appropriate label
+ARG HZ_VERSION=5.5.0-SNAPSHOT
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
+ARG JDK_VERSION="21"
+# Optional, defaults to latest released version
+ARG HAZELCAST_ZIP_URL=""
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
     CLASSPATH_DEFAULT="${HZ_HOME}/*" \
-    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -XX:MaxRAMPercentage=80.0 -XX:MaxGCPauseMillis=5" \
+    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -XX:MaxRAMPercentage=80.0" \
     PROMETHEUS_PORT="" \
     PROMETHEUS_CONFIG="${HZ_HOME}/config/jmx_agent_config.yaml" \
     CLASSPATH="" \
@@ -23,17 +25,21 @@ ENV HZ_HOME="${HZ_HOME}" \
 # Expose port
 EXPOSE 5701
 
-COPY *.jar get-hz-dist-zip.sh hazelcast-*.zip ${HZ_HOME}/
+COPY *.jar hazelcast-*.zip maven.functions.sh ${HZ_HOME}/
 
 # Install
 RUN echo "Upgrading APK packages" \
     && apk upgrade --no-cache \
     && echo "Installing new APK packages" \
-    && apk add --no-cache openjdk11-jre-headless bash curl libxml2-utils zip unzip \
+    && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl libxml2-utils zip unzip \
     && if [[ ! -f ${HZ_HOME}/hazelcast-distribution.zip ]]; then \
-       HAZELCAST_ZIP_URL=$(${HZ_HOME}/get-hz-dist-zip.sh); \
-       echo "Downloading Hazelcast${HZ_VARIANT} distribution zip from ${HAZELCAST_ZIP_URL}..."; \
-       curl -sf -L ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-distribution.zip; \
+       if [ -z ${HAZELCAST_ZIP_URL} ]; then \
+            source ${HZ_HOME}/maven.functions.sh; \
+            HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-distribution https://repo1.maven.org/maven2)".zip; \
+       fi; \
+       echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
+       mkdir --parents ${HZ_HOME}; \
+       curl -sfL ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-distribution.zip; \
     else \
            echo "Using local hazelcast-distribution.zip"; \
     fi \
@@ -45,7 +51,7 @@ RUN echo "Upgrading APK packages" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Cleaning APK packages and redundant files/folders" \
     && apk del libxml2-utils zip unzip \
-    && rm -rf /var/cache/apk/* ${HZ_HOME}/get-hz-dist-zip.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp \
+    && rm -rf /var/cache/apk/* ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp \
     # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
     && chmod +x ${HZ_HOME}/bin/*
 

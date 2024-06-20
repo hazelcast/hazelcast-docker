@@ -3,20 +3,28 @@
 set -e
 set -o pipefail
 
-export CLC_VERSION=v5.2.0-beta3
-
 function test_docker_image() {
     local image=$1
     local container_name=$2
+
+    if [ "$(docker ps --all --quiet --filter name="$container_name")" ]; then
+      echo "Removing existing '$container_name' container"
+      docker container rm --force "$container_name"
+    fi
+
     echo "Starting container '$container_name' from image '$image'"
     docker run -it --name "$container_name" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "$image"
     local key="some-key"
     local expected="some-value"
     echo "Putting value '$expected' for key '$key'"
-    clc map set -n some-map $key $expected --log.path stderr
+    while ! clc --timeout 5s map set -n some-map $key $expected --log.path stderr
+    do
+      echo "Retrying..."
+      sleep 3
+    done
     echo "Getting value for key '$key'"
     local actual
-    actual=$(clc map get -n some-map $key --log.path stderr)
+    actual=$(clc map get --format delimited -n some-map $key --log.path stderr)
     echo "Stopping container $container_name}"
     docker stop "$container_name"
 
@@ -27,9 +35,13 @@ function test_docker_image() {
 }
 
 function install_clc() {
-  CLC_URL="https://github.com/hazelcast/hazelcast-commandline-client/releases/download/${CLC_VERSION}/hazelcast-clc_${CLC_VERSION}_linux_amd64.tar.gz"
-  curl -L $CLC_URL | tar xzf - --strip-components=1 -C /usr/local/bin
-  chmod +x /usr/local/bin/clc
+  while ! curl https://hazelcast.com/clc/install.sh | bash
+    do
+      echo "Retrying clc installation..."
+      sleep 3
+    done
+  export PATH=$PATH:$HOME/.hazelcast/bin
+  clc config add default cluster.name=dev cluster.address=localhost
 }
 
 install_clc

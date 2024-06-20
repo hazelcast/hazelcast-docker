@@ -6,12 +6,17 @@ This repository contains Dockerfiles for the official Hazelcast Docker images.
 
 ### Hazelcast
 
-You can launch a Hazelcast Docker Container by running the following command. You can find the full list of Hazelcast versions to replace $HAZELCAST_VERSION at the [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast/tags).
+You can launch a Hazelcast Docker Container by running the following command. Check [Hazelcast Versions](#hazelcast-versions) for the versions to replace $HAZELCAST_VERSION.
 
 ```
 $ docker run hazelcast/hazelcast:$HAZELCAST_VERSION
 ```
 This command will pull a Hazelcast Docker image and run a new Hazelcast instance.
+
+### Hazelcast Versions
+
+You can find the full list of Hazelcast versions at the [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast/tags).
+
 
 ### Hazelcast Hello World
 
@@ -31,13 +36,17 @@ After setting up the cluster, you can start the [client](https://github.com/haze
 
 ### Hazelcast Enterprise
 
-You can launch a Hazelcast Enterprise Docker Container by running the following command. You can find the full list of Hazelcast Enterprise versions to replace $HAZELCAST_VERSION at the [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast-enterprise/tags).
+You can launch a Hazelcast Enterprise Docker Container by running the following command. Check [Hazelcast Enterprise Versions](#hazelcast-enterprise-versions) for the versions to replace $HAZELCAST_VERSION.
 
 Please request a trial license [here](https://hazelcast.com/hazelcast-enterprise-download/) or contact sales@hazelcast.com.
 
 ```
 $ docker run -e HZ_LICENSEKEY=<your_license_key> hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
 ```
+
+### Hazelcast Enterprise Versions
+
+You can find the full list of Hazelcast Enterprise versions at the [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast-enterprise/tags).
 
 ### Hazelcast Enterprise Hello World
 
@@ -299,3 +308,7 @@ Hazelcast is prepared to work in the Kubernetes environment. For details, please
 * Hazelcast Helm Charts:
   * [Hazelcast](https://github.com/helm/charts/tree/master/stable/hazelcast)
   * [Hazelcast Enterprise](https://github.com/hazelcast/charts/tree/master/stable/hazelcast-enterprise)
+
+### Automatic rebuilding (Hazelcast Enterprise only)
+
+Every 24 hours maintained Hazelcast Enterprise docker images are checked against updates of the base system or system libraries. If any of them are present the images are rebuilt and republished.
