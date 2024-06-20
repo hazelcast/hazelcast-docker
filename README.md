@@ -308,3 +308,7 @@ Hazelcast is prepared to work in the Kubernetes environment. For details, please
 * Hazelcast Helm Charts:
   * [Hazelcast](https://github.com/helm/charts/tree/master/stable/hazelcast)
   * [Hazelcast Enterprise](https://github.com/hazelcast/charts/tree/master/stable/hazelcast-enterprise)
+
+### Automatic rebuilding (Hazelcast Enterprise only)
+
+Every 24 hours maintained Hazelcast Enterprise docker images are checked against updates of the base system or system libraries. If any of them are present the images are rebuilt and republished.
