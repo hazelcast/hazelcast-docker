@@ -37,6 +37,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Install xmllint
+        uses: ./.github/actions/install-xmllint
+
       - name: Set HZ version
         run: |
           if [ -z "${{ env.HZ_VERSION }}" ]; then
