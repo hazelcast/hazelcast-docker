@@ -252,7 +252,7 @@ jobs:
           .github/scripts/generate-docker-hub-description.sh
       - name: Update Docker Hub Description of OSS image
         if: needs.prepare.outputs.should_build_oss == 'yes'
-        uses: peter-evans/dockerhub-description@v3
+        uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -262,7 +262,7 @@ jobs:
 
       - name: Update Docker Hub Description of EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
-        uses: peter-evans/dockerhub-description@v3
+        uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
