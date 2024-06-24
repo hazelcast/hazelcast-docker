@@ -103,8 +103,8 @@ jobs:
           fi
           echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
 
-          echo "DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${SUFFIX}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
-          echo "DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${SUFFIX}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_OSS=docker-${{ env.test_container_name_oss }}${SUFFIX}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_EE=docker-${{ env.test_container_name_ee }}${SUFFIX}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
 
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -132,56 +132,7 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build Test OSS image
-        if: needs.prepare.outputs.should_build_oss == 'yes'
-        run: |
-          . .github/scripts/oss-build.functions.sh
-          docker buildx build --load \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}") \
-            --tag hazelcast-oss:test \
-            hazelcast-oss
-
-      - name: Run smoke test against OSS image
-        if: needs.prepare.outputs.should_build_oss == 'yes'
-        timeout-minutes: 2
-        run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
-
-      - name: Build Test EE image
-        if: needs.prepare.outputs.should_build_ee == 'yes'
-        run: |
-          . .github/scripts/ee-build.functions.sh
-          docker buildx build --load \
-            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}") \
-            --tag hazelcast-ee:test \
-            hazelcast-enterprise
-
-      - name: Run smoke test against EE image
-        if: needs.prepare.outputs.should_build_ee == 'yes'
-        timeout-minutes: 2
-        run: |
-          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }}
-
-      - name: Get docker logs
-        if: ${{ always() }}
-        run: |
-          docker logs ${{ env.test_container_name_oss }} > ${{ env.DOCKER_LOG_FILE_OSS }} || true
-          docker logs ${{ env.test_container_name_ee }} > ${{ env.DOCKER_LOG_FILE_EE }} || true
-
-      - name: Store docker logs as artifact
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-logs${{ env.SUFFIX }}-jdk${{ matrix.jdk }}
-          path: | 
-            ${{ env.DOCKER_LOG_FILE_OSS }}
-            ${{ env.DOCKER_LOG_FILE_EE }}
-
-      - name: Build and Push OSS image
+      - name: Build OSS image
         if: needs.prepare.outputs.should_build_oss == 'yes'
         run: |
           . .github/scripts/get-tags-to-push.sh 
@@ -199,15 +150,23 @@ jobs:
           do
             TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
-          
+
+          echo "TEST_OSS_IMAGE_TAG=${IMAGE_NAME}:${tag}" >> $GITHUB_ENV
+
           PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
-          docker buildx build --push \
+          docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}" "${{ env.SUFFIX }}") \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
-      - name: Build/Push EE image
+      - name: Run smoke test against OSS image
+        if: needs.prepare.outputs.should_build_oss == 'yes'
+        timeout-minutes: 2
+        run: |
+          .github/scripts/simple-smoke-test.sh $TEST_OSS_IMAGE_TAG ${{ env.test_container_name_oss }} oss
+
+      - name: Build EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
         run: |
           . .github/scripts/get-tags-to-push.sh 
@@ -227,12 +186,44 @@ jobs:
           done
           
           PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
-          docker buildx build --push \
+          docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}") \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
+
+      - name: Run smoke test against EE image
+        if: needs.prepare.outputs.should_build_ee == 'yes'
+        timeout-minutes: 2
+        run: |
+          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
+          .github/scripts/simple-smoke-test.sh $TEST_EE_IMAGE_TAG ${{ env.test_container_name_ee }} ee
+
+      - name: Get docker logs
+        if: ${{ always() }}
+        run: |
+          docker logs ${{ env.test_container_name_oss }} > ${{ env.DOCKER_LOG_FILE_OSS }} || true
+          docker logs ${{ env.test_container_name_ee }} > ${{ env.DOCKER_LOG_FILE_EE }} || true
+
+      - name: Store docker logs as artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs${{ env.SUFFIX }}-jdk${{ matrix.jdk }}
+          path: | 
+            ${{ env.DOCKER_LOG_FILE_OSS }}
+            ${{ env.DOCKER_LOG_FILE_EE }}
+
+      - name: Push OSS image
+        if: needs.prepare.outputs.should_build_oss == 'yes'
+        run: |
+          docker push $TEST_OSS_IMAGE_TAG --all-tags
+
+      - name: Push EE image
+        if: needs.prepare.outputs.should_build_ee == 'yes'
+        run: |
+          docker push $TEST_EE_IMAGE_TAG --all-tags
 
       - name: Slack notification
         uses: ./.github/actions/slack-notification
