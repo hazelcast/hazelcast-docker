@@ -44,16 +44,20 @@ jobs:
         run: |
           .github/scripts/test_scripts.sh
 
+      - name: Get OSS dist ZIP URL
+        run: |
+          . .github/scripts/oss-build.functions.sh
+          echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION})" >> $GITHUB_ENV
+
       - name: Build OSS image
         run: |
           DOCKER_PATH=hazelcast-oss
           # Extract from Dockerfile to avoid duplicate hardcoding of the latest SNAPSHOT version
           HZ_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' ${DOCKER_PATH}/Dockerfile)
 
-          . .github/scripts/oss-build.functions.sh
           docker buildx build --load \
           --build-arg HZ_VERSION=${HZ_VERSION} \
-          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION} "") \
+          --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
           --tag hazelcast-oss:test \
           ${DOCKER_PATH}
 
@@ -62,16 +66,20 @@ jobs:
         run: |
           .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss
 
+      - name: Get EE dist ZIP URL
+        run: |
+          . .github/scripts/ee-build.functions.sh
+          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION})" >> $GITHUB_ENV
+
       - name: Build Test EE image
         run: |
           DOCKER_PATH=hazelcast-enterprise
           # Extract from Dockerfile to avoid duplicate hardcoding of the latest SNAPSHOT version
           HZ_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' ${DOCKER_PATH}/Dockerfile)
 
-          . .github/scripts/ee-build.functions.sh
           docker buildx build --load \
           --build-arg HZ_VERSION=${HZ_VERSION} \
-          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION} "") \
+          --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
           --tag hazelcast-ee:test \
           ${DOCKER_PATH}
 
@@ -129,11 +137,10 @@ jobs:
           # Extract from Dockerfile to avoid duplicate hardcoding of the latest SNAPSHOT version
           HZ_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' ${DOCKER_PATH}/Dockerfile)
 
-          . .github/scripts/oss-build.functions.sh
           docker buildx build --load \
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
           --build-arg HZ_VERSION=${HZ_VERSION} \
-          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION} "") \
+          --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
           --tag hazelcast-oss:test \
           ${DOCKER_PATH}
 
@@ -148,11 +155,10 @@ jobs:
           # Extract from Dockerfile to avoid duplicate hardcoding of the latest SNAPSHOT version
           HZ_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' ${DOCKER_PATH}/Dockerfile)
 
-          . .github/scripts/ee-build.functions.sh
           docker buildx build --load \
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
           --build-arg HZ_VERSION=${HZ_VERSION} \
-          --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION} "") \
+          --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
           --tag hazelcast-ee:test \
           ${DOCKER_PATH}
 

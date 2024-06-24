@@ -62,12 +62,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
 
-      - name: Build Test OSS image
+      - name: Get OSS dist ZIP URL
         run: |
           . .github/scripts/oss-build.functions.sh
+          echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip ${{ matrix.variant }} ${HZ_VERSION})" >> $GITHUB_ENV
+
+      - name: Build Test OSS image
+        run: |
           docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}") \
+            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -99,7 +103,6 @@ jobs:
           set -eEuo pipefail ${RUNNER_DEBUG:+-x}
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
-          . .github/scripts/oss-build.functions.sh
           
           VERSIONS=("$HZ_VERSION")
           
@@ -119,7 +122,7 @@ jobs:
           docker buildx build --push \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}") \
+            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
             $TAGS_ARG \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification
