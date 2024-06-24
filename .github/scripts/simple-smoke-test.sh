@@ -14,7 +14,7 @@ function test_docker_image() {
     fi
 
     echo "Checking if $image is EE"
-    if docker run --rm docker.io/hazelcast/hazelcast-enterprise:latest-snapshot bash -c 'compgen -G lib/*enterprise*'; then
+    if docker run --rm $image bash -c 'compgen -G lib/*enterprise*'; then
       echo "EE contents identified"
       distribution_type="ee"
     else
