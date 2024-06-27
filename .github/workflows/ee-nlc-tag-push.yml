@@ -90,12 +90,12 @@ jobs:
         timeout-minutes: 2
         run: |
           export HZ_INSTANCETRACKING_FILENAME=instance-tracking.txt
-          .github/scripts/simple-smoke-test.sh hazelcast-nlc:test ${{ env.test_container_name_ee }}
+          .github/scripts/simple-smoke-test.sh hazelcast-nlc:test ${{ env.test_container_name_ee }} ee
 
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test-jdk${{ matrix.jdk }}.log
+          DOCKER_LOG_FILE_EE=docker-${{ env.test_container_name_ee }}-jdk${{ matrix.jdk }}.log
           echo "DOCKER_LOG_FILE_EE=${DOCKER_LOG_FILE_EE}" >> $GITHUB_ENV
           docker logs ${{ env.test_container_name_ee }} > ${DOCKER_LOG_FILE_EE}
 

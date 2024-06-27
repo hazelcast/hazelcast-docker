@@ -6,6 +6,27 @@ set -o pipefail
 function test_docker_image() {
     local image=$1
     local container_name=$2
+    local expected_distribution_type=$3
+
+    if [ "$(docker ps --all --quiet --filter name="$container_name")" ]; then
+      echo "Removing existing '$container_name' container"
+      docker container rm --force "$container_name"
+    fi
+
+    echo "Checking if $image is EE"
+    if docker run --rm $image bash -c 'compgen -G lib/*enterprise*'; then
+      echo "EE contents identified"
+      distribution_type="ee"
+    else
+      echo "No EE contents identified - assuming OSS"
+      distribution_type="oss"
+    fi
+
+    if [[ "$distribution_type" != "$expected_distribution_type" ]]; then
+      echo "Distribution was $distribution_type, not $expected_distribution_type as expected"
+      exit 1
+    fi
+
     echo "Starting container '$container_name' from image '$image'"
     docker run -it --name "$container_name" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "$image"
     local key="some-key"
@@ -29,7 +50,11 @@ function test_docker_image() {
 }
 
 function install_clc() {
-  curl https://hazelcast.com/clc/install.sh | bash
+  while ! curl https://hazelcast.com/clc/install.sh | bash
+    do
+      echo "Retrying clc installation..."
+      sleep 3
+    done
   export PATH=$PATH:$HOME/.hazelcast/bin
   clc config add default cluster.name=dev cluster.address=localhost
 }
