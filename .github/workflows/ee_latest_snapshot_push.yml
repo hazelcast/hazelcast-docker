@@ -25,13 +25,20 @@ jobs:
         variant: [ 'slim','' ]
         include:
           - variant: slim
-            suffix: '-slim'
           - variant: ''
-            suffix: ''
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION : ${{ github.event.inputs.HZ_VERSION }}
     steps:
+      - name: Compute Suffix
+        run: |
+          if [ -n "${{ matrix.variant }}" ]; then
+            SUFFIX=-${{ matrix.variant }}
+          else
+            SUFFIX=
+          fi
+          echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -53,13 +60,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
 
-      - name: Build Test EE image
+      - name: Get EE dist ZIP URL
         run: |
           . .github/scripts/ee-build.functions.sh
+          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip ${{ matrix.variant }} ${HZ_VERSION})" >> $GITHUB_ENV
+
+      - name: Build Test EE image
+        run: |
           docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HZ_VERSION=${HZ_VERSION} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" ${HZ_VERSION} "${{ matrix.suffix }}") \
+            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
             --tag hazelcast-ee:test \
             hazelcast-enterprise
 
@@ -67,12 +78,12 @@ jobs:
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee
 
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log
+          DOCKER_LOG_FILE_EE=docker-${{ env.test_container_name_ee }}${{ env.SUFFIX }}-jdk${{ matrix.jdk }}.log
           echo "DOCKER_LOG_FILE_EE=${DOCKER_LOG_FILE_EE}" >> $GITHUB_ENV
           docker logs ${{ env.test_container_name_ee }} > ${DOCKER_LOG_FILE_EE}
 
@@ -80,7 +91,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs${{ matrix.suffix }}-jdk${{ matrix.jdk }}
+          name: docker-logs${{ env.SUFFIX }}-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_EE }}
 
@@ -91,7 +102,6 @@ jobs:
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
-          . .github/scripts/ee-build.functions.sh
           
           VERSIONS=("$HZ_VERSION")
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
@@ -102,7 +112,7 @@ jobs:
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
-          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -115,7 +125,7 @@ jobs:
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}" "${{ matrix.suffix }}") \
+            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification

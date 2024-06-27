@@ -74,9 +74,7 @@ jobs:
         variant: [ 'slim','' ]
         include:
           - variant: slim
-            suffix: '-slim'
           - variant: ''
-            suffix: ''
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ inputs.HZ_VERSION }}
@@ -97,9 +95,16 @@ jobs:
              RELEASE_VERSION=${{ env.RELEASE_VERSION }}
           fi
           echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
-          
-          echo "DOCKER_LOG_FILE_OSS=docker-hazelcast-oss-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
-          echo "DOCKER_LOG_FILE_EE=docker-hazelcast-ee-test${{ matrix.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
+
+          if [ -n "${{ matrix.variant }}" ]; then
+            SUFFIX=-${{ matrix.variant }}
+          else
+            SUFFIX=
+          fi
+          echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
+
+          echo "DOCKER_LOG_FILE_OSS=docker-${{ env.test_container_name_oss }}${SUFFIX}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_EE=docker-${{ env.test_container_name_ee }}${SUFFIX}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
 
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -127,13 +132,17 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+      - name: Get OSS dist ZIP URL
+        run: |
+          . .github/scripts/oss-build.functions.sh
+          echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip ${{ matrix.variant }} ${{ env.HZ_VERSION }}" >> $GITHUB_ENV
+
       - name: Build Test OSS image
         if: needs.prepare.outputs.should_build_oss == 'yes'
         run: |
-          . .github/scripts/oss-build.functions.sh
           docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}" "${{ matrix.suffix }}") \
+            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -141,7 +150,12 @@ jobs:
         if: needs.prepare.outputs.should_build_oss == 'yes'
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }}
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss
+
+      - name: Get EE dist ZIP URL
+        run: |
+          . .github/scripts/ee-build.functions.sh
+          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip ${{ matrix.variant }} ${{ env.HZ_VERSION }}" >> $GITHUB_ENV
 
       - name: Build Test EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
@@ -150,7 +164,7 @@ jobs:
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}" "${{ matrix.suffix }}") \
+            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
             --tag hazelcast-ee:test \
             hazelcast-enterprise
 
@@ -159,7 +173,7 @@ jobs:
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee
 
       - name: Get docker logs
         if: ${{ always() }}
@@ -171,7 +185,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs${{ matrix.suffix }}-jdk${{ matrix.jdk }}
+          name: docker-logs${{ env.SUFFIX }}-jdk${{ matrix.jdk }}
           path: | 
             ${{ env.DOCKER_LOG_FILE_OSS }}
             ${{ env.DOCKER_LOG_FILE_EE }}
@@ -181,13 +195,12 @@ jobs:
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
-          . .github/scripts/oss-build.functions.sh
           
           DOCKER_DIR=hazelcast-oss
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -198,7 +211,7 @@ jobs:
           PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}" "${{ matrix.suffix }}") \
+            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
@@ -213,7 +226,7 @@ jobs:
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -225,7 +238,7 @@ jobs:
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}" "${{ matrix.suffix }}") \
+            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
