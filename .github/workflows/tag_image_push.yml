@@ -135,7 +135,7 @@ jobs:
       - name: Get OSS dist ZIP URL
         run: |
           . .github/scripts/oss-build.functions.sh
-          echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip ${{ matrix.variant }} ${{ env.HZ_VERSION }}" >> $GITHUB_ENV
+          echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
 
       - name: Build Test OSS image
         if: needs.prepare.outputs.should_build_oss == 'yes'
@@ -155,7 +155,7 @@ jobs:
       - name: Get EE dist ZIP URL
         run: |
           . .github/scripts/ee-build.functions.sh
-          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip ${{ matrix.variant }} ${{ env.HZ_VERSION }}" >> $GITHUB_ENV
+          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
 
       - name: Build Test EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
