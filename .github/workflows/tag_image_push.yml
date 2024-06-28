@@ -15,7 +15,7 @@ on:
         description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
         required: false
       RELEASE_TYPE:
-        description: 'Which editions should be built'
+        description: 'What should be built'
         required: true
         default: 'EE'
         type: choice
@@ -23,6 +23,7 @@ on:
           - ALL
           - OSS
           - EE
+          - README
 env:
   test_container_name_oss: hazelcast-oss-test
   test_container_name_ee: hazelcast-ee-test
@@ -38,6 +39,8 @@ jobs:
     outputs:
       should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
+      should_build_readme_ee: ${{ steps.which_editions.outputs.should_build_readme_ee }}
+      should_build_readme_oss: ${{ steps.which_editions.outputs.should_build_readme_oss }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -62,12 +65,17 @@ jobs:
           triggered_by=${{ github.event_name }}
           should_build_oss=$(should_build_oss "$release_type")
           should_build_ee=$(should_build_ee "$release_type")
+          should_build_readme_ee=$(should_build_readme_ee "$release_type")
+          should_build_readme_oss=$(should_build_readme_oss "$release_type")
           echo "should_build_ee=${should_build_ee}" >> $GITHUB_OUTPUT
           echo "should_build_oss=${should_build_oss}" >> $GITHUB_OUTPUT
+          echo "should_build_readme_ee=${should_build_readme_ee}" >> $GITHUB_OUTPUT
+          echo "should_build_readme_oss=${should_build_readme_oss}" >> $GITHUB_OUTPUT
 
   push:
     runs-on: ubuntu-latest
     needs: [ jdks, prepare ]
+    if: needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes'
     strategy:
       matrix:
         jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
@@ -256,7 +264,7 @@ jobs:
         run: |
           .github/scripts/generate-docker-hub-description.sh
       - name: Update Docker Hub Description of OSS image
-        if: needs.prepare.outputs.should_build_oss == 'yes'
+        if: needs.prepare.outputs.should_build_readme_oss == 'yes'
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -266,7 +274,7 @@ jobs:
           readme-filepath: ./README-docker.md
 
       - name: Update Docker Hub Description of EE image
-        if: needs.prepare.outputs.should_build_ee == 'yes'
+        if: needs.prepare.outputs.should_build_readme_ee == 'yes'
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
