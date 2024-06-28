@@ -1,4 +1,4 @@
-FROM redhat/ubi9-minimal:9.3
+FROM redhat/ubi9-minimal:9.4
 
 # Used for image metadata only
 # Describes the version of the Dockerfile, *not* the version of the bundled Hazelcast binary as this is/can be controlled externally
