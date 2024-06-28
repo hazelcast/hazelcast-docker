@@ -47,6 +47,7 @@ jobs:
       - name: Get OSS dist ZIP URL
         run: |
           . .github/scripts/oss-build.functions.sh
+          HZ_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' hazelcast-oss/Dockerfile)
           echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION})" >> $GITHUB_ENV
 
       - name: Build OSS image
@@ -68,6 +69,7 @@ jobs:
 
       - name: Get EE dist ZIP URL
         run: |
+          HZ_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' hazelcast-enterprise/Dockerfile)
           . .github/scripts/ee-build.functions.sh
           echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION})" >> $GITHUB_ENV
 
