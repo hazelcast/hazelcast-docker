@@ -286,6 +286,8 @@ $ docker push <username>/hazelcast:test
 
 Then, use the image `<username>/hazelcast:test` in your Kubernetes environment to test your change.
 
+Additional documentation can be found [here](https://hazelcast.atlassian.net/wiki/spaces/DI/pages/5110693890/How+to+build+local+Hazelcast+Docker+image+from+hazelcast-mono).
+
 ## Docker Images Usages
 
 ### Hazelcast Docker Repositories
