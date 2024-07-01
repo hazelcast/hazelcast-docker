@@ -65,6 +65,8 @@ jobs:
       - name: Get OSS dist ZIP URL
         run: |
           . .github/scripts/oss-build.functions.sh
+          export HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+          export HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
           echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}")" >> $GITHUB_ENV
 
       - name: Build Test OSS image
