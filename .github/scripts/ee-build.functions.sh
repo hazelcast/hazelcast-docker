@@ -13,21 +13,14 @@ function get_hz_dist_zip() {
   local hz_version=$2
 
   # The slim is an artifact with a classifier, need to add `-` there
-  suffix=${hz_variant:+-$hz_variant}
+  suffix=${hz_variant:+-${hz_variant}}
 
   if [[ "${hz_version}" == *"SNAPSHOT"* ]]
   then  
-      if [ -n "$hz_variant" ]; then
-          classifier_filter="classifier='$hz_variant'"
-      else
-          classifier_filter="not(classifier)"
-      fi
-      version=$(curl --fail --silent --show-error --location https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/"${hz_version}"/maven-metadata.xml | xmllint --xpath "/metadata/versioning/snapshotVersions/snapshotVersion[extension='zip' and $classifier_filter]/value/text()" -) || exit 1
-
-      url="https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${version}${suffix}.zip"
+      repository=snapshot
   else
-      url="https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${hz_version}${suffix}.zip"
+      repository=release
   fi
 
-  echo "$url"
+  echo "https://repository.hazelcast.com/${repository}/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${hz_version}${suffix}.zip"
 }
