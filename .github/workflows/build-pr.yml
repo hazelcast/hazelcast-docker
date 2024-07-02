@@ -16,7 +16,6 @@ jobs:
     name: Prepare environment
     outputs:
       HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.HZ_VERSION_OSS }}
-      HAZELCAST_OSS_ZIP_URL: ${{ steps.get_oss_vars.outputs.HAZELCAST_OSS_ZIP_URL }}
       HZ_VERSION_EE: ${{ steps.get_ee_vars.outputs.HZ_VERSION_EE }}
       HAZELCAST_EE_ZIP_URL: ${{ steps.get_ee_vars.outputs.HAZELCAST_EE_ZIP_URL }}
     steps:
@@ -42,12 +41,8 @@ jobs:
       - name: Setup OSS variables
         id: get_oss_vars
         run: |
-          export HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
-          export HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
-          . .github/scripts/oss-build.functions.sh
           HZ_VERSION_OSS=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' hazelcast-oss/Dockerfile)
           echo "HZ_VERSION_OSS=$HZ_VERSION_OSS" >> $GITHUB_OUTPUT
-          echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION_OSS})" >> $GITHUB_OUTPUT
 
       - name: Setup EE variables
         id: get_ee_vars
@@ -74,7 +69,14 @@ jobs:
         run: |
           DOCKER_PATH=hazelcast-oss
           HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_OSS }}"
-          curl -sfL "${{ needs.prepare.outputs.HAZELCAST_OSS_ZIP_URL }}" --output $DOCKER_PATH/hazelcast-distribution.zip; 
+          
+          # duplicated block as GH doesn't support passing sensitive data between jobs
+          . .github/scripts/oss-build.functions.sh
+          export HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+          export HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+          HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "" "${HZ_VERSION}")
+          
+          curl -sfL "$HAZELCAST_OSS_ZIP_URL" --output $DOCKER_PATH/hazelcast-distribution.zip; 
           
           docker buildx build --load \
           --build-arg HZ_VERSION=${HZ_VERSION} \
@@ -145,7 +147,14 @@ jobs:
         run: |
           DOCKER_PATH=hazelcast-oss
           HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_OSS }}"
-          curl -sfL "${{ needs.prepare.outputs.HAZELCAST_OSS_ZIP_URL }}" --output $DOCKER_PATH/hazelcast-distribution.zip;
+          
+          # duplicated block as GH doesn't support passing sensitive data between jobs
+          . .github/scripts/oss-build.functions.sh
+          export HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+          export HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+          HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "" "${HZ_VERSION}")
+          
+          curl -sfL "$HAZELCAST_OSS_ZIP_URL" --output $DOCKER_PATH/hazelcast-distribution.zip;
 
           docker buildx build --load \
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
