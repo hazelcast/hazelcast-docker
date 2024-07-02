@@ -24,15 +24,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install xmllint
-        uses: ./.github/actions/install-xmllint
-
       - name: Forbid .github/release_type file
         run: |
           if [ -f ".github/release_type" ]; then
             echo "Error: .github/release_type file is not allowed in the PRs. It's used only during release creation"
             exit 1
           fi
+
+      - name: Install xmllint
+        uses: ./.github/actions/install-xmllint
 
       - name: Test scripts
         run: |
