@@ -50,7 +50,7 @@ RUN echo "Installing new packages" \
         fi; \
         echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
         mkdir --parents ${HZ_HOME}; \
-        curl -sfL ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
+        curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
     else \
            echo "Using local hazelcast-enterprise-distribution.zip"; \
     fi \
