@@ -72,7 +72,7 @@ jobs:
           . .github/scripts/oss-build.functions.sh
           HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}")
         
-          curl -sfL "$HAZELCAST_OSS_ZIP_URL" --output hazelcast-oss/hazelcast-distribution.zip;
+          curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output hazelcast-oss/hazelcast-distribution.zip;
 
       - name: Build Test OSS image
         run: |
