@@ -32,7 +32,7 @@ function check_distribution_type() {
     local image=$1
     local expected_distribution_type=$2
 
-    echo "Checking if ${image} is EE"
+    echo "Checking ${image} distribution type"
     if docker run --rm "${image}" bash -c 'compgen -G lib/*enterprise*'; then
       echo "EE contents identified"
       distribution_type="ee"
