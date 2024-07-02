@@ -84,7 +84,7 @@ jobs:
       - name: Run smoke test against OSS image
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${HZ_VERSION}
 
       - name: Get docker logs
         if: ${{ always() }}

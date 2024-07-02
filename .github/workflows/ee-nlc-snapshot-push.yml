@@ -76,7 +76,7 @@ jobs:
         timeout-minutes: 2
         run: |
           export HZ_INSTANCETRACKING_FILENAME=instance-tracking.txt
-          .github/scripts/simple-smoke-test.sh hazelcast-nlc:test ${{ env.test_container_name_ee }} ee
+          .github/scripts/simple-smoke-test.sh hazelcast-nlc:test ${{ env.test_container_name_ee }} ee ${HZ_VERSION}
 
       - name: Get docker logs
         if: ${{ always() }}
