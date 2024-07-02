@@ -42,7 +42,7 @@ function check_distribution_type() {
     fi
 
     if [[ "${distribution_type}" != "${expected_distribution_type}" ]]; then
-      echo "Distribution was ${distribution_type}, not ${expected_distribution_type} as expected"
+      echo "Image ${image} should contain ${expected_distribution_type} distribution but ${distribution_type} was detected"
       exit 1
     fi
 }
