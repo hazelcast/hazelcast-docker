@@ -53,7 +53,7 @@ function check_version() {
 
     echo "Checking ${image} version"
     local version
-    version=$(docker run --rm hazelcast/hazelcast-enterprise:latest-snapshot bin/hz-cli --version | awk '/Hazelcast/ {print $2}')
+    version=$(docker run --rm "${image}" bin/hz-cli --version | awk '/Hazelcast/ {print $2}')
     if [[ "${version}" != "${expected_version}" ]]; then
       echo "${image} was ${version}, not ${expected_version} as expected"
       exit 1
@@ -96,5 +96,5 @@ function install_clc() {
   clc config add default cluster.name=dev cluster.address=localhost
 }
 
-# install_clc
+install_clc
 test_docker_image "$@"
