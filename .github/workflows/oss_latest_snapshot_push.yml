@@ -113,7 +113,7 @@ jobs:
           VERSIONS=("$HZ_VERSION")
           
           DOCKER_DIR=hazelcast-oss          
-          IMAGE_NAME=$HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY/hazelcast/hazelcast
+          IMAGE_NAME=$HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY/docker/hazelcast/hazelcast
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
           TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
