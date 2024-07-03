@@ -54,8 +54,10 @@ function check_version() {
     echo "Checking ${image} version"
     local version
     version=$(docker run --rm "${image}" bin/hz-cli --version | awk '/Hazelcast/ {print $2}')
-    if [[ "${version}" != "${expected_version}" ]]; then
-      echo "${image} was ${version}, not ${expected_version} as expected"
+    if [[ "${version}" == "${expected_version}" ]]; then
+      echo "${image} version identified as ${version}"
+    else
+      echo "${image} version was ${version}, not ${expected_version} as expected"
       exit 1
     fi
 }
