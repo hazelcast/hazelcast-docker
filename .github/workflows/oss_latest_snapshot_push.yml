@@ -28,7 +28,14 @@ jobs:
           - variant: slim
           - variant: ''
     env:
-      DOCKER_ORG: hazelcast
+      DOCKER_REGISTRY: ${{ secrets.HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY }}
+      DOCKER_USERNAME: ${{ secrets.JFROG_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
+
+      # required by OSS get_hz_dist_zip function
+      HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+      HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
     steps:
       - name: Compute Suffix
@@ -62,16 +69,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
 
-      - name: Get OSS dist ZIP URL
+      - name: Get OSS dist ZIP
         run: |
           . .github/scripts/oss-build.functions.sh
-          echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}")" >> $GITHUB_ENV
+          HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}")
+        
+          curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output hazelcast-oss/hazelcast-distribution.zip;
 
       - name: Build Test OSS image
         run: |
           docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
@@ -95,8 +103,8 @@ jobs:
           path: |
             ${{ env.DOCKER_LOG_FILE_OSS }}
 
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Login to Docker Registry
+        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin $DOCKER_REGISTRY
 
       - name: Build/Push OSS image
         run: |
@@ -110,7 +118,7 @@ jobs:
           fi
           
           DOCKER_DIR=hazelcast-oss
-          IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
+          IMAGE_NAME=$DOCKER_REGISTRY/docker/hazelcast/hazelcast
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
           TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
@@ -125,7 +133,6 @@ jobs:
           docker buildx build --push \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
-            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
             $TAGS_ARG \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification
