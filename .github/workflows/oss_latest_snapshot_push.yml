@@ -28,9 +28,11 @@ jobs:
           - variant: slim
           - variant: ''
     env:
-      HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY: ${{ secrets.HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY }}
+      DOCKER_REGISTRY: ${{ secrets.HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY }}
+      DOCKER_USERNAME: ${{ secrets.JFROG_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
 
-      # also required by get_hz_dist_zip function
+      # required by OSS get_hz_dist_zip function
       HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
       HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
 
@@ -72,7 +74,7 @@ jobs:
           . .github/scripts/oss-build.functions.sh
           HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}")
         
-          curl -sfL "$HAZELCAST_OSS_ZIP_URL" --output hazelcast-oss/hazelcast-distribution.zip;
+          curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output hazelcast-oss/hazelcast-distribution.zip;
 
       - name: Build Test OSS image
         run: |
@@ -102,7 +104,7 @@ jobs:
             ${{ env.DOCKER_LOG_FILE_OSS }}
 
       - name: Login to Docker Registry
-        run: echo "$HZ_SNAPSHOT_INTERNAL_PASSWORD" | docker login -u "$HZ_SNAPSHOT_INTERNAL_USERNAME" --password-stdin $HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY
+        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin $DOCKER_REGISTRY
 
       - name: Build/Push OSS image
         run: |
@@ -112,8 +114,8 @@ jobs:
           
           VERSIONS=("$HZ_VERSION")
           
-          DOCKER_DIR=hazelcast-oss          
-          IMAGE_NAME=$HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY/docker/hazelcast/hazelcast
+          DOCKER_DIR=hazelcast-oss
+          IMAGE_NAME=$DOCKER_REGISTRY/docker/hazelcast/hazelcast
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
           TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
