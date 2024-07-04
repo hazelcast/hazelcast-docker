@@ -22,7 +22,7 @@ function remove_container_if_exists() {
     local containers
     containers=$(docker ps --all --quiet --filter name="${container_name}")
 
-    if [[ -n ${containers} ]]; then
+    if [[ -n "${containers}" ]]; then
       echo "Removing existing '${container_name}' container"
       docker container rm --force "${container_name}"
     fi
@@ -100,7 +100,7 @@ function install_clc() {
 
 # Prints the given message to stderr
 function echoerr() {
-  echo "ERROR - $@" 1>&2;
+  echo "ERROR - $*" 1>&2;
 }
 
 
