@@ -42,7 +42,7 @@ function check_distribution_type() {
     fi
 
     if [[ "${distribution_type}" != "${expected_distribution_type}" ]]; then
-      echo "Image ${image} should contain ${expected_distribution_type} distribution but ${distribution_type} was detected"
+      echoerr "Image ${image} should contain ${expected_distribution_type} distribution but ${distribution_type} was detected"
       exit 1
     fi
 }
@@ -57,7 +57,7 @@ function check_version() {
     if [[ "${version}" == "${expected_version}" ]]; then
       echo "${image} version identified as ${version}"
     else
-      echo "${image} version was ${version}, not ${expected_version} as expected"
+      echoerr "${image} version was ${version}, not ${expected_version} as expected"
       exit 1
     fi
 }
@@ -83,7 +83,7 @@ function test_map_read_write() {
     docker stop "${container_name}"
 
     if [[ "${expected}" != "${actual}" ]]; then
-        echo "Expected to read '${expected}' but got '${actual}'"
+        echoerr "Expected to read '${expected}' but got '${actual}'"
         exit 1;
     fi
 }
@@ -97,6 +97,12 @@ function install_clc() {
   export PATH=${PATH}:${HOME}/.hazelcast/bin
   clc config add default cluster.name=dev cluster.address=localhost
 }
+
+# Prints the given message to stderr
+function echoerr() {
+  echo "ERROR - $@" 1>&2;
+}
+
 
 install_clc
 test_docker_image "$@"
