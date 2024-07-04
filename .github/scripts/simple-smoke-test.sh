@@ -11,7 +11,7 @@ function test_docker_image() {
     remove_container_if_exists "${container_name}"
 
     check_distribution_type "${image}" "${expected_distribution_type}"
-    check_version "${image}" "${expected_version}"
+    check_image_hz_version "${image}" "${expected_version}"
 
     test_map_read_write "${image}" "${container_name}"
 }
@@ -47,7 +47,7 @@ function check_distribution_type() {
     fi
 }
 
-function check_version() {
+function check_image_hz_version() {
     local image=$1
     local expected_version=$2
 
