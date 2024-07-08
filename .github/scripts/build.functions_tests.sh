@@ -4,7 +4,7 @@ set -eu
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
-. "$SCRIPT_DIR"/assert.sh/assert.sh
+. <(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
 . "$SCRIPT_DIR"/build.functions.sh
 
 TESTS_RESULT=0
