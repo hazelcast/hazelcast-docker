@@ -4,7 +4,9 @@ set -eu
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
-. <(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
+script_content=$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
+# shellcheck source=/dev/null
+. <(echo "${script_content}")
 . "$SCRIPT_DIR"/build.functions.sh
 
 TESTS_RESULT=0

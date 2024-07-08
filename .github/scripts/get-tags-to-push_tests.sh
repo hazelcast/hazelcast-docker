@@ -25,7 +25,9 @@ function findScriptDir() {
 
 findScriptDir
 
-. <(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
+script_content=$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
+# shellcheck source=/dev/null
+. <(echo "${script_content}")
 . "$SCRIPT_DIR"/get-tags-to-push.sh
 
 TESTS_RESULT=0

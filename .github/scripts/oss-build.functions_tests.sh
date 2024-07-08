@@ -23,7 +23,9 @@ function find_script_dir() {
 
 SCRIPT_DIR=$(find_script_dir)
 
-. <(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
+script_content=$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
+# shellcheck source=/dev/null
+. <(echo "${script_content}")
 . "$SCRIPT_DIR"/oss-build.functions.sh
 
 TESTS_RESULT=0
