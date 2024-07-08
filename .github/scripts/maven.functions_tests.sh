@@ -24,9 +24,9 @@ function find_script_dir() {
 
 SCRIPT_DIR=$(find_script_dir)
 
-script_content=$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
+assert_script_content=$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
 # shellcheck source=/dev/null
-. <(echo "${script_content}")
+. <(echo "${assert_script_content}")
 
 TESTS_RESULT=0
 
