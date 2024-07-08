@@ -25,6 +25,7 @@ function findScriptDir() {
 
 findScriptDir
 
+# Source the latest version of assert.sh unit testing library and include in current shell
 assert_script_content=$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
 # shellcheck source=/dev/null
 . <(echo "${assert_script_content}")
