@@ -90,7 +90,7 @@ jobs:
           echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
           
           if [ -z "${{ env.RELEASE_VERSION }}" ]; then
-             RELEASE_VERSION=${{ env.HZ_VERSION }}
+             RELEASE_VERSION=${HZ_VERSION}
           else
              RELEASE_VERSION=${{ env.RELEASE_VERSION }}
           fi
