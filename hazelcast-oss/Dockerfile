@@ -2,7 +2,7 @@ FROM alpine:3
 
 # Describes the version of the Dockerfile, *not* the version of the bundled Hazelcast binary as this is/can be controlled externally
 # Dockerfile needs some concept of versioning so that the release pipeline can tag/archive with an appropriate label
-ARG HZ_VERSION=5.4.1-SNAPSHOT
+ARG HZ_VERSION=5.4.1
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
