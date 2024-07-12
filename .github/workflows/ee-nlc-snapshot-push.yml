@@ -34,9 +34,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install xmllint
-        uses: ./.github/actions/install-xmllint
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
