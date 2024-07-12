@@ -111,9 +111,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install xmllint
-        uses: ./.github/actions/install-xmllint
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.1.0
 
