@@ -20,7 +20,7 @@ function get_latest_version() {
   local artifact_id=$2
   local repository_url=$3
 
-  curl --fail --silent --show-error --location "${repository_url}/${group_id//./\/}/${artifact_id}/maven-metadata.xml" | xmllint --xpath "string(/metadata/versioning/release)" -
+  curl --fail --silent --show-error --location "${repository_url}/${group_id//./\/}/${artifact_id}/maven-metadata.xml" | awk -F'<release>|</release>' 'NF>1 {print $2; exit}'
 }
 
 # Prints a URL to the latest version in the Maven repository, without a file extension
