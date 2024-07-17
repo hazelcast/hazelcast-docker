@@ -71,7 +71,7 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/c
 
 RUN echo "Adding non-root user" \
     && groupadd --system hazelcast \
-    && useradd -l --system -g hazelcast -m ${USER_NAME}
+    && useradd --no-log-init --system --gid hazelcast --create-home ${USER_NAME}
 
 WORKDIR ${HZ_HOME}
 
