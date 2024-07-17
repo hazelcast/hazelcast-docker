@@ -42,7 +42,7 @@ COPY *.jar hazelcast-*.zip maven.functions.sh ${HZ_HOME}/
 RUN echo "Installing new packages" \
     && microdnf -y update --nodocs \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
-        --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java \
+        --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java util-linux \
     && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
         if [ -z ${HAZELCAST_ZIP_URL} ]; then \
             source ${HZ_HOME}/maven.functions.sh; \
@@ -71,7 +71,7 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/c
 
 RUN echo "Adding non-root user" \
     && groupadd --system hazelcast \
-    && useradd -l --system -g hazelcast -d ${HZ_HOME} ${USER_NAME}
+    && useradd --no-log-init --system --gid hazelcast --create-home ${USER_NAME}
 
 WORKDIR ${HZ_HOME}
 
