@@ -103,7 +103,7 @@ jobs:
           echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${RELEASE_VERSION}-jdk${{ matrix.jdk }}" >> $GITHUB_ENV
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.0.0
+        uses: docker/setup-qemu-action@v3.1.0
 
       - name:  Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -111,14 +111,11 @@ jobs:
           version: v0.5.1
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
-
-      - name: Install xmllint
-        uses: ./.github/actions/install-xmllint
 
       - name: Log in to Red Hat Scan Registry
         run: |

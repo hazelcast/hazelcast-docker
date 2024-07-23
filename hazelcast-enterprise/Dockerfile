@@ -3,7 +3,7 @@ FROM redhat/ubi9-minimal:9.4
 # Used for image metadata only
 # Describes the version of the Dockerfile, *not* the version of the bundled Hazelcast binary as this is/can be controlled externally
 # Dockerfile needs some concept of versioning so that the release pipeline can tag/archive with an appropriate label
-ARG HZ_VERSION=5.5.0-SNAPSHOT
+ARG HZ_VERSION=6.0.0-SNAPSHOT
 ARG JDK_VERSION="21"
 
 # Build constants
@@ -50,7 +50,7 @@ RUN echo "Installing new packages" \
         fi; \
         echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
         mkdir --parents ${HZ_HOME}; \
-        curl -sfL ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
+        curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
     else \
            echo "Using local hazelcast-enterprise-distribution.zip"; \
     fi \

@@ -2,7 +2,7 @@ FROM alpine:3
 
 # Describes the version of the Dockerfile, *not* the version of the bundled Hazelcast binary as this is/can be controlled externally
 # Dockerfile needs some concept of versioning so that the release pipeline can tag/archive with an appropriate label
-ARG HZ_VERSION=5.5.0-SNAPSHOT
+ARG HZ_VERSION=6.0.0-SNAPSHOT
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
@@ -39,7 +39,7 @@ RUN echo "Upgrading APK packages" \
        fi; \
        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
        mkdir --parents ${HZ_HOME}; \
-       curl -sfL ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-distribution.zip; \
+       curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-distribution.zip; \
     else \
            echo "Using local hazelcast-distribution.zip"; \
     fi \
