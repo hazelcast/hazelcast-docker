@@ -53,7 +53,7 @@ jobs:
         run: echo "${NLC_REPO_TOKEN}" | docker login -u ${NLC_REPO_USERNAME} ${NLC_REPOSITORY} --password-stdin
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.1.0
+        uses: docker/setup-qemu-action@v3.2.0
 
       - name:  Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
