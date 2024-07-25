@@ -58,7 +58,7 @@ $ docker run -p 5702:5701 -e HZ_LICENSEKEY=<your_license_key> -e HZ_NETWORK_PUBL
 ```
 
 Note that:
-* This example assumes unencrypted communication channels for IMDG members and clients. Hazelcast allows you to encrypt socket-level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](https://github.com/hazelcast/hazelcast-docker#tls_enabled-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
+* This example assumes unencrypted communication channels for Hazelcast members and clients. Hazelcast allows you to encrypt socket-level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](https://github.com/hazelcast/hazelcast-docker#tls_enabled-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
 
 ### Management Center Hello World
 
@@ -134,7 +134,7 @@ Note that by default Hazelcast uses up to 80% of the container memory limit, but
 
 ### Configuring Hazelcast via Environment Variables
 
-With Hazelcast IMDG 4.1 release, configuration entries of your cluster can be overritten without changing the declarative configuration files (XML/YAML), see [Overriding Configuration documentation section](https://docs.hazelcast.org/docs/latest/manual/html-single/#overriding-configuration).
+Configuration entries of your cluster can be overritten without changing the declarative configuration files (XML/YAML), see [Overriding Configuration documentation section](https://docs.hazelcast.com/hazelcast/latest/configuration/configuring-with-system-properties).
 
 Assume that you want to have the following configuration for your cluster, represented as YAML:
 ```yaml
@@ -189,7 +189,7 @@ $ keytool -export -alias server -keystore ./keystore/server.keystore -storepass 
 $ keytool -import -noprompt -alias server -keystore ./keystore/server.truststore -storepass 123456 -file ./keystore/server.crt
 ```
 
-2. Run Hazelcast IMDG Enterprise with TLS enabled:
+2. Run Hazelcast Enterprise with TLS enabled:
 ```bash
 $ docker run -e HZ_LICENSEKEY=<your_license_key> \
     -e HZ_NETWORK_SSL_ENABLED=true \

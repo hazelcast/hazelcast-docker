@@ -50,7 +50,6 @@ function assert_get_hz_dist_zip_for_snapshot {
 log_header "Tests for get_hz_dist_zip"
 assert_get_hz_dist_zip slim 5.4.0 https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.4.0/hazelcast-enterprise-distribution-5.4.0-slim.zip
 assert_get_hz_dist_zip "" 5.4.0 https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.4.0/hazelcast-enterprise-distribution-5.4.0.zip
-CURRENT_SNAPSHOT_VERSION=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' "$SCRIPT_DIR/../../hazelcast-enterprise/Dockerfile")
-assert_get_hz_dist_zip_for_snapshot "" "$CURRENT_SNAPSHOT_VERSION" "https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/$CURRENT_SNAPSHOT_VERSION/hazelcast-enterprise-distribution-${CURRENT_SNAPSHOT_VERSION%-SNAPSHOT}"
+assert_get_hz_dist_zip "" 5.4.1-SNAPSHOT https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/5.4.1-SNAPSHOT/hazelcast-enterprise-distribution-5.4.1-SNAPSHOT.zip
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
