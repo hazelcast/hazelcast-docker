@@ -3,7 +3,7 @@ FROM redhat/ubi9-minimal:9.3
 # Used for image metadata only
 # Describes the version of the Dockerfile, *not* the version of the bundled Hazelcast binary as this is/can be controlled externally
 # Dockerfile needs some concept of versioning so that the release pipeline can tag/archive with an appropriate label
-ARG HZ_VERSION=5.5.0-SNAPSHOT
+ARG HZ_VERSION=5.5.0
 ARG JDK_VERSION="21"
 
 # Build constants
