@@ -35,21 +35,24 @@ function assert_minor_versions_contain {
   local MINIMAL_SUPPORTED_VERSION=$1
   local EXPECTED_VERSION=$2
   local ACTUAL_MINOR_VERSIONS=$(get_minor_versions "$MINIMAL_SUPPORTED_VERSION")
-  assert_contain "$ACTUAL_MINOR_VERSIONS" "$EXPECTED_VERSION" "Minor versions starting from $MINIMAL_SUPPORTED_VERSION should contain $EXPECTED_VERSION " || TESTS_RESULT=$?
+  local MSG="Minor versions starting from $MINIMAL_SUPPORTED_VERSION should contain $EXPECTED_VERSION "
+  assert_contain "$ACTUAL_MINOR_VERSIONS" "$EXPECTED_VERSION" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 function assert_minor_versions_not_contain {
   local MINIMAL_SUPPORTED_VERSION=$1
   local EXPECTED_VERSION=$2
   local ACTUAL_MINOR_VERSIONS=$(get_minor_versions "$MINIMAL_SUPPORTED_VERSION")
-  assert_not_contain "$ACTUAL_MINOR_VERSIONS" "$EXPECTED_VERSION" "Minor versions starting from $MINIMAL_SUPPORTED_VERSION should NOT contain $EXPECTED_VERSION " || TESTS_RESULT=$?
+  local MSG="Minor versions starting from $MINIMAL_SUPPORTED_VERSION should NOT contain $EXPECTED_VERSION"
+  assert_not_contain "$ACTUAL_MINOR_VERSIONS" "$EXPECTED_VERSION" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 function assert_latest_patch_version {
   local MINOR_VERSION=$1
   local EXPECTED_VERSION=$2
   local ACTUAL_VERSION=$(get_latest_patch_version "$MINOR_VERSION")
-  assert_eq "$ACTUAL_VERSION" "$EXPECTED_VERSION" "Latest patch version of $MINOR_VERSION should be $EXPECTED_VERSION " || TESTS_RESULT=$?
+  local MSG="Latest patch version of $MINOR_VERSION should be $EXPECTED_VERSION"
+  assert_eq "$ACTUAL_VERSION" "$EXPECTED_VERSION" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 
@@ -57,14 +60,16 @@ function assert_latest_patch_versions_contain {
   local MINIMAL_SUPPORTED_VERSION=$1
   local EXPECTED_VERSION=$2
   local ACTUAL_LATEST_PATCH_VERSIONS=$(get_latest_patch_versions "$MINIMAL_SUPPORTED_VERSION")
-  assert_contain "$ACTUAL_LATEST_PATCH_VERSIONS" "$EXPECTED_VERSION" "Latest patch versions starting from $MINIMAL_SUPPORTED_VERSION should contain $EXPECTED_VERSION " || TESTS_RESULT=$?
+  local MSG="Latest patch versions starting from $MINIMAL_SUPPORTED_VERSION should contain $EXPECTED_VERSION"
+  assert_contain "$ACTUAL_LATEST_PATCH_VERSIONS" "$EXPECTED_VERSION" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 function assert_latest_patch_versions_not_contain {
   local MINIMAL_SUPPORTED_VERSION=$1
   local EXPECTED_VERSION=$2
   local ACTUAL_LATEST_PATCH_VERSIONS=$(get_latest_patch_versions "$MINIMAL_SUPPORTED_VERSION")
-  assert_not_contain "$ACTUAL_LATEST_PATCH_VERSIONS" "$EXPECTED_VERSION" "Latest patch versions starting from $MINIMAL_SUPPORTED_VERSION should NOT contain $EXPECTED_VERSION " || TESTS_RESULT=$?
+  local MSG="Latest patch versions starting from $MINIMAL_SUPPORTED_VERSION should NOT contain $EXPECTED_VERSION"
+  assert_not_contain "$ACTUAL_LATEST_PATCH_VERSIONS" "$EXPECTED_VERSION" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 log_header "Tests for get_latest_patch_version"

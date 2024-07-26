@@ -16,14 +16,16 @@ function assert_should_build_oss {
   local release_type=$1
   local expected_should_build_os=$2
   local actual=$(should_build_oss "$release_type")
-  assert_eq "$expected_should_build_os" "$actual" "For release_type=$release_type we should$( [ "$expected_should_build_os" = "no" ] && echo " NOT") build OS" || TESTS_RESULT=$?
+  local MSG="For release_type=$release_type we should$( [ "$expected_should_build_os" = "no" ] && echo " NOT") build OS"
+  assert_eq "$expected_should_build_os" "$actual" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 function assert_should_build_ee {
   local release_type=$1
   local expected_should_build_os=$2
   local actual=$(should_build_ee "$release_type")
-  assert_eq "$expected_should_build_os" "$actual" "For release_type=$release_type we should$( [ "$expected_should_build_os" = "no" ] && echo " NOT") build EE" || TESTS_RESULT=$?
+  local MSG="For release_type=$release_type we should$( [ "$expected_should_build_os" = "no" ] && echo " NOT") build EE"
+  assert_eq "$expected_should_build_os" "$actual" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 log_header "Tests for should_build_oss"

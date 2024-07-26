@@ -34,7 +34,8 @@ TESTS_RESULT=0
 # Functions overlap, so likely only testing one implementation - but as are duplicated, *shouldn't* be an issue
 OSS_SCRIPT="$SCRIPT_DIR"/../../hazelcast-oss/maven.functions.sh
 EE_SCRIPT="$SCRIPT_DIR"/../../hazelcast-enterprise/maven.functions.sh
-assert_eq "$(cat "$OSS_SCRIPT")" "$(cat "$EE_SCRIPT")" "Contents of $OSS_SCRIPT and $EE_SCRIPT should be the same " || TESTS_RESULT=$?
+MSG="Contents of $OSS_SCRIPT and $EE_SCRIPT should be the same"
+assert_eq "$(cat "$OSS_SCRIPT")" "$(cat "$EE_SCRIPT")" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 
 . "$OSS_SCRIPT"
 . "$EE_SCRIPT"
@@ -46,7 +47,8 @@ function assert_get_latest_version {
   local repository_url=$3
   local expected_version=$4
   local actual_version=$(get_latest_version "$group_id" "$artifact_id" "$repository_url")
-  assert_eq "$expected_version" "$actual_version" "Latest version of $group_id:$artifact_id expected to be equal to $expected_version " || TESTS_RESULT=$?
+  local msg="Latest version of $group_id:$artifact_id expected to be equal to $expected_version"
+  assert_eq "$expected_version" "$actual_version" "$msg" && log_success "$msg" || TESTS_RESULT=$?
 }
 
 
@@ -56,7 +58,8 @@ function assert_get_latest_url_without_extension {
   local repository_url=$3
   local expected_url=$4
   local actual_url=$(get_latest_url_without_extension "$group_id" "$artifact_id" "$repository_url")
-  assert_eq "$expected_url" "$actual_url" "Latest URL of $group_id:$artifact_id expected to be equal to $expected_url " || TESTS_RESULT=$?
+  local msg="Latest URL of $group_id:$artifact_id expected to be equal to $expected_url"
+  assert_eq "$expected_url" "$actual_url" "$msg" && log_success "$msg" || TESTS_RESULT=$?
 }
 
 log_header "Tests for get_latest_version"

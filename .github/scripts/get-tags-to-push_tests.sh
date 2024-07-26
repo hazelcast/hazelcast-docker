@@ -37,7 +37,8 @@ function assert_get_version_only_tags_to_push {
   local VERSION_TO_RELEASE=$1
   local EXPECTED_TAGS_TO_PUSH=$2
   local ACTUAL_TAGS_TO_PUSH=$(get_version_only_tags_to_push "$VERSION_TO_RELEASE")
-  assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "Tags to push for version $VERSION_TO_RELEASE should be equal to $EXPECTED_TAGS_TO_PUSH " || TESTS_RESULT=$?
+  local MSG="Tags to push for version $VERSION_TO_RELEASE should be equal to $EXPECTED_TAGS_TO_PUSH"
+  assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 function assert_augment_with_suffixed_tags {
@@ -47,7 +48,8 @@ function assert_augment_with_suffixed_tags {
   local DEFAULT_JDK=$4
   local EXPECTED_TAGS_TO_PUSH=$5
   local ACTUAL_TAGS_TO_PUSH=$(augment_with_suffixed_tags "${INITIAL_TAGS[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
-  assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "Suffixed tags to push for (tags=$INITIAL_TAGS suffix=$SUFFIX current_jdk=$CURRENT_JDK default_jdk=$DEFAULT_JDK) should be equal to: $EXPECTED_TAGS_TO_PUSH " || TESTS_RESULT=$?
+  local MSG="Suffixed tags to push for (tags=$INITIAL_TAGS suffix=$SUFFIX current_jdk=$CURRENT_JDK default_jdk=$DEFAULT_JDK) should be equal to: $EXPECTED_TAGS_TO_PUSH"
+  assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 function assert_get_tags_to_push {
@@ -57,7 +59,8 @@ function assert_get_tags_to_push {
   local DEFAULT_JDK=$4
   local EXPECTED_TAGS_TO_PUSH=$5
   local ACTUAL_TAGS_TO_PUSH=$(get_tags_to_push "$VERSION_TO_RELEASE" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
-  assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "Tags to push for (version_to_release=$VERSION_TO_RELEASE suffix=$SUFFIX current_jdk=$CURRENT_JDK default_jdk=$DEFAULT_JDK) should be equal to: $EXPECTED_TAGS_TO_PUSH " || TESTS_RESULT=$?
+  local MSG="Tags to push for (version_to_release=$VERSION_TO_RELEASE suffix=$SUFFIX current_jdk=$CURRENT_JDK default_jdk=$DEFAULT_JDK) should be equal to: $EXPECTED_TAGS_TO_PUSH "
+  assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 log_header "Tests for get_version_only_tags_to_push"

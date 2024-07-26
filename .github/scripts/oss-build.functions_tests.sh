@@ -37,7 +37,8 @@ function assert_get_hz_dist_zip {
   local hz_version=$2
   local expected_url=$3
   local actual_url=$(get_hz_dist_zip "$hz_variant" "$hz_version")
-  assert_eq "$expected_url" "$actual_url" "Expected URL for variant \"$hz_variant\", version \"$hz_version\"" || TESTS_RESULT=$?
+  local msg="Expected URL for variant \"$hz_variant\", version \"$hz_version\""
+  assert_eq "$expected_url" "$actual_url" "$msg" && log_success "$msg" || TESTS_RESULT=$?
 }
 
 log_header "Tests for get_hz_dist_zip"
