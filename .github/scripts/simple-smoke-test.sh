@@ -20,7 +20,7 @@ function start() {
     docker run -it --name "${container_name}" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "${image}"
 }
 
-function get_logs() {
+function get_hz_logs() {
     docker logs "${container_name}"
 }
 

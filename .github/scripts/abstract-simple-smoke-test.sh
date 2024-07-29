@@ -23,7 +23,7 @@ function check_metadata() {
     local expected_distribution_type=$1
     local expected_version=$2
 
-    logs=$(get_logs)
+    logs=$(get_hz_logs)
 
     if [[ -z "${logs}" ]]; then
       echoerr "Failed to read logs"
