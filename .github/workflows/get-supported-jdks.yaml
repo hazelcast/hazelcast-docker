@@ -1,0 +1,15 @@
+name: Get supported JDKs
+
+on:
+  workflow_call:
+    outputs:
+      jdks:
+        value: ${{ jobs.get-supported-jdks.outputs.jdks }}
+
+jobs:
+  get-supported-jdks:
+    runs-on: ubuntu-latest
+    outputs:
+      jdks: "['11']"
+    steps:
+      - run: exit 0
