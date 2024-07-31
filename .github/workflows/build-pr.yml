@@ -64,6 +64,7 @@ jobs:
 
       - name: Build OSS image
         run: |
+          set -eEuo pipefail ${RUNNER_DEBUG:+-x}
           DOCKER_PATH=hazelcast-oss
           HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_OSS }}"
           
@@ -72,6 +73,8 @@ jobs:
           export HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
           export HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
           HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "" "${HZ_VERSION}")
+          
+          echo "Downloading distribution from $HAZELCAST_OSS_ZIP_URL"
           
           curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output $DOCKER_PATH/hazelcast-distribution.zip; 
           
