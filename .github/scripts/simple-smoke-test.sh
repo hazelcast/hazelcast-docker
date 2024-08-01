@@ -15,7 +15,7 @@ function remove_container_if_exists() {
     fi
 }
 
-function start() {
+function start_container() {
     echo "Starting container '${container_name}' from image '${image}'"
     docker run -it --name "${container_name}" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "${image}"
 }
@@ -24,7 +24,7 @@ function get_hz_logs() {
     docker logs "${container_name}"
 }
 
-function stop() {
+function stop_container() {
     echo "Stopping container ${container_name}"
     docker stop "${container_name}"
 }
@@ -48,6 +48,6 @@ case "${input_distribution_type}" in
 esac
 
 remove_container_if_exists
-start
+start_container
 test_package "${expected_distribution_type}" "${expected_version}"
-stop
+stop_container
