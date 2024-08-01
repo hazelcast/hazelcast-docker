@@ -12,7 +12,7 @@ function test_package() {
     test_health
     test_map_read_write
 
-    # Deliberately last as it doesn't block-and-wait until the instance is initialized
+    # Deliberately last step as it doesn't block-and-wait until the instance is initialized
     # Otherwise would have false positives if instance still starting and logs empty
     check_metadata "${expected_distribution_type}" "${expected_version}"
 }
