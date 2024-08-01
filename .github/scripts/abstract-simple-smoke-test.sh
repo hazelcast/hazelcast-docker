@@ -4,6 +4,7 @@ set -o errexit -o nounset -o pipefail
 
 # Performs simple validation tests on an already-running Hazelcast instance
 # Abstract as could be from Docker, Homebrew, local binary etc
+# Because abstract, expects callers to implement required, but absent functions
 function test_package() {
     local expected_distribution_type=$1
     local expected_version=$2
