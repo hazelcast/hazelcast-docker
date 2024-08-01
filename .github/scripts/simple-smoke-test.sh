@@ -49,5 +49,7 @@ esac
 
 remove_container_if_exists
 start_container
+
+trap stop_container EXIT
+
 test_package "${expected_distribution_type}" "${expected_version}"
-stop_container
