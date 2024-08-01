@@ -23,7 +23,10 @@ function find_script_dir() {
 
 SCRIPT_DIR=$(find_script_dir)
 
-. "$SCRIPT_DIR"/assert.sh/assert.sh
+# Source the latest version of assert.sh unit testing library and include in current shell
+assert_script_content=$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
+# shellcheck source=/dev/null
+. <(echo "${assert_script_content}")
 . "$SCRIPT_DIR"/ee-build.functions.sh
 
 TESTS_RESULT=0
@@ -33,7 +36,8 @@ function assert_get_hz_dist_zip {
   local hz_version=$2
   local expected_url=$3
   local actual_url=$(get_hz_dist_zip "$hz_variant" "$hz_version")
-  assert_eq "$expected_url" "$actual_url" "Expected URL for variant \"$hz_variant\", version \"$hz_version\"" || TESTS_RESULT=$?
+  local MSG="Expected URL for variant \"$hz_variant\", version \"$hz_version\""
+  assert_eq "$expected_url" "$actual_url" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 function assert_get_hz_dist_zip_for_snapshot {
@@ -41,7 +45,8 @@ function assert_get_hz_dist_zip_for_snapshot {
   local hz_version=$2
   local expected_url=$3
   local actual_url=$(get_hz_dist_zip "$hz_variant" "$hz_version")
-  assert_contain "$actual_url" "$expected_url" "Expected URL for variant \"$hz_variant\", version \"$hz_version\" should contain $expected_url" || TESTS_RESULT=$?
+  local MSG="Expected URL for variant \"$hz_variant\", version \"$hz_version\" should contain $expected_url"
+  assert_contain "$actual_url" "$expected_url" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 log_header "Tests for get_hz_dist_zip"
