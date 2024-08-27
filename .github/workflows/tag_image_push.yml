@@ -250,8 +250,6 @@ jobs:
         if: needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes'
         uses: ./.github/actions/update-dockerhub-readme
         with:
-          should_build_readme_oss: ${{ needs.prepare.outputs.should_build_readme_oss }}
-          should_build_readme_ee: ${{ needs.prepare.outputs.should_build_readme_ee }}
           docker_username: ${{ secrets.DOCKER_USERNAME }}
           docker_password: ${{ secrets.DOCKER_PASSWORD }}
 
