@@ -27,6 +27,7 @@ function assert_should_build_ee {
   local MSG="For release_type=$release_type we should$( [ "$expected_should_build_ee" = "no" ] && echo " NOT") build EE"
   assert_eq "$expected_should_build_ee" "$actual" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
+
 function assert_should_build_readme_ee {
   local release_type=$1
   local expected_should_build_ee=$2
