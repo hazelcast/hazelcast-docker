@@ -248,7 +248,7 @@ jobs:
 
       - name: Update Docker Hub Description
         if: needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes'
-        uses: ./.github/actions/update-dockerhub-readme
+        uses: ./.github/actions/update-dockerhub-description
         with:
           docker_username: ${{ secrets.DOCKER_USERNAME }}
           docker_password: ${{ secrets.DOCKER_PASSWORD }}
