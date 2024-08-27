@@ -1,0 +1,42 @@
+name: 'Update Docker Hub README'
+description: 'Composite action to update Docker Hub README for OSS and EE images'
+inputs:
+  should_build_readme_oss:
+    description: 'Flag to determine if OSS README should be updated'
+    required: true
+  should_build_readme_ee:
+    description: 'Flag to determine if EE README should be updated'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: .github
+
+    - name: Generate Docker Hub Description
+      shell: bash
+      run: |
+        .github/scripts/generate-docker-hub-description.sh
+
+    - name: Update Docker Hub Description of OSS image
+      if: ${{ inputs.should_build_readme_oss == 'true' }}
+      uses: peter-evans/dockerhub-description@v4
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        repository: hazelcast/hazelcast
+        short-description: Hazelcast Docker Image
+        readme-filepath: ./README-docker.md
+
+    - name: Update Docker Hub Description of EE image
+      if: ${{ inputs.should_build_readme_ee == 'true' }}
+      uses: peter-evans/dockerhub-description@v4
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        repository: hazelcast/hazelcast-enterprise
+        short-description: Hazelcast Enterprise Docker Image
+        readme-filepath: ./README-docker.md

@@ -75,7 +75,6 @@ jobs:
   push:
     runs-on: ubuntu-latest
     needs: [ jdks, prepare ]
-    if: needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes'
     strategy:
       matrix:
         jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
@@ -138,6 +137,7 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Get OSS dist ZIP URL
+        if: needs.prepare.outputs.should_build_oss == 'yes'
         run: |
           . .github/scripts/oss-build.functions.sh
           echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
@@ -158,6 +158,7 @@ jobs:
           .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ env.HZ_VERSION }}
 
       - name: Get EE dist ZIP URL
+        if: needs.prepare.outputs.should_build_ee == 'yes'
         run: |
           . .github/scripts/ee-build.functions.sh
           echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
@@ -191,9 +192,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docker-logs${{ env.SUFFIX }}-jdk${{ matrix.jdk }}
-          path: | 
-            ${{ env.DOCKER_LOG_FILE_OSS }}
-            ${{ env.DOCKER_LOG_FILE_EE }}
+          path: docker-*.log
 
       - name: Build and Push OSS image
         if: needs.prepare.outputs.should_build_oss == 'yes'
@@ -247,41 +246,12 @@ jobs:
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
-      - name: Slack notification
-        uses: ./.github/actions/slack-notification
-        if: failure()
+      - name: Update Docker Hub Description
+        if: needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes'
+        uses: ./.github/workflows/update-dockerhub-readme.yml
         with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-
-  post-push:
-    runs-on: ubuntu-latest
-    needs: [ push, prepare ]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: .github
-      - name: Generate Docker Hub Description
-        run: |
-          .github/scripts/generate-docker-hub-description.sh
-      - name: Update Docker Hub Description of OSS image
-        if: needs.prepare.outputs.should_build_readme_oss == 'yes'
-        uses: peter-evans/dockerhub-description@v4
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: hazelcast/hazelcast
-          short-description: Hazelcast Docker Image
-          readme-filepath: ./README-docker.md
-
-      - name: Update Docker Hub Description of EE image
-        if: needs.prepare.outputs.should_build_readme_ee == 'yes'
-        uses: peter-evans/dockerhub-description@v4
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: hazelcast/hazelcast-enterprise
-          short-description: Hazelcast Enterprise Docker Image
-          readme-filepath: ./README-docker.md
+          should_build_readme_oss: ${{ needs.prepare.outputs.should_build_readme_oss }}
+          should_build_readme_ee: ${{ needs.prepare.outputs.should_build_readme_ee }}
 
       - name: Create release
         if: github.event_name == 'push'
