@@ -252,6 +252,8 @@ jobs:
         with:
           should_build_readme_oss: ${{ needs.prepare.outputs.should_build_readme_oss }}
           should_build_readme_ee: ${{ needs.prepare.outputs.should_build_readme_ee }}
+          docker_username: ${{ secrets.DOCKER_USERNAME }}
+          docker_password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Create release
         if: github.event_name == 'push'

@@ -7,6 +7,12 @@ inputs:
   should_build_readme_ee:
     description: 'Flag to determine if EE README should be updated'
     required: true
+  docker_username:
+    description: 'Docker username'
+    required: true
+  docker_password:
+    description: 'Docker password'
+    required: true
 
 runs:
   using: 'composite'
@@ -25,8 +31,8 @@ runs:
       if: ${{ inputs.should_build_readme_oss == 'true' }}
       uses: peter-evans/dockerhub-description@v4
       with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+        username: ${{ inputs.docker_username }}
+        password: ${{ inputs.docker_password }}
         repository: hazelcast/hazelcast
         short-description: Hazelcast Docker Image
         readme-filepath: ./README-docker.md
@@ -35,8 +41,8 @@ runs:
       if: ${{ inputs.should_build_readme_ee == 'true' }}
       uses: peter-evans/dockerhub-description@v4
       with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+        username: ${{ inputs.docker_username }}
+        password: ${{ inputs.docker_password }}
         repository: hazelcast/hazelcast-enterprise
         short-description: Hazelcast Enterprise Docker Image
         readme-filepath: ./README-docker.md
