@@ -16,7 +16,7 @@ runs:
       run: |
         .github/scripts/generate-docker-hub-description.sh
 
-    - name: Update Docker Hub Description of OSS image
+    - name: Update Docker Hub Description for OSS image
       uses: peter-evans/dockerhub-description@v4
       with:
         username: ${{ inputs.docker_username }}
@@ -25,7 +25,7 @@ runs:
         short-description: Hazelcast Docker Image
         readme-filepath: ./README-docker.md
 
-    - name: Update Docker Hub Description of EE image
+    - name: Update Docker Hub Description for EE image
       uses: peter-evans/dockerhub-description@v4
       with:
         username: ${{ inputs.docker_username }}
