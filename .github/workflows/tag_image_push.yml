@@ -248,7 +248,7 @@ jobs:
 
       - name: Update Docker Hub Description
         if: needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes'
-        uses: ./.github/workflows/update-dockerhub-readme.yml
+        uses: ./.github/actions/update-dockerhub-readme
         with:
           should_build_readme_oss: ${{ needs.prepare.outputs.should_build_readme_oss }}
           should_build_readme_ee: ${{ needs.prepare.outputs.should_build_readme_ee }}
