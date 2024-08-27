@@ -188,7 +188,7 @@ jobs:
           docker logs ${{ env.test_container_name_ee }} > ${{ env.DOCKER_LOG_FILE_EE }} || true
 
       - name: Store docker logs as artifact
-        if: ${{ always() }}
+        if: ${{ always() && ( needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes') }}
         uses: actions/upload-artifact@v4
         with:
           name: docker-logs${{ env.SUFFIX }}-jdk${{ matrix.jdk }}
