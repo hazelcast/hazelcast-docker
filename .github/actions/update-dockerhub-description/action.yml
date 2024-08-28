@@ -17,7 +17,7 @@ runs:
         .github/scripts/generate-docker-hub-description.sh
 
     - name: Update Docker Hub Description for OSS image
-      uses: peter-evans/dockerhub-description@v4
+      uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
       with:
         username: ${{ inputs.docker_username }}
         password: ${{ inputs.docker_password }}
@@ -26,7 +26,7 @@ runs:
         readme-filepath: ./README-docker.md
 
     - name: Update Docker Hub Description for EE image
-      uses: peter-evans/dockerhub-description@v4
+      uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
       with:
         username: ${{ inputs.docker_username }}
         password: ${{ inputs.docker_password }}
