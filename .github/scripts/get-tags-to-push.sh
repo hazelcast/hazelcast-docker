@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 function find_last_matching_version() {
   FILTER=$1

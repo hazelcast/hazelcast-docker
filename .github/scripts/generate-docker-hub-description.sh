@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -eEuo pipefail ${RUNNER_DEBUG:+-x}
 

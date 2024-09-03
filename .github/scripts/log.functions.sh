@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 if command -v tput &>/dev/null && tty -s; then
   RED=$(tput setaf 1)

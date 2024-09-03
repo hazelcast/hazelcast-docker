@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 function get_supported_versions() {
     local MINIMAL_VERSION=$1
