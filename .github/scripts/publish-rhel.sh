@@ -17,16 +17,17 @@ get_image()
         echo "Need first parameter as 'published' or 'not_published'." ; return 1
     fi
 
-    local FILTER="filter=deleted==false;${PUBLISHED_FILTER}"
-    local INCLUDE="include=total,data.repositories.tags.name,data.certified,data.container_grades,data._id"
+    local FILTER="filter=deleted==false;${PUBLISHED_FILTER};repositories.tags=em=(name=='${VERSION}')"
+    local INCLUDE="include=total,data.repositories.tags.name,data.certified,data.container_grades,data._id,data.creation_date"
+    local SORT_BY='sort_by=creation_date\[desc\]'
 
     local RESPONSE=$( \
         curl --silent \
              --request GET \
              --header "X-API-KEY: ${RHEL_API_KEY}" \
-             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}&${INCLUDE}")
+             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}&${INCLUDE}&${SORT_BY}")
 
-    echo "${RESPONSE}" | jq ".data[] | select(.repositories[].tags[]?.name==\"${VERSION}\")" | jq -s '.[0] | select( . != null)' | jq -s '{data:., total: length}'
+    echo "${RESPONSE}"
 }
 
 wait_for_container_scan()
