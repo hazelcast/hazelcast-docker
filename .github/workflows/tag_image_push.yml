@@ -23,6 +23,14 @@ on:
           - ALL
           - OSS
           - EE
+      IS_LATEST_LTS:
+        description: 'Is latest LTS'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 env:
   test_container_name_oss: hazelcast-oss-test
   test_container_name_ee: hazelcast-ee-test
@@ -35,6 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
+      IS_LATEST_LTS: ${{ inputs.IS_LATEST_LTS || 'false' }}
     outputs:
       should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
@@ -51,6 +60,17 @@ jobs:
           else
               echo "File '$RELEASE_TYPE_FILE' does not exist."
               exit 1
+          fi
+
+      - name: Check if it is latest-lts release
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          IS_LATEST_LTS_FILE=.github/latest_lts
+          if [ -f IS_LATEST_LTS_FILE ]; then
+              echo "IS_LATEST_LTS=true" >> $GITHUB_ENV
+              echo "File '$IS_LATEST_LTS_FILE' exists. Assuming latest-lts release"
+          else
+              echo "File '$IS_LATEST_LTS_FILE' does not exist. Assuming NON-latest-lts release"
           fi
 
       - name: Check which editions should be built
@@ -197,7 +217,9 @@ jobs:
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          #OSS has no LTS releases
+          IS_LATEST_LTS=false
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -223,7 +245,7 @@ jobs:
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
