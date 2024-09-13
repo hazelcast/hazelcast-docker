@@ -45,10 +45,10 @@ function get_version_only_tags_to_push() {
   fi
 
   if verlte "$LATEST" "$VERSION_TO_RELEASE"; then
-    TAGS_TO_PUSH+=(latest)
+    TAGS_TO_PUSH+=("latest")
   fi
   if [ "$IS_LATEST_LTS" == "true" ] ; then
-    TAGS_TO_PUSH+=(latest-lts)
+    TAGS_TO_PUSH+=("latest-lts")
   fi
 
   echo "${TAGS_TO_PUSH[@]}"

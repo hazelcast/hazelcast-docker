@@ -217,7 +217,7 @@ jobs:
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
-          #OSS has no LTS releases
+          # OSS has no LTS releases
           IS_LATEST_LTS=false
           TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
