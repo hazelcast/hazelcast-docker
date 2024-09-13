@@ -2,28 +2,7 @@
 
 set -eu
 
-function findScriptDir() {
-  CURRENT=$PWD
-
-  DIR=$(dirname "$0")
-  cd "$DIR" || exit
-  TARGET_FILE=$(basename "$0")
-
-  # Iterate down a (possible) chain of symlinks
-  while [ -L "$TARGET_FILE" ]
-  do
-      TARGET_FILE=$(readlink "$TARGET_FILE")
-      DIR=$(dirname "$TARGET_FILE")
-      cd "$DIR" || exit
-      TARGET_FILE=$(basename "$TARGET_FILE")
-  done
-
-  SCRIPT_DIR=$(pwd -P)
-  # Restore current directory
-  cd "$CURRENT" || exit
-}
-
-findScriptDir
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 # Source the latest version of assert.sh unit testing library and include in current shell
 assert_script_content=$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
@@ -35,9 +14,10 @@ TESTS_RESULT=0
 
 function assert_get_version_only_tags_to_push {
   local VERSION_TO_RELEASE=$1
-  local EXPECTED_TAGS_TO_PUSH=$2
-  local ACTUAL_TAGS_TO_PUSH=$(get_version_only_tags_to_push "$VERSION_TO_RELEASE")
-  local MSG="Tags to push for version $VERSION_TO_RELEASE should be equal to $EXPECTED_TAGS_TO_PUSH"
+  local IS_LTS=$2
+  local EXPECTED_TAGS_TO_PUSH=$3
+  local ACTUAL_TAGS_TO_PUSH=$(get_version_only_tags_to_push "$VERSION_TO_RELEASE" "$IS_LTS")
+  local MSG="Tags to push for version $VERSION_TO_RELEASE and is_lts = '$IS_LTS' should be equal to $EXPECTED_TAGS_TO_PUSH"
   assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
@@ -57,22 +37,25 @@ function assert_get_tags_to_push {
   local SUFFIX=$2
   local CURRENT_JDK=$3
   local DEFAULT_JDK=$4
-  local EXPECTED_TAGS_TO_PUSH=$5
-  local ACTUAL_TAGS_TO_PUSH=$(get_tags_to_push "$VERSION_TO_RELEASE" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
-  local MSG="Tags to push for (version_to_release=$VERSION_TO_RELEASE suffix=$SUFFIX current_jdk=$CURRENT_JDK default_jdk=$DEFAULT_JDK) should be equal to: $EXPECTED_TAGS_TO_PUSH "
+  local IS_LATEST_LTS=$5
+  local EXPECTED_TAGS_TO_PUSH=$6
+  local ACTUAL_TAGS_TO_PUSH=$(get_tags_to_push "$VERSION_TO_RELEASE" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+  local MSG="Tags to push for (version_to_release=$VERSION_TO_RELEASE suffix=$SUFFIX current_jdk=$CURRENT_JDK default_jdk=$DEFAULT_JDK is_latest_lts=$IS_LATEST_LTS) should be equal to: $EXPECTED_TAGS_TO_PUSH "
   assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
 
 log_header "Tests for get_version_only_tags_to_push"
-assert_get_version_only_tags_to_push "5.2.0" "5.2.0"
-assert_get_version_only_tags_to_push "5.2.1" "5.2.1"
-assert_get_version_only_tags_to_push "5.1.99" "5.1.99 5.1"
-assert_get_version_only_tags_to_push "4.99.0" "4.99.0 4.99 4"
-assert_get_version_only_tags_to_push "99.0.0" "99.0.0 99.0 99 latest"
-assert_get_version_only_tags_to_push "5.3.0-BETA-1" "5.3.0-BETA-1"
-assert_get_version_only_tags_to_push "5.4.0-DEVEL-9" "5.4.0-DEVEL-9"
-assert_get_version_only_tags_to_push "5.99.0-BETA-1" "5.99.0-BETA-1"
-assert_get_version_only_tags_to_push "99.0.0-BETA-1" "99.0.0-BETA-1"
+assert_get_version_only_tags_to_push "5.2.0" "false" "5.2.0"
+assert_get_version_only_tags_to_push "5.2.1" "false" "5.2.1"
+assert_get_version_only_tags_to_push "5.1.99" "false" "5.1.99 5.1"
+assert_get_version_only_tags_to_push "4.99.0" "false" "4.99.0 4.99 4"
+assert_get_version_only_tags_to_push "99.0.0" "false" "99.0.0 99.0 99 latest"
+assert_get_version_only_tags_to_push "5.3.0-BETA-1" "false" "5.3.0-BETA-1"
+assert_get_version_only_tags_to_push "5.4.0-DEVEL-9" "false" "5.4.0-DEVEL-9"
+assert_get_version_only_tags_to_push "5.99.0-BETA-1" "false" "5.99.0-BETA-1"
+assert_get_version_only_tags_to_push "99.0.0-BETA-1" "false" "99.0.0-BETA-1"
+assert_get_version_only_tags_to_push "99.0.0" "true" "99.0.0 99.0 99 latest latest-lts"
+assert_get_version_only_tags_to_push "5.2.0" "true" "5.2.0 latest-lts"
 
 log_header "Tests for augment_with_suffixed_tags"
 assert_augment_with_suffixed_tags "1.2.3" "" "11" "11" "1.2.3 1.2.3-jdk11"
@@ -82,14 +65,17 @@ assert_augment_with_suffixed_tags "1.2.3 latest" "" "17" "11" "1.2.3-jdk17 lates
 assert_augment_with_suffixed_tags "1.2.3" "-slim" "11" "11" "1.2.3-slim 1.2.3-slim-jdk11"
 assert_augment_with_suffixed_tags "1.2.3" "-slim" "17" "11" "1.2.3-slim-jdk17"
 assert_augment_with_suffixed_tags "1.2.3 latest" "-slim" "17" "11" "1.2.3-slim-jdk17 latest-slim-jdk17"
+assert_augment_with_suffixed_tags "1.2.3 latest-lts" "-slim" "17" "11" "1.2.3-slim-jdk17 latest-lts-slim-jdk17"
 tags_array=(1.2.3 latest)
 assert_augment_with_suffixed_tags "${tags_array[*]}" "-slim" "17" "11" "1.2.3-slim-jdk17 latest-slim-jdk17"
 assert_augment_with_suffixed_tags "1.2.3 1.2" "-slim" "17" "11" "1.2.3-slim-jdk17 1.2-slim-jdk17"
 
 log_header "Tests for get_tags_to_push"
-assert_get_tags_to_push "5.2.0" "" "11" "11" "5.2.0 5.2.0-jdk11"
-assert_get_tags_to_push "99.0.0" "" "11" "11" "99.0.0 99.0.0-jdk11 99.0 99.0-jdk11 99 99-jdk11 latest latest-jdk11"
-assert_get_tags_to_push "99.0.0-BETA-1" "" "17" "11" "99.0.0-BETA-1-jdk17"
-assert_get_tags_to_push "5.4.0-DEVEL-9" "-slim" "17" "11" "5.4.0-DEVEL-9-slim-jdk17"
+assert_get_tags_to_push "5.2.0" "" "11" "11" "false" "5.2.0 5.2.0-jdk11"
+assert_get_tags_to_push "99.0.0" "" "11" "11" "false" "99.0.0 99.0.0-jdk11 99.0 99.0-jdk11 99 99-jdk11 latest latest-jdk11"
+assert_get_tags_to_push "99.0.0-BETA-1" "" "17" "11" "false" "99.0.0-BETA-1-jdk17"
+assert_get_tags_to_push "5.4.0-DEVEL-9" "-slim" "17" "false" "11" "5.4.0-DEVEL-9-slim-jdk17"
+assert_get_tags_to_push "5.2.0" "" "11" "11" "true" "5.2.0 5.2.0-jdk11 latest-lts latest-lts-jdk11"
+assert_get_tags_to_push "99.0.0" "" "11" "11" "true" "99.0.0 99.0.0-jdk11 99.0 99.0-jdk11 99 99-jdk11 latest latest-jdk11 latest-lts latest-lts-jdk11"
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
