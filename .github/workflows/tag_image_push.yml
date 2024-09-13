@@ -66,7 +66,7 @@ jobs:
         if: github.event_name != 'workflow_dispatch'
         run: |
           IS_LATEST_LTS_FILE=.github/latest_lts
-          if [ -f IS_LATEST_LTS_FILE ]; then
+          if [ -f $IS_LATEST_LTS_FILE ]; then
               echo "IS_LATEST_LTS=true" >> $GITHUB_ENV
               echo "File '$IS_LATEST_LTS_FILE' exists. Assuming latest-lts release"
           else
