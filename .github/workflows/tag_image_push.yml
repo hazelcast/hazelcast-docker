@@ -34,6 +34,7 @@ on:
 env:
   test_container_name_oss: hazelcast-oss-test
   test_container_name_ee: hazelcast-ee-test
+  IS_LATEST_LTS: ${{ inputs.IS_LATEST_LTS || 'false' }}
 
 jobs:
   jdks:
@@ -43,7 +44,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
-      IS_LATEST_LTS: ${{ inputs.IS_LATEST_LTS || 'false' }}
     outputs:
       should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
