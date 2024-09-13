@@ -15,9 +15,10 @@ function verlte() {
 
 function get_version_only_tags_to_push() {
   local VERSION_TO_RELEASE=$1
+  local IS_LATEST_LTS=$2
 
-  if [ "$#" -ne 1 ]; then
-    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} VERSION_TO_RELEASE"
+  if [ "$#" -ne 2 ]; then
+    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} VERSION_TO_RELEASE IS_LATEST_LTS"
     exit 1;
   fi
 
@@ -44,7 +45,10 @@ function get_version_only_tags_to_push() {
   fi
 
   if verlte "$LATEST" "$VERSION_TO_RELEASE"; then
-    TAGS_TO_PUSH+=(latest)
+    TAGS_TO_PUSH+=("latest")
+  fi
+  if [ "$IS_LATEST_LTS" == "true" ] ; then
+    TAGS_TO_PUSH+=("latest-lts")
   fi
 
   echo "${TAGS_TO_PUSH[@]}"
@@ -52,8 +56,8 @@ function get_version_only_tags_to_push() {
 
 function get_tags_to_push() {
 
-  if [ "$#" -ne 4 ]; then
-    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} VERSION_TO_RELEASE SUFFIX CURRENT_JDK DEFAULT_JDK"
+  if [ "$#" -ne 5 ]; then
+    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} VERSION_TO_RELEASE SUFFIX CURRENT_JDK DEFAULT_JDK IS_LATEST_LTS"
     exit 1;
   fi
 
@@ -61,7 +65,8 @@ function get_tags_to_push() {
   local SUFFIX=$2
   local CURRENT_JDK=$3
   local DEFAULT_JDK=$4
-  local VERSION_ONLY_TAGS_TO_PUSH=$(get_version_only_tags_to_push "$VERSION_TO_RELEASE")
+  local IS_LATEST_LTS=$5
+  local VERSION_ONLY_TAGS_TO_PUSH=$(get_version_only_tags_to_push "$VERSION_TO_RELEASE" "$IS_LATEST_LTS")
   augment_with_suffixed_tags "${VERSION_ONLY_TAGS_TO_PUSH[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK"
 }
 
