@@ -32,6 +32,13 @@ on:
         options:
           - 'false'
           - 'true'
+      DRY_RUN:
+        description: 'Skip pushing the images to remote registry'
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 env:
   test_container_name_oss: hazelcast-oss-test
   test_container_name_ee: hazelcast-ee-test
@@ -243,11 +250,15 @@ jobs:
           done
           
           PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
-          docker buildx build --push \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
-            ${TAGS_ARG} \
-            --platform=${PLATFORMS} $DOCKER_DIR
+          if [ "${{ inputs.DRY_RUN }} " == "true" ] ; then
+            echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
+          else
+            docker buildx build --push \
+              --build-arg JDK_VERSION=${{ matrix.jdk }} \
+              --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
+              ${TAGS_ARG} \
+              --platform=${PLATFORMS} $DOCKER_DIR
+          fi
 
       - name: Build/Push EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
@@ -269,12 +280,16 @@ jobs:
           done
           
           PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
-          docker buildx build --push \
-            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
-            ${TAGS_ARG} \
-            --platform=${PLATFORMS} $DOCKER_DIR
+          if [ "${{ inputs.DRY_RUN }} " == "true" ] ; then
+            echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
+          else
+            docker buildx build --push \
+              --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+              --build-arg JDK_VERSION=${{ matrix.jdk }} \
+              --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
+              ${TAGS_ARG} \
+              --platform=${PLATFORMS} $DOCKER_DIR
+          fi
 
       - name: Update Docker Hub Description
         if: needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes'
