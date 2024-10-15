@@ -44,6 +44,8 @@ jobs:
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
       IS_LTS: ${{ inputs.IS_LTS || 'false' }}
+      # default value
+      IS_LATEST_LTS: false
 
     runs-on: ubuntu-latest
     needs: jdks

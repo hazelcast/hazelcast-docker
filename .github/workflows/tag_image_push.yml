@@ -43,6 +43,8 @@ env:
   test_container_name_oss: hazelcast-oss-test
   test_container_name_ee: hazelcast-ee-test
   IS_LTS: ${{ inputs.IS_LTS || 'false' }}
+  # default value
+  IS_LATEST_LTS: false
 
 jobs:
   jdks:
