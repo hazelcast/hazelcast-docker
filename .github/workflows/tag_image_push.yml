@@ -104,6 +104,7 @@ jobs:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
+      IS_LTS_FILE: .github/lts
     steps:
       - name: Set environment variables
         run: |
@@ -246,7 +247,6 @@ jobs:
       - name: Check if LTS release
         if: github.event_name != 'workflow_dispatch'
         run: |
-          IS_LTS_FILE=.github/lts
           if [ -f $IS_LTS_FILE ]; then
               echo "IS_LTS=true" >> $GITHUB_ENV
               echo "File '$IS_LTS_FILE' exists. Assuming LTS release"
@@ -258,7 +258,6 @@ jobs:
         if: env.IS_LTS == 'true'
         run: |
           . .github/scripts/version.functions.sh
-          IS_LTS_FILE=.github/lts
           CURRENT_LATEST_LTS_VERSION=$(get_last_version_with_file "$IS_LTS_FILE")
           if version_less_or_equal "$CURRENT_LATEST_LTS_VERSION" "$RELEASE_VERSION"; then
              echo "IS_LATEST_LTS=true" >> $GITHUB_ENV   
