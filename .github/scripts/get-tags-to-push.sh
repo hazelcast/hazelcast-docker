@@ -9,7 +9,7 @@ function get_latest_version() {
   find_last_matching_version ""
 }
 
-function verlte() {
+function version_less_or_equal() {
   [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
 
@@ -36,15 +36,15 @@ function get_version_only_tags_to_push() {
 
   local TAGS_TO_PUSH+=($VERSION_TO_RELEASE)
 
-  if verlte "$LATEST_FOR_MINOR" "$VERSION_TO_RELEASE"; then
+  if version_less_or_equal "$LATEST_FOR_MINOR" "$VERSION_TO_RELEASE"; then
     TAGS_TO_PUSH+=($MINOR_VERSION_TO_RELEASE)
   fi
 
-  if verlte "$LATEST_FOR_MAJOR" "$VERSION_TO_RELEASE"; then
+  if version_less_or_equal "$LATEST_FOR_MAJOR" "$VERSION_TO_RELEASE"; then
     TAGS_TO_PUSH+=($MAJOR_VERSION_TO_RELEASE)
   fi
 
-  if verlte "$LATEST" "$VERSION_TO_RELEASE"; then
+  if version_less_or_equal "$LATEST" "$VERSION_TO_RELEASE"; then
     TAGS_TO_PUSH+=("latest")
   fi
   if [ "$IS_LATEST_LTS" == "true" ] ; then

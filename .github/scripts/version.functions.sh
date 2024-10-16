@@ -26,7 +26,7 @@ function get_latest_patch_versions() {
     echo "${LATEST_PATCH_VERSIONS[@]}"
 }
 
-function verlte() {
+function version_less_or_equal() {
   [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
 
