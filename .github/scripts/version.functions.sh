@@ -37,6 +37,10 @@ get_tags_descending() {
 file_exists_in_tag() {
   local file=$1
   local tag=$2
+  if [ "$#" -ne 2 ]; then
+    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} <file> <tag>"
+    exit 1
+  fi
   # subshell to wrap directory change
   (
     set -e
