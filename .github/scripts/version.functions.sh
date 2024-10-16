@@ -30,11 +30,11 @@ function version_less_or_equal() {
   [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
 
-get_tags_descending() {
+function get_tags_descending() {
   git tag -l "v*" | sort -V -r | grep -v '-'
 }
 
-file_exists_in_tag() {
+function file_exists_in_tag() {
   local file=$1
   local tag=$2
   if [ "$#" -ne 2 ]; then
