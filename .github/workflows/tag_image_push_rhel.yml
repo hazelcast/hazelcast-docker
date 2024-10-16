@@ -43,7 +43,6 @@ jobs:
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
-      IS_LTS: ${{ inputs.IS_LTS || 'false' }}
 
     runs-on: ubuntu-latest
     needs: jdks
@@ -135,6 +134,7 @@ jobs:
         uses: ./.github/actions/check-if-latest-lts-release
         with:
           release_version: ${{ env.RELEASE_VERSION }}
+          is_lts_override: ${{ inputs.IS_LTS }}
 
       - name: Build the Hazelcast Enterprise image
         run: |

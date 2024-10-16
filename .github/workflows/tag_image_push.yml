@@ -26,8 +26,7 @@ on:
           - README
       IS_LTS:
         description: 'Is LTS release'
-        required: true
-        default: 'false'
+        required: false
         type: choice
         options:
           - 'false'
@@ -42,7 +41,6 @@ on:
 env:
   test_container_name_oss: hazelcast-oss-test
   test_container_name_ee: hazelcast-ee-test
-  IS_LTS: ${{ inputs.IS_LTS || 'false' }}
 
 jobs:
   jdks:
@@ -246,6 +244,7 @@ jobs:
         uses: ./.github/actions/check-if-latest-lts-release
         with:
           release_version: ${{ env.RELEASE_VERSION }}
+          is_lts_override: ${{ inputs.IS_LTS }}
 
       - name: Build/Push EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'

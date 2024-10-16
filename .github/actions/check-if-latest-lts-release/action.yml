@@ -4,6 +4,9 @@ inputs:
   release_version:
     description: Version to be released
     required: true
+  is_lts_override:
+    description: Override is LTS release or not
+    required: true
 outputs:
   is_latest_lts:
     value: ${{ steps.is_latest_lts.outputs.is_latest_lts }}
@@ -17,10 +20,12 @@ runs:
         echo "IS_LTS_FILE=.github/lts" >> $GITHUB_ENV
 
     - name: Check if EE LTS release
-      if: github.event_name != 'workflow_dispatch'
       shell: bash
       run: |
-        if [ -f $IS_LTS_FILE ]; then
+        if [ -n "${{inputs.is_lts_override}}" ]; then
+            echo "IS_LTS overridden to '${{inputs.is_lts_override}}'"
+            echo "IS_LTS=${{inputs.is_lts_override}}" >> $GITHUB_ENV
+        elif [ -f $IS_LTS_FILE ]; then
             echo "IS_LTS=true" >> $GITHUB_ENV
             echo "File '$IS_LTS_FILE' exists. Assuming LTS release"
         else
@@ -38,5 +43,5 @@ runs:
         if version_less_or_equal "$CURRENT_LATEST_LTS_VERSION" "$RELEASE_VERSION"; then
            echo "is_latest_lts=true" >> $GITHUB_OUTPUT
         else 
-           cho "is_latest_lts=false" >> $GITHUB_OUTPUT
+           echo "is_latest_lts=false" >> $GITHUB_OUTPUT
         fi
