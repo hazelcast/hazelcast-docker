@@ -252,7 +252,7 @@ jobs:
           done
           
           PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
-          if [ "${{ inputs.DRY_RUN }} " == "true" ] ; then
+          if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
             echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
           else
             docker buildx build --push \
@@ -282,7 +282,7 @@ jobs:
           done
           
           PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
-          if [ "${{ inputs.DRY_RUN }} " == "true" ] ; then
+          if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
             echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
           else
             docker buildx build --push \
