@@ -244,7 +244,7 @@ jobs:
               --platform=${PLATFORMS} $DOCKER_DIR
           fi
 
-      - name: Check if LTS release
+      - name: Check if EE LTS release
         if: github.event_name != 'workflow_dispatch'
         run: |
           if [ -f $IS_LTS_FILE ]; then
@@ -254,7 +254,7 @@ jobs:
               echo "File '$IS_LTS_FILE' does not exist. Assuming non-LTS release"
           fi
 
-      - name: Check if latest LTS release
+      - name: Check if latest EE LTS release
         if: env.IS_LTS == 'true'
         run: |
           . .github/scripts/version.functions.sh
