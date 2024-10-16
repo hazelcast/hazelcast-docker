@@ -149,7 +149,9 @@ jobs:
           . .github/scripts/version.functions.sh
           IS_LTS_FILE=.github/lts
           CURRENT_LATEST_LTS_VERSION=$(get_last_version_with_file "$IS_LTS_FILE")
-          echo "IS_LATEST_LTS=true" >> $GITHUB_ENV 
+          if verlte "$CURRENT_LATEST_LTS_VERSION" "$RELEASE_VERSION"; then
+             echo "IS_LATEST_LTS=true" >> $GITHUB_ENV   
+          fi
 
       - name: Build the Hazelcast Enterprise image
         run: |

@@ -26,6 +26,10 @@ function get_latest_patch_versions() {
     echo "${LATEST_PATCH_VERSIONS[@]}"
 }
 
+function verlte() {
+  [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
+}
+
 get_tags_descending() {
   git tag -l "v*" | sort -V -r | grep -v '-'
 }

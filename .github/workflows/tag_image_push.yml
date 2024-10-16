@@ -74,25 +74,6 @@ jobs:
               exit 1
           fi
 
-      - name: Check if LTS release
-        if: github.event_name != 'workflow_dispatch'
-        run: |
-          IS_LTS_FILE=.github/lts
-          if [ -f $IS_LTS_FILE ]; then
-              echo "IS_LTS=true" >> $GITHUB_ENV
-              echo "File '$IS_LTS_FILE' exists. Assuming LTS release"
-          else
-              echo "File '$IS_LTS_FILE' does not exist. Assuming non-LTS release"
-          fi
-
-      - name: Check if latest LTS release
-        if: env.IS_LTS == 'true'
-        run: |
-          . .github/scripts/version.functions.sh
-          IS_LTS_FILE=.github/lts
-          CURRENT_LATEST_LTS_VERSION=$(get_last_version_with_file "$IS_LTS_FILE")
-          echo "IS_LATEST_LTS=true" >> $GITHUB_ENV 
-
       - name: Check which editions should be built
         id: which_editions
         run: |
@@ -260,6 +241,27 @@ jobs:
               --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
               ${TAGS_ARG} \
               --platform=${PLATFORMS} $DOCKER_DIR
+          fi
+
+      - name: Check if LTS release
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          IS_LTS_FILE=.github/lts
+          if [ -f $IS_LTS_FILE ]; then
+              echo "IS_LTS=true" >> $GITHUB_ENV
+              echo "File '$IS_LTS_FILE' exists. Assuming LTS release"
+          else
+              echo "File '$IS_LTS_FILE' does not exist. Assuming non-LTS release"
+          fi
+
+      - name: Check if latest LTS release
+        if: env.IS_LTS == 'true'
+        run: |
+          . .github/scripts/version.functions.sh
+          IS_LTS_FILE=.github/lts
+          CURRENT_LATEST_LTS_VERSION=$(get_last_version_with_file "$IS_LTS_FILE")
+          if verlte "$CURRENT_LATEST_LTS_VERSION" "$RELEASE_VERSION"; then
+             echo "IS_LATEST_LTS=true" >> $GITHUB_ENV   
           fi
 
       - name: Build/Push EE image
