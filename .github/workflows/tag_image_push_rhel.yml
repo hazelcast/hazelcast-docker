@@ -15,12 +15,13 @@ on:
       RELEASE_VERSION:
         description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
         required: false
-      IS_LTS:
-        description: 'Is LTS release'
-        required: true
-        default: 'false'
+      IS_LTS_OVERRIDE:
+        description: 'Override is LTS release'
+        required: false
         type: choice
+        default: ''
         options:
+          - ''
           - 'false'
           - 'true'
 jobs:
@@ -134,7 +135,7 @@ jobs:
         uses: ./.github/actions/check-if-latest-lts-release
         with:
           release_version: ${{ env.RELEASE_VERSION }}
-          is_lts_override: ${{ inputs.IS_LTS }}
+          is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build the Hazelcast Enterprise image
         run: |

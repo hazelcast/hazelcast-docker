@@ -24,11 +24,13 @@ on:
           - OSS
           - EE
           - README
-      IS_LTS:
-        description: 'Is LTS release'
+      IS_LTS_OVERRIDE:
+        description: 'Override is LTS release'
         required: false
         type: choice
+        default: ''
         options:
+          - ''
           - 'false'
           - 'true'
       DRY_RUN:
@@ -244,7 +246,7 @@ jobs:
         uses: ./.github/actions/check-if-latest-lts-release
         with:
           release_version: ${{ env.RELEASE_VERSION }}
-          is_lts_override: ${{ inputs.IS_LTS }}
+          is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build/Push EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
