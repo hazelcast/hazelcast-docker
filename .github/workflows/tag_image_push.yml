@@ -43,8 +43,6 @@ env:
   test_container_name_oss: hazelcast-oss-test
   test_container_name_ee: hazelcast-ee-test
   IS_LTS: ${{ inputs.IS_LTS || 'false' }}
-  # default value
-  IS_LATEST_LTS: false
 
 jobs:
   jdks:
@@ -104,7 +102,6 @@ jobs:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
-      IS_LTS_FILE: .github/lts
     steps:
       - name: Set environment variables
         run: |
@@ -244,24 +241,11 @@ jobs:
               --platform=${PLATFORMS} $DOCKER_DIR
           fi
 
-      - name: Check if EE LTS release
-        if: github.event_name != 'workflow_dispatch'
-        run: |
-          if [ -f $IS_LTS_FILE ]; then
-              echo "IS_LTS=true" >> $GITHUB_ENV
-              echo "File '$IS_LTS_FILE' exists. Assuming LTS release"
-          else
-              echo "File '$IS_LTS_FILE' does not exist. Assuming non-LTS release"
-          fi
-
       - name: Check if latest EE LTS release
-        if: env.IS_LTS == 'true'
-        run: |
-          . .github/scripts/version.functions.sh
-          CURRENT_LATEST_LTS_VERSION=$(get_last_version_with_file "$IS_LTS_FILE")
-          if version_less_or_equal "$CURRENT_LATEST_LTS_VERSION" "$RELEASE_VERSION"; then
-             echo "IS_LATEST_LTS=true" >> $GITHUB_ENV   
-          fi
+        id: is_latest_lts
+        uses: ./.github/actions/check-if-latest-lts-release
+        with:
+          release_version: ${{ env.RELEASE_VERSION }}
 
       - name: Build/Push EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
@@ -274,6 +258,7 @@ jobs:
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
+          IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
           TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
