@@ -24,6 +24,22 @@ on:
           - OSS
           - EE
           - README
+      IS_LTS_OVERRIDE:
+        description: 'Override is LTS release'
+        required: false
+        type: choice
+        default: ''
+        options:
+          - ''
+          - 'false'
+          - 'true'
+      DRY_RUN:
+        description: 'Skip pushing the images to remote registry'
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 env:
   test_container_name_oss: hazelcast-oss-test
   test_container_name_ee: hazelcast-ee-test
@@ -204,7 +220,9 @@ jobs:
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          # OSS has no LTS releases
+          IS_LATEST_LTS=false
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -213,11 +231,22 @@ jobs:
           done
           
           PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
-          docker buildx build --push \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
-            ${TAGS_ARG} \
-            --platform=${PLATFORMS} $DOCKER_DIR
+          if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
+            echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
+          else
+            docker buildx build --push \
+              --build-arg JDK_VERSION=${{ matrix.jdk }} \
+              --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
+              ${TAGS_ARG} \
+              --platform=${PLATFORMS} $DOCKER_DIR
+          fi
+
+      - name: Check if latest EE LTS release
+        id: is_latest_lts
+        uses: ./.github/actions/check-if-latest-lts-release
+        with:
+          release_version: ${{ env.RELEASE_VERSION }}
+          is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build/Push EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
@@ -230,7 +259,8 @@ jobs:
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -239,12 +269,16 @@ jobs:
           done
           
           PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
-          docker buildx build --push \
-            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
-            ${TAGS_ARG} \
-            --platform=${PLATFORMS} $DOCKER_DIR
+          if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
+            echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
+          else
+            docker buildx build --push \
+              --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+              --build-arg JDK_VERSION=${{ matrix.jdk }} \
+              --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
+              ${TAGS_ARG} \
+              --platform=${PLATFORMS} $DOCKER_DIR
+          fi
 
       - name: Update Docker Hub Description
         if: needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes'
