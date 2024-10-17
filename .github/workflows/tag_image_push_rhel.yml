@@ -15,6 +15,15 @@ on:
       RELEASE_VERSION:
         description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
         required: false
+      IS_LTS_OVERRIDE:
+        description: 'Override is LTS release'
+        required: false
+        type: choice
+        default: ''
+        options:
+          - ''
+          - 'false'
+          - 'true'
 jobs:
   jdks:
     uses: ./.github/workflows/get-supported-jdks.yaml
@@ -88,7 +97,7 @@ jobs:
           echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${RELEASE_VERSION}-jdk${{ matrix.jdk }}" >> $GITHUB_ENV
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.1.0
+        uses: docker/setup-qemu-action@v3.2.0
 
       - name:  Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -114,6 +123,13 @@ jobs:
         run: |
           docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
 
+      - name: Check if latest EE LTS release
+        id: is_latest_lts
+        uses: ./.github/actions/check-if-latest-lts-release
+        with:
+          release_version: ${{ env.RELEASE_VERSION }}
+          is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
+
       - name: Delete unpublished images
         run: |
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
@@ -131,7 +147,8 @@ jobs:
           IMAGE_NAME=${SCAN_REPOSITORY}
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
