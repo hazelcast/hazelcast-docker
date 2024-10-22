@@ -36,11 +36,6 @@ jobs:
       REQUIRED_HZ_MAJOR_VERSION: 5
       SCAN_REGISTRY: "quay.io"
       TIMEOUT_IN_MINS: 60
-      HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
-      OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
-      OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
-      OCP_CLUSTER_URL: ${{ secrets.OCP_CLUSTER_URL }}
-      RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
@@ -78,12 +73,6 @@ jobs:
             exit 1
           fi
           echo "HZ_MAJOR_VERSION=${HZ_MAJOR_VERSION}" >> $GITHUB_ENV
-
-      - name: Set scan registry secrets
-        run: |
-          echo "SCAN_REGISTRY_USER=${{ secrets[format('SCAN_REGISTRY_USER_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
-          echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
-          echo "RHEL_PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', env.REQUIRED_HZ_MAJOR_VERSION)] }}" >> $GITHUB_ENV
 
       - name: Checkout to Management Center Openshift
         uses: actions/checkout@v4
@@ -125,6 +114,18 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
+
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            OCP_LOGIN_USERNAME,CN/OCP_USERNAME
+            OCP_LOGIN_PASSWORD,CN/OCP_PASSWORD
+            OCP_CLUSTER_URL,CN/OCP_CLUSTER_URL
+            RHEL_API_KEY,CN/PREFLIGHT_RHEL_API_KEY
+            SCAN_REGISTRY_USER,SCAN_REGISTRY_USER_V${{ env.REQUIRED_HZ_MAJOR_VERSION }}
+            SCAN_REGISTRY_PASSWORD,SCAN_REGISTRY_PASSWORD_V${{ env.REQUIRED_HZ_MAJOR_VERSION }}
+            RHEL_PROJECT_ID,RHEL_PROJECT_ID_V${{ env.REQUIRED_HZ_MAJOR_VERSION }}
 
       - name: Log in to Red Hat Scan Registry
         run: |
@@ -204,6 +205,7 @@ jobs:
 
         env:
           CLUSTER_SIZE: 3
+          HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
 
       - name: Validate Cluster Size
         run: |
