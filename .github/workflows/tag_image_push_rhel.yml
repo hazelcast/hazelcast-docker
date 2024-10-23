@@ -36,6 +36,7 @@ jobs:
       REQUIRED_HZ_MAJOR_VERSION: 5
       SCAN_REGISTRY: "quay.io"
       TIMEOUT_IN_MINS: 60
+      RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
@@ -128,7 +129,6 @@ jobs:
             OCP_LOGIN_USERNAME,CN/OCP_USERNAME
             OCP_LOGIN_PASSWORD,CN/OCP_PASSWORD
             OCP_CLUSTER_URL,CN/OCP_CLUSTER_URL
-            RHEL_API_KEY,CN/PREFLIGHT_RHEL_API_KEY
 
       - name: Log in to Red Hat Scan Registry
         run: |
