@@ -17,6 +17,7 @@ jobs:
     outputs:
       HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.HZ_VERSION_OSS }}
       HZ_VERSION_EE: ${{ steps.get_ee_vars.outputs.HZ_VERSION_EE }}
+      LAST_RELEASED_HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       HAZELCAST_EE_ZIP_URL: ${{ steps.get_ee_vars.outputs.HAZELCAST_EE_ZIP_URL }}
     steps:
       - name: Checkout Code
@@ -40,6 +41,10 @@ jobs:
         run: |
           HZ_VERSION_OSS=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' hazelcast-oss/Dockerfile)
           echo "HZ_VERSION_OSS=$HZ_VERSION_OSS" >> $GITHUB_OUTPUT
+
+          source hazelcast-oss/maven.functions.sh
+          LAST_RELEASED_HZ_VERSION_OSS="$(get_latest_url_without_extension com.hazelcast hazelcast-distribution https://repo1.maven.org/maven2)".zip;
+          echo "LAST_RELEASED_HZ_VERSION_OSS=$LAST_RELEASED_HZ_VERSION_OSS" >> $GITHUB_OUTPUT
 
       - name: Setup EE variables
         id: get_ee_vars
@@ -199,8 +204,8 @@ jobs:
     needs: [ prepare ]
     uses: ./.github/workflows/tag_image_push.yml
     with:
-      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
-      RELEASE_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
+      HZ_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       RELEASE_TYPE: ALL
       DRY_RUN: true
     secrets: inherit
@@ -210,7 +215,7 @@ jobs:
     needs: [ prepare ]
     uses: ./.github/workflows/tag_image_push_rhel.yml
     with:
-      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
-      RELEASE_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
+      HZ_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       DRY_RUN: true
     secrets: inherit
