@@ -43,7 +43,7 @@ jobs:
           echo "HZ_VERSION_OSS=$HZ_VERSION_OSS" >> $GITHUB_OUTPUT
 
           source hazelcast-oss/maven.functions.sh
-          LAST_RELEASED_HZ_VERSION_OSS="$(get_latest_url_without_extension com.hazelcast hazelcast-distribution https://repo1.maven.org/maven2)".zip;
+          LAST_RELEASED_HZ_VERSION_OSS="$(get_latest_version com.hazelcast hazelcast-distribution https://repo1.maven.org/maven2)".zip;
           echo "LAST_RELEASED_HZ_VERSION_OSS=$LAST_RELEASED_HZ_VERSION_OSS" >> $GITHUB_OUTPUT
 
       - name: Setup EE variables
