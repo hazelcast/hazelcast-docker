@@ -212,3 +212,10 @@ jobs:
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
       RELEASE_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
       DRY_RUN: true
+
+  debug-vars:
+    runs-on: ubuntu-latest
+    needs: [ prepare ]
+    steps:
+      - run: |
+          echo "needs.prepare.outputs.HZ_VERSION_OSS is ${{ needs.prepare.outputs.HZ_VERSION_OSS }}"
