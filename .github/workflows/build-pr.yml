@@ -195,22 +195,20 @@ jobs:
             ${{ env.docker_log_file_ee }}
 
   test-push:
-    runs-on: ubuntu-latest
     name: Test pushing image (dry run)
     needs: [ prepare ]
-    steps:
-      - uses: actions/checkout@v4
+    uses: ./.github/workflows/tag_image_push.yml
+    with:
+      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
+      RELEASE_TYPE: ALL
+      DRY_RUN: true
 
-      - uses: ./.github/workflows/tag_image_push.yml
-        with:
-          HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
-          RELEASE_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
-          RELEASE_TYPE: ALL
-          DRY_RUN: true
-
-      - uses: ./.github/workflows/tag_image_push_rhel.yml
-        with:
-          HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
-          RELEASE_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
-          RELEASE_TYPE: ALL
-          DRY_RUN: true
+  test-push-rhel:
+    name: Test pushing image RHEL (dry run)
+    needs: [ prepare ]
+    uses: ./.github/workflows/tag_image_push_rhel.yml
+    with:
+      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
+      DRY_RUN: true
