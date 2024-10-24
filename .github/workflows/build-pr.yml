@@ -154,6 +154,7 @@ jobs:
           --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-oss:test \
           ${DOCKER_PATH}
+
       - name: Run smoke test against OSS image
         timeout-minutes: 2
         run: |
@@ -169,16 +170,19 @@ jobs:
           --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-ee:test \
           ${DOCKER_PATH}
+
       - name: Run smoke test against EE image
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
           .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ needs.prepare.outputs.HZ_VERSION_EE }}
+
       - name: Get docker logs
         if: ${{ always() }}
         run: |
           docker logs ${{ env.test_container_name_oss }} > ${{ env.docker_log_file_oss }}
           docker logs ${{ env.test_container_name_ee }} > ${{ env.docker_log_file_ee }}
+
       - name: Store docker logs as artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -187,6 +191,7 @@ jobs:
           path: |
             ${{ env.docker_log_file_oss }}
             ${{ env.docker_log_file_ee }}
+
   test-push:
     runs-on: ubuntu-latest
     name: Test pushing image (dry run)
