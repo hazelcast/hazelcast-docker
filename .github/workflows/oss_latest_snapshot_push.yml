@@ -36,7 +36,7 @@ jobs:
       HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
       HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
 
-      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
     steps:
       - name: Compute Suffix
         run: |
@@ -126,7 +126,7 @@ jobs:
           PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
+            --label hazelcast.revision=${{ inputs.HZ_REVISION }} \
             $TAGS_ARG \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification
