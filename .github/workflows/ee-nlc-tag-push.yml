@@ -32,7 +32,7 @@ jobs:
       NLC_REPO_TOKEN: ${{ secrets.NLC_REPO_TOKEN }}
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
-      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -100,7 +100,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-jdk${{ matrix.jdk }}
+          name: docker-logs-${{ github.job }}-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_EE }}
 
