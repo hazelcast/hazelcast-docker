@@ -81,6 +81,10 @@ jobs:
     steps:
       - name: Set HZ version as environment variable
         run: |
+          # TODO Delete
+          echo "env.HZ_VERSION is ${{ env.HZ_VERSION }}"
+          echo "inputs.HZ_VERSION is ${{ github.event.inputs.HZ_VERSION }}"
+
           if [ -z "${{ env.HZ_VERSION }}" ]; then
              HZ_VERSION=${GITHUB_REF:11}
           else
