@@ -87,7 +87,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Read release type from the file
-        if: github.event_name != 'workflow_dispatch'
+        if: github.event_name == 'push'
         run: |
           RELEASE_TYPE_FILE=.github/release_type
           if [ -f $RELEASE_TYPE_FILE ]; then
