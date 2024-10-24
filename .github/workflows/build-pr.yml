@@ -117,7 +117,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs
+          name: docker-logs-${{ github.job }}
           path: |
             ${{ env.docker_log_file_oss }}
             ${{ env.docker_log_file_ee }}
@@ -194,7 +194,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-jdk${{ matrix.jdk }}
+          name: docker-logs-${{ github.job }}-jdk${{ matrix.jdk }}
           path: |
             ${{ env.docker_log_file_oss }}
             ${{ env.docker_log_file_ee }}
