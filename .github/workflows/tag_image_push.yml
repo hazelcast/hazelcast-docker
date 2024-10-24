@@ -40,6 +40,31 @@ on:
         options:
           - 'false'
           - 'true'
+  workflow_call:
+    inputs:
+      HZ_VERSION:
+        type: string
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
+        required: true
+      RELEASE_VERSION:
+        type: string
+        description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
+        required: false
+      RELEASE_TYPE:
+        description: 'What should be built'
+        required: true
+        default: 'EE'
+        type: string
+      IS_LTS_OVERRIDE:
+        description: 'Override is LTS release'
+        required: false
+        type: string
+        default: ''
+      DRY_RUN:
+        description: 'Skip pushing the images to remote registry'
+        default: 'false'
+        type: string
+
 env:
   test_container_name_oss: hazelcast-oss-test
   test_container_name_ee: hazelcast-ee-test
@@ -231,14 +256,14 @@ jobs:
           done
           
           PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
-          if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
-            echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
-          else
+          if [ "${{ inputs.DRY_RUN }}" == "false" ] ; then
             docker buildx build --push \
               --build-arg JDK_VERSION=${{ matrix.jdk }} \
               --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
               ${TAGS_ARG} \
               --platform=${PLATFORMS} $DOCKER_DIR
+          else
+            echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
           fi
 
       - name: Check if latest EE LTS release
@@ -269,19 +294,19 @@ jobs:
           done
           
           PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
-          if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
-            echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
-          else
+          if [ "${{ inputs.DRY_RUN }}" == "false" ] ; then
             docker buildx build --push \
               --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
               --build-arg JDK_VERSION=${{ matrix.jdk }} \
               --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
               ${TAGS_ARG} \
               --platform=${PLATFORMS} $DOCKER_DIR
+          else
+            echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
           fi
 
       - name: Update Docker Hub Description
-        if: needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes'
+        if: inputs.DRY_RUN == 'false' && (needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes')
         uses: ./.github/actions/update-dockerhub-description
         with:
           docker_username: ${{ secrets.DOCKER_USERNAME }}

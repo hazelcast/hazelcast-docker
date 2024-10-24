@@ -24,6 +24,33 @@ on:
           - ''
           - 'false'
           - 'true'
+      DRY_RUN:
+        description: 'Skip pushing the images to remote registry'
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+  workflow_call:
+    inputs:
+      HZ_VERSION:
+        type: string
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
+        required: true
+      RELEASE_VERSION:
+        type: string
+        description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
+        required: false
+      IS_LTS_OVERRIDE:
+        description: 'Override is LTS release'
+        required: false
+        type: string
+        default: ''
+      DRY_RUN:
+        description: 'Skip pushing the images to remote registry'
+        default: 'false'
+        type: string
+
 jobs:
   jdks:
     uses: ./.github/workflows/get-supported-jdks.yaml
@@ -244,9 +271,13 @@ jobs:
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
 
-          publish_the_image "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
-          wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
-          sync_tags "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+          if [ "${{ inputs.DRY_RUN }}" == "false" ] ; then
+            publish_the_image "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+            wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
+            sync_tags "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+          else
+            echo "DRY RUN: Build and push ${VERSION} to ${RHEL_PROJECT_ID}"
+          fi
 
       - name: Slack notification
         uses: ./.github/actions/slack-notification
