@@ -34,7 +34,9 @@ function check_java_version() {
     local actual_major_version
     actual_major_version=$(docker run --rm "${image}" sh -c 'java -version 2>&1 | head -n 1 | awk -F "\"" "{print \$2}" | awk -F "." "{print \$1}"')
 
-    if [[ "${expected_major_version}" != "${actual_major_version}" ]]; then
+    if [[ "${expected_major_version}" == "${actual_major_version}" ]]; then
+      echo "Expected Java version (${expected_distribution_type}) identified."
+    else
       echoerr "Expected Java version '${expected_major_version}' but got '${actual_major_version}'"
       exit 1;
     fi
