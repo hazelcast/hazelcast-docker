@@ -31,7 +31,6 @@ function stop_container() {
 
 function check_java_version() {
     local expected_major_version=$1
-    echo "Checking Java version - expected ${expected_major_version}"
     local actual_major_version
     actual_major_version=$(docker run --rm "${image}" sh -c 'java -version 2>&1 | head -n 1 | awk -F "\"" "{print \$2}" | awk -F "." "{print \$1}"')
 
