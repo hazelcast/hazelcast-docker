@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -o errexit
-set -x
 
 # shellcheck source=../.github/scripts/abstract-simple-smoke-test.sh
 . .github/scripts/abstract-simple-smoke-test.sh
