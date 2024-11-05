@@ -85,8 +85,9 @@ jobs:
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
-        run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss
+        run: |          
+          . .github/scripts/docker.functions.sh
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ needs.prepare.outputs.HZ_VERSION_OSS }} "$(get_default_jdk hazelcast-oss)"
 
       - name: Build Test EE image
         run: |
@@ -102,8 +103,9 @@ jobs:
       - name: Run smoke test against EE image
         timeout-minutes: 2
         run: |
+          . .github/scripts/docker.functions.sh
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ needs.prepare.outputs.HZ_VERSION_EE }} "$(get_default_jdk hazelcast-enterprise)"
 
       - name: Get docker logs
         if: ${{ always() }}
@@ -165,7 +167,7 @@ jobs:
       - name: Run smoke test against OSS image
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ needs.prepare.outputs.HZ_VERSION_OSS }} ${{ matrix.jdk }}
 
       - name: Build Test EE image
         run: |
@@ -183,7 +185,7 @@ jobs:
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ needs.prepare.outputs.HZ_VERSION_EE }} ${{ matrix.jdk }}
 
       - name: Get docker logs
         if: ${{ always() }}
