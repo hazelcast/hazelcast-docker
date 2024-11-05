@@ -208,7 +208,11 @@ jobs:
       RELEASE_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       RELEASE_TYPE: ALL
       DRY_RUN: true
-    secrets: inherit
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
   test-push-rhel:
     name: Test pushing image RHEL (dry run)

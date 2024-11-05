@@ -64,6 +64,15 @@ on:
         description: 'Skip pushing the images to remote registry'
         default: 'false'
         type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      HZ_ENTERPRISE_LICENSE:
+        required: true
+      SLACK_WEBHOOK:
+        required: true
 
 env:
   test_container_name_oss: hazelcast-oss-test
@@ -175,6 +184,7 @@ jobs:
           aws-region: 'us-east-1'
 
       - name: Login to Docker Hub
+        if: inputs.DRY_RUN == 'false'
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Get OSS dist ZIP URL
