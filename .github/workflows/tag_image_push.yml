@@ -171,7 +171,7 @@ jobs:
         if: needs.prepare.outputs.should_build_oss == 'yes'
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ env.HZ_VERSION }}
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ env.HZ_VERSION }} ${{ matrix.jdk }}
 
       - name: Get EE dist ZIP URL
         if: needs.prepare.outputs.should_build_ee == 'yes'
@@ -195,7 +195,7 @@ jobs:
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ env.HZ_VERSION }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ env.HZ_VERSION }} ${{ matrix.jdk }}
 
       - name: Get docker logs
         if: ${{ always() }}
