@@ -88,21 +88,48 @@ function test_map_read_write() {
     fi
 }
 
-function install_clc() {
-  while ! curl https://hazelcast.com/clc/install.sh | bash
-    do
-      echo "Retrying clc installation..."
-      sleep 3
-    done
-  export PATH=${PATH}:${HOME}/.hazelcast/bin
-  clc config add default cluster.name=dev cluster.address=localhost
+function check_java_version() {
+    local expected_major_version=$1
+    local actual_major_version
+    actual_major_version=$(docker run --rm "${image}" sh -c 'java -version 2>&1 | head -n 1 | awk -F "\"" "{print \$2}" | awk -F "." "{print \$1}"')
+
+    if [[ "${expected_major_version}" == "${actual_major_version}" ]]; then
+      echo "Expected Java version (${expected_distribution_type}) identified."
+    else
+      echoerr "Expected Java version '${expected_major_version}' but got '${actual_major_version}'"
+      exit 1;
+    fi
 }
 
-# Prints the given message to stderr
-function echoerr() {
-  echo "ERROR - $*" 1>&2;
+function derive_expected_distribution_type() {
+  local input_distribution_type=$1
+
+  case "${input_distribution_type}" in
+    "oss")
+      echo "Hazelcast Platform"
+      ;;
+    "ee")
+      echo "Hazelcast Enterprise"
+      ;;
+    *)
+      echoerr "Unrecognized distribution type ${input_distribution_type}"
+      exit 1
+      ;;
+  esac
 }
 
+image=$1
+container_name=$2
+input_distribution_type=$3
+expected_version=$4
+expected_java_major_version=$5
 
-install_clc
-test_docker_image "$@"
+
+remove_container_if_exists
+start_container
+
+trap stop_container EXIT
+
+expected_distribution_type=$(derive_expected_distribution_type "${input_distribution_type}")
+test_package "${expected_distribution_type}" "${expected_version}"
+check_java_version "${expected_java_major_version}"
