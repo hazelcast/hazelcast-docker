@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -o errexit
+set -o errexit ${RUNNER_DEBUG:+-x}
 
 # shellcheck source=../.github/scripts/abstract-simple-smoke-test.sh
 . .github/scripts/abstract-simple-smoke-test.sh
