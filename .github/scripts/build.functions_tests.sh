@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu ${RUNNER_DEBUG:+-x}
+set -eu
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 

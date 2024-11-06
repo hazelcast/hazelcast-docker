@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail ${RUNNER_DEBUG:+-x}
+set -euo pipefail
 
 # Checks if we should build the OSS docker image.
 # Returns "yes" if we should build it or "no" if we shouldn't.

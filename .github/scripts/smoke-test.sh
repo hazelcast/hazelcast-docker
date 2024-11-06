@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e -o pipefail ${RUNNER_DEBUG:+-x}
+set -e
+set -o pipefail
 
 # Fill the variables before running the script
 WORKDIR=$1

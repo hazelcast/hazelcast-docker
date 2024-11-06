@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail ${RUNNER_DEBUG:+-x}
+set -euo pipefail
 
 function get_hz_dist_zip() {
   local hz_variant=$1

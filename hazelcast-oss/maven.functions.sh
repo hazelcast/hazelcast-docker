@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail ${RUNNER_DEBUG:+-x}
+set -euo pipefail
 
 # THIS FILE IS DUPLICATED AND MUST BE KEPT IN SYNC MANUALLY
 # Docker requires any included script to be in the current folder, hence we must duplicate this script for OS and EE
