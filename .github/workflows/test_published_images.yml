@@ -89,7 +89,7 @@ jobs:
           username: ${{ secrets.NLC_REPO_USERNAME }}
           password: ${{ secrets.NLC_REPO_TOKEN }}
 
-      - name: Login to OCP
+      - name: Login to Red Hat Catalog
         if: matrix.distribution_type == 'ee'
         uses: docker/login-action@v3
         with:
@@ -162,7 +162,7 @@ jobs:
               simple-smoke-test "${{ secrets.NLC_REPOSITORY }}/hazelcast_cloud" "hazelcast-nlc"
             fi
 
-            echo "Testing OCP"
+            echo "Testing Red Hat Catalog"
             simple-smoke-test "registry.connect.redhat.com/hazelcast" "${image_name}-${{ steps.version.outputs.major }}-rhel8"
           fi
 
