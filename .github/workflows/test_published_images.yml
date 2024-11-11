@@ -12,7 +12,7 @@ on:
       DISTRIBUTION_TYPE:
         required: true
         description: The distribution(s) to test - `oss`, `ee` or `all` (case-sensitive)
-      DEFAULT_JAVA_VERSION:
+      EXPECTED_DEFAULT_JAVA_VERSION:
         required: true
         description: The expected Java major version (e.g. `21`, `8`) used by default in the image
       OTHER_JDKS:
@@ -127,7 +127,7 @@ jobs:
             if [ -n "${{ matrix.jdk-image-variant }}" ]; then
               expected_jdk_version=${{ matrix.jdk-image-variant }}
             else
-              expected_jdk_version=${{ inputs.DEFAULT_JAVA_VERSION }}
+              expected_jdk_version=${{ inputs.EXPECTED_DEFAULT_JAVA_VERSION }}
             fi
 
             # Compute tag by concatenating tag_elements
