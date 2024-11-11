@@ -11,7 +11,7 @@ on:
         required: true
       DISTRIBUTION_TYPE:
         required: true
-        description: The type of distribution - `oss` or `ee` - supplied as a comma-separated list (e.g. `oss`, `ee`)
+        description: The distribution(s) to test - `oss`, `ee` or `all` (case-sensitive)
       DEFAULT_JAVA_VERSION:
         required: true
         description: The expected Java major version (e.g. `21`, `8`) used by default in the image
@@ -32,10 +32,24 @@ jobs:
       - name: Parse input into matrix
         id: set-matrix
         run: |
-          # https://unix.stackexchange.com/a/719752 + trim
-          matrix=$(echo '"${{ inputs.DISTRIBUTION_TYPE }}"' | jq --compact-output 'split(",") | map(gsub("^\\s+|\\s+$"; ""))' )
+          case "${{ inputs.DISTRIBUTION_TYPE }}" in
+            "oss")
+              matrix=["oss"]
+              ;;
+            "ee")
+              matrix=["ee"]
+              ;;
+            "all")
+              matrix=["oss","all"]
+              ;;
+            *)
+              echoerr "Unrecognized distribution type ${{ matrix.distribution_type }}"
+              exit 1
+              ;;
+          esac
           echo "distribution-type-matrix=$matrix" >> $GITHUB_OUTPUT
 
+          # https://unix.stackexchange.com/a/719752 + trim
           # Add an "empty" option for base image
           matrix=$(echo '"${{ inputs.OTHER_JDKS }}"' | jq --compact-output 'split(",") + [""] | map(gsub("^\\s+|\\s+$"; ""))' )
           echo "jdk-image-variants-matrix=$matrix" >> $GITHUB_OUTPUT
@@ -128,6 +142,7 @@ jobs:
               image_name="hazelcast-enterprise"
               ;;
             *)
+              # Impossible as validated earlier
               echoerr "Unrecognized distribution type ${{ matrix.distribution_type }}"
               exit 1
               ;;
