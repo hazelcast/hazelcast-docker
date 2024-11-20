@@ -39,13 +39,13 @@ jobs:
         run: |
           case "${{ inputs.DISTRIBUTION_TYPE }}" in
             "oss")
-              matrix=['oss']
+              matrix='["oss"]'
               ;;
             "ee")
-              matrix=['ee']
+              matrix='["ee"]'
               ;;
             "all")
-              matrix=['oss','ee']
+              matrix='["oss","ee"]'
               ;;
             *)
               echoerr "Unrecognized distribution type ${{ matrix.distribution_type }}"
