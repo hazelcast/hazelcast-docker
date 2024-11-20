@@ -35,8 +35,8 @@ jobs:
       SCAN_REGISTRY: "quay.io"
       TIMEOUT_IN_MINS: 60
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
-      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
       SCAN_REGISTRY_USER: ${{ secrets.SCAN_REGISTRY_USER_V5 }}
       SCAN_REGISTRY_PASSWORD: ${{ secrets.SCAN_REGISTRY_PASSWORD_V5 }}

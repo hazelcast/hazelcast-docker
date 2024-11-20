@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -eu
+set -eu ${RUNNER_DEBUG:+-x}
+
 function find_script_dir() {
   CURRENT=$PWD
 

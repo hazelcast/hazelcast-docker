@@ -17,6 +17,7 @@ jobs:
     outputs:
       HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.HZ_VERSION_OSS }}
       HZ_VERSION_EE: ${{ steps.get_ee_vars.outputs.HZ_VERSION_EE }}
+      LAST_RELEASED_HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       HAZELCAST_EE_ZIP_URL: ${{ steps.get_ee_vars.outputs.HAZELCAST_EE_ZIP_URL }}
     steps:
       - name: Checkout Code
@@ -40,6 +41,10 @@ jobs:
         run: |
           HZ_VERSION_OSS=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' hazelcast-oss/Dockerfile)
           echo "HZ_VERSION_OSS=$HZ_VERSION_OSS" >> $GITHUB_OUTPUT
+
+          source hazelcast-oss/maven.functions.sh
+          LAST_RELEASED_HZ_VERSION_OSS="$(get_latest_version com.hazelcast hazelcast-distribution https://repo1.maven.org/maven2)";
+          echo "LAST_RELEASED_HZ_VERSION_OSS=$LAST_RELEASED_HZ_VERSION_OSS" >> $GITHUB_OUTPUT
 
       - name: Setup EE variables
         id: get_ee_vars
@@ -82,8 +87,9 @@ jobs:
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
-        run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
+        run: |          
+          . .github/scripts/docker.functions.sh
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ needs.prepare.outputs.HZ_VERSION_OSS }} "$(get_default_jdk hazelcast-oss)"
 
       - name: Build Test EE image
         run: |
@@ -99,8 +105,9 @@ jobs:
       - name: Run smoke test against EE image
         timeout-minutes: 2
         run: |
+          . .github/scripts/docker.functions.sh
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ needs.prepare.outputs.HZ_VERSION_EE }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ needs.prepare.outputs.HZ_VERSION_EE }} "$(get_default_jdk hazelcast-enterprise)"
 
       - name: Get docker logs
         if: ${{ always() }}
@@ -112,7 +119,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs
+          name: docker-logs-${{ github.job }}
           path: |
             ${{ env.docker_log_file_oss }}
             ${{ env.docker_log_file_ee }}
@@ -159,7 +166,7 @@ jobs:
       - name: Run smoke test against OSS image
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ needs.prepare.outputs.HZ_VERSION_OSS }} ${{ matrix.jdk }}
 
       - name: Build Test EE image
         run: |
@@ -177,7 +184,7 @@ jobs:
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ needs.prepare.outputs.HZ_VERSION_EE }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ needs.prepare.outputs.HZ_VERSION_EE }} ${{ matrix.jdk }}
 
       - name: Get docker logs
         if: ${{ always() }}
@@ -189,8 +196,22 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-jdk${{ matrix.jdk }}
+          name: docker-logs-${{ github.job }}-jdk${{ matrix.jdk }}
           path: |
             ${{ env.docker_log_file_oss }}
             ${{ env.docker_log_file_ee }}
 
+  test-push:
+    name: Test pushing image (dry run)
+    needs: [ prepare ]
+    uses: ./.github/workflows/tag_image_push.yml
+    with:
+      HZ_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      RELEASE_TYPE: ALL
+      DRY_RUN: true
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
