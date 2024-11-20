@@ -170,7 +170,8 @@ jobs:
           fi
 
           echo "Testing Docker registry"
-          simple-smoke-test hazelcast "${image_name}"
+          organization=hazelcast
+          simple-smoke-test "${organization}" "${image_name}"
 
           # Check additional EE repos
           # Only populated for default variant, not "slim"
