@@ -188,6 +188,6 @@ jobs:
           fi
 
       - name: Get docker logs
-        if: ${{ failure() }}
+        if: always()
         run: |
           docker logs "${CONTAINER_NAME}"
