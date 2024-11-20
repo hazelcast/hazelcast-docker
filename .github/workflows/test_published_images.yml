@@ -52,12 +52,12 @@ jobs:
               exit 1
               ;;
           esac
-          matrix=$(jq '{distribution-type: .}' <<< "${matrix}")
+          matrix=$(jq '{"distribution-type": .}' <<< "${matrix}")
           echo "distribution-type-matrix=${matrix}" >> $GITHUB_OUTPUT
 
           # https://unix.stackexchange.com/a/719752 + trim
           # Add an "empty" option for base image
-          matrix=$(echo '"${{ inputs.OTHER_JDKS }}"' | jq --compact-output 'split(",") + [""] | map(gsub("^\\s+|\\s+$"; ""))' | jq '{jdk-image-variants: .}' )
+          matrix=$(echo '"${{ inputs.OTHER_JDKS }}"' | jq --compact-output 'split(",") + [""] | map(gsub("^\\s+|\\s+$"; ""))' | jq '{"jdk-image-variants": .}' )
           echo "jdk-image-variants-matrix=${matrix}" >> $GITHUB_OUTPUT
 
   test:
