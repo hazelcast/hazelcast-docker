@@ -83,5 +83,5 @@ function install_clc() {
 
 # Prints the given message to stderr
 function echoerr() {
-  echo "ERROR - $*" 1>&2;
+  echo "::error::ERROR - $*" 1>&2;
 }

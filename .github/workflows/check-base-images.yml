@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       MINIMAL_SUPPORTED_VERSION:
-        description: 'Minimal supported version from which we should start checking images, e.g. 5.1, 5.0.1, 4.2.3. Default values is 5.2'
+        description: 'Minimal supported version from which we should start checking images, e.g. 5.1, 5.0.1, 4.2.3. Default values is 5.3'
         required: false
   schedule:
     - cron: '0 6 * * *'
@@ -17,7 +17,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     env:
       MINIMAL_SUPPORTED_VERSION: ${{ github.event.inputs.MINIMAL_SUPPORTED_VERSION }}
-      DEFAULT_MINIMAL_SUPPORTED_VERSION: 5.2
+      DEFAULT_MINIMAL_SUPPORTED_VERSION: 5.3
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
