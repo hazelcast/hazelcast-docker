@@ -23,7 +23,6 @@ on:
           - ''
           - 'false'
           - 'true'
-
 jobs:
   jdks:
     uses: ./.github/workflows/get-supported-jdks.yaml
