@@ -75,7 +75,7 @@ jobs:
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${HZ_VERSION}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${HZ_VERSION} ${{ matrix.jdk }}
 
       - name: Get docker logs
         if: ${{ always() }}
