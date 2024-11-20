@@ -29,8 +29,6 @@ jobs:
           - variant: ''
     env:
       DOCKER_REGISTRY: ${{ secrets.HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY }}
-      DOCKER_USERNAME: ${{ secrets.JFROG_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
 
       # required by OSS get_hz_dist_zip function
       HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
@@ -101,7 +99,10 @@ jobs:
             ${{ env.DOCKER_LOG_FILE_OSS }}
 
       - name: Login to Docker Registry
-        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin $DOCKER_REGISTRY
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.JFROG_USERNAME }}
+          password: ${{ secrets.JFROG_PASSWORD }}
 
       - name: Build/Push OSS image
         run: |
