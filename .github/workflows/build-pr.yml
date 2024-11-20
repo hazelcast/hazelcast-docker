@@ -213,13 +213,3 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-
-  test-push-rhel:
-    name: Test pushing image RHEL (dry run)
-    needs: [ prepare ]
-    uses: ./.github/workflows/tag_image_push_rhel.yml
-    with:
-      HZ_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
-      RELEASE_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
-      DRY_RUN: true
-    secrets: inherit
