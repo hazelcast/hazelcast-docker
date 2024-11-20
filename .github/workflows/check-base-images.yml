@@ -16,7 +16,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     env:
-      MINIMAL_SUPPORTED_VERSION: ${{ github.event.inputs.MINIMAL_SUPPORTED_VERSION }}
+      MINIMAL_SUPPORTED_VERSION: ${{ inputs.MINIMAL_SUPPORTED_VERSION }}
       DEFAULT_MINIMAL_SUPPORTED_VERSION: 5.3
     steps:
       - name: Checkout Code
