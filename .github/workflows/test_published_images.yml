@@ -5,13 +5,13 @@ on:
     inputs:
       IMAGE_VERSION:
         required: true
-        description: A version, `5.4.1`, `latest` etc
+        description: The version/label of the image e.g. `5.4.1`, `latest` etc
       EXPECTED_HZ_VERSION:
-        description: A fully-qualified version, e.g. `5.4.1`
+        description: The expected Hazelcast version (fully-qualified), e.g. `5.4.1`
         required: true
       DISTRIBUTION_TYPE:
         required: true
-        description: The distribution(s) to test (case-sensitive)
+        description: The distribution(s) to test
         type: choice
         options:
           - oss
