@@ -57,7 +57,7 @@ jobs:
 
           # https://unix.stackexchange.com/a/719752 + trim
           # Add an "empty" option for base image
-          matrix=$(echo '"${{ inputs.OTHER_JDKS }}"' | jq --compact-output '{"jdk-image-variants": (split(",") + [""] | map(gsub("^\\s+|\\s+$"; "")))}' )
+          matrix=$(echo '"${{ inputs.OTHER_JDKS }}"' | jq --compact-output 'split(",") + [""] | map(gsub("^\\s+|\\s+$"; ""))' )
           echo "jdk-image-variants-matrix=${matrix}" >> $GITHUB_OUTPUT
 
   test:
