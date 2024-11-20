@@ -45,7 +45,7 @@ jobs:
               matrix=["ee"]
               ;;
             "all")
-              matrix=["oss","all"]
+              matrix=["oss","ee"]
               ;;
             *)
               echoerr "Unrecognized distribution type ${{ matrix.distribution_type }}"
