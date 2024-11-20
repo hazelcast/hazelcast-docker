@@ -1,0 +1,193 @@
+name: Test published images
+
+on:
+  workflow_dispatch:
+    inputs:
+      IMAGE_VERSION:
+        required: true
+        description: A version, `5.4.1`, `latest` etc
+      EXPECTED_HZ_VERSION:
+        description: A fully-qualified version, e.g. `5.4.1`
+        required: true
+      DISTRIBUTION_TYPE:
+        required: true
+        description: The distribution(s) to test (case-sensitive)
+        type: choice
+        options:
+          - oss
+          - ee
+          - all
+      EXPECTED_DEFAULT_JAVA_VERSION:
+        required: true
+        description: The expected Java major version (e.g. `21`, `8`) used by default in the image
+      OTHER_JDKS:
+        required: true
+        description: The other Java variant images to test (e.g. `5-jdk21`) - supplied as a comma-separated list of major Java versions (e.g. `8, 11, 17`)
+
+env:
+  CONTAINER_NAME: my-container
+
+jobs:
+  set-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      distribution-type-matrix: ${{ steps.set-matrix.outputs.distribution-type-matrix }}
+      jdk-image-variants-matrix: ${{ steps.set-matrix.outputs.jdk-image-variants-matrix }}
+    steps:
+      - name: Parse input into matrix
+        id: set-matrix
+        run: |
+          case "${{ inputs.DISTRIBUTION_TYPE }}" in
+            "oss")
+              matrix=["oss"]
+              ;;
+            "ee")
+              matrix=["ee"]
+              ;;
+            "all")
+              matrix=["oss","ee"]
+              ;;
+            *)
+              echoerr "Unrecognized distribution type ${{ matrix.distribution_type }}"
+              exit 1
+              ;;
+          esac
+          echo "distribution-type-matrix=$matrix" >> $GITHUB_OUTPUT
+
+          # https://unix.stackexchange.com/a/719752 + trim
+          # Add an "empty" option for base image
+          matrix=$(echo '"${{ inputs.OTHER_JDKS }}"' | jq --compact-output 'split(",") + [""] | map(gsub("^\\s+|\\s+$"; ""))' )
+          echo "jdk-image-variants-matrix=$matrix" >> $GITHUB_OUTPUT
+
+  test:
+    runs-on: ubuntu-latest
+    needs: set-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: 
+          - ''
+          - 'slim'
+        distribution_type: ${{ fromJson(needs.set-matrix.outputs.distribution-type-matrix) }}
+        jdk-image-variant: ${{ fromJson(needs.set-matrix.outputs.jdk-image-variants-matrix) }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - uses: madhead/semver-utils@latest
+        id: version
+        with:
+          version: ${{ inputs.IMAGE_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT,REDHAT/REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT
+          parse-json-secrets: true
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to NLC Repository
+        if: matrix.distribution_type == 'ee'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.NLC_REPOSITORY }}
+          username: ${{ secrets.NLC_REPO_USERNAME }}
+          password: ${{ secrets.NLC_REPO_TOKEN }}
+
+      - name: Login to Red Hat Catalog
+        if: matrix.distribution_type == 'ee'
+        uses: docker/login-action@v3
+        with:
+          registry: registry.connect.redhat.com
+          username: ${{ env.REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT_USERNAME }}
+          password: ${{ env.REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT_PASSWORD }}
+
+      - name: Run smoke test against image
+        timeout-minutes: 10
+        run: |
+          set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
+
+          # shellcheck source=../.github/scripts/abstract-simple-smoke-test.sh
+          . .github/scripts/abstract-simple-smoke-test.sh
+
+          function simple-smoke-test() {
+            local organization=$1
+            local image_name=$2
+
+            local expected_jdk_version
+            if [ -n "${{ matrix.jdk-image-variant }}" ]; then
+              expected_jdk_version=${{ matrix.jdk-image-variant }}
+            else
+              expected_jdk_version=${{ inputs.EXPECTED_DEFAULT_JAVA_VERSION }}
+            fi
+
+            # Compute tag by concatenating tag_elements
+            .github/scripts/simple-smoke-test.sh "${organization}/${image_name}":$(IFS=- ; echo "${tag_elements[*]}") "${CONTAINER_NAME}" "${{ matrix.distribution_type }}" "${{ inputs.EXPECTED_HZ_VERSION }}" "${expected_jdk_version}"
+          }
+
+          case "${{ matrix.distribution_type }}" in
+            "oss")
+              image_name="hazelcast"
+              ;;
+            "ee")
+              image_name="hazelcast-enterprise"
+              ;;
+            *)
+              # Impossible as validated earlier
+              echoerr "Unrecognized distribution type ${{ matrix.distribution_type }}"
+              exit 1
+              ;;
+          esac
+
+          if [[ "${{ matrix.distribution_type }}" == "ee" ]]; then
+            export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
+            export HZ_INSTANCETRACKING_FILENAME=instance-tracking.txt
+          fi
+
+          # To allow computing the required tag, store the elements in an array
+          tag_elements=("${{ inputs.IMAGE_VERSION }}")
+
+          if [[ -n "${{ matrix.variant }}" ]]; then
+            tag_elements+=("${{ matrix.variant }}")
+          fi
+
+          if [[ -n "${{ matrix.jdk-image-variant }}" ]]; then
+            tag_elements+=("jdk${{ matrix.jdk-image-variant }}")
+          fi
+
+          echo "Testing Docker registry"
+          organization=hazelcast
+          simple-smoke-test "${organization}" "${image_name}"
+
+          # Check additional EE repos
+          # Only populated for default variant, not "slim"
+          if [[ "${{ matrix.distribution_type }}" == "ee" && -z "${{ matrix.variant }}" ]]; then
+            # NLC repo only populated for absolute versions - not "latest", "latest-lts" etc tags
+            # Identify absolute version based on earlier parsing of version number
+            if [[ -n "${{ steps.version.outputs.major }}" ]]; then
+              echo "Testing NLC"
+              simple-smoke-test "${{ secrets.NLC_REPOSITORY }}/hazelcast_cloud" "hazelcast-nlc"
+            fi
+
+            echo "Testing Red Hat Catalog"
+            simple-smoke-test "registry.connect.redhat.com/hazelcast" "${image_name}-${{ steps.version.outputs.major }}-rhel8"
+          fi
+
+      - name: Get docker logs
+        if: always()
+        run: |
+          docker logs "${CONTAINER_NAME}"
