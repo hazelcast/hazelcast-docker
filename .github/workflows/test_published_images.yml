@@ -48,16 +48,16 @@ jobs:
               matrix='["oss","ee"]'
               ;;
             *)
-              echoerr "Unrecognized distribution type ${{ matrix.distribution_type }}"
+              echoerr "Unrecognized distribution type ${{ inputs.DISTRIBUTION_TYPE }}"
               exit 1
               ;;
           esac
-          matrix=$(jq  --compact-output '{"distribution-type": .}' <<< "${matrix}")
+          matrix=$(jq --compact-output '{"distribution-type": .}' <<< "${matrix}")
           echo "distribution-type-matrix=${matrix}" >> $GITHUB_OUTPUT
 
           # https://unix.stackexchange.com/a/719752 + trim
           # Add an "empty" option for base image
-          matrix=$(echo '"${{ inputs.OTHER_JDKS }}"' | jq --compact-output 'split(",") + [""] | map(gsub("^\\s+|\\s+$"; ""))' | jq --compact-output '{"jdk-image-variants": .}' )
+          matrix=$(echo '"${{ inputs.OTHER_JDKS }}"' | jq --compact-output '{"jdk-image-variants": (split(",") + [""] | map(gsub("^\\s+|\\s+$"; "")))}' )
           echo "jdk-image-variants-matrix=${matrix}" >> $GITHUB_OUTPUT
 
   test:
@@ -70,7 +70,7 @@ jobs:
           - ''
           - 'slim'
         jdk-image-variant: ${{ fromJson(needs.set-matrix.outputs.jdk-image-variants-matrix) }}
-        distribution_type: ${{ fromJson(needs.set-matrix.outputs.distribution-type-matrix) }}
+        distribution-type: ${{ fromJson(needs.set-matrix.outputs.distribution-type-matrix) }}
 
     steps:
       - name: Checkout Code
@@ -102,7 +102,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Login to NLC Repository
-        if: matrix.distribution_type == 'ee'
+        if: matrix.distribution-type == 'ee'
         uses: docker/login-action@v3
         with:
           registry: ${{ secrets.NLC_REPOSITORY }}
@@ -110,7 +110,7 @@ jobs:
           password: ${{ secrets.NLC_REPO_TOKEN }}
 
       - name: Login to Red Hat Catalog
-        if: matrix.distribution_type == 'ee'
+        if: matrix.distribution-type == 'ee'
         uses: docker/login-action@v3
         with:
           registry: registry.connect.redhat.com
@@ -137,10 +137,10 @@ jobs:
             fi
 
             # Compute tag by concatenating tag_elements
-            .github/scripts/simple-smoke-test.sh "${organization}/${image_name}":$(IFS=- ; echo "${tag_elements[*]}") "${CONTAINER_NAME}" "${{ matrix.distribution_type }}" "${{ inputs.EXPECTED_HZ_VERSION }}" "${expected_jdk_version}"
+            .github/scripts/simple-smoke-test.sh "${organization}/${image_name}":$(IFS=- ; echo "${tag_elements[*]}") "${CONTAINER_NAME}" "${{ matrix.distribution-type }}" "${{ inputs.EXPECTED_HZ_VERSION }}" "${expected_jdk_version}"
           }
 
-          case "${{ matrix.distribution_type }}" in
+          case "${{ matrix.distribution-type }}" in
             "oss")
               image_name="hazelcast"
               ;;
@@ -149,12 +149,12 @@ jobs:
               ;;
             *)
               # Impossible as validated earlier
-              echoerr "Unrecognized distribution type ${{ matrix.distribution_type }}"
+              echoerr "Unrecognized distribution type ${{ matrix.distribution-type }}"
               exit 1
               ;;
           esac
 
-          if [[ "${{ matrix.distribution_type }}" == "ee" ]]; then
+          if [[ "${{ matrix.distribution-type }}" == "ee" ]]; then
             export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
             export HZ_INSTANCETRACKING_FILENAME=instance-tracking.txt
           fi
@@ -176,7 +176,7 @@ jobs:
 
           # Check additional EE repos
           # Only populated for default variant, not "slim"
-          if [[ "${{ matrix.distribution_type }}" == "ee" && -z "${{ matrix.variant }}" ]]; then
+          if [[ "${{ matrix.distribution-type }}" == "ee" && -z "${{ matrix.variant }}" ]]; then
             # NLC repo only populated for absolute versions - not "latest", "latest-lts" etc tags
             # Identify absolute version based on earlier parsing of version number
             if [[ -n "${{ steps.version.outputs.major }}" ]]; then
