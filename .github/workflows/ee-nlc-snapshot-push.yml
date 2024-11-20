@@ -24,7 +24,7 @@ jobs:
       matrix:
         jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
     env:
-      HZ_VERSION : ${{ github.event.inputs.HZ_VERSION }}
+      HZ_VERSION : ${{ inputs.HZ_VERSION }}
       NLC_REPOSITORY: ${{ secrets.NLC_REPOSITORY }}
       NLC_REPO_USERNAME: ${{ secrets.NLC_REPO_USERNAME }}
       NLC_REPO_TOKEN: ${{ secrets.NLC_REPO_TOKEN }}
@@ -66,7 +66,7 @@ jobs:
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
+            --label hazelcast.ee.revision=${{ inputs.HZ_EE_REVISION }} \
             --tag hazelcast-nlc:test hazelcast-enterprise
 
       - name: Run smoke test against EE image
@@ -86,7 +86,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-jdk${{ matrix.jdk }}
+          name: docker-logs-${{ github.job }}-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_EE }}
 
@@ -112,7 +112,7 @@ jobs:
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
-            --label hazelcast.ee.revision=${{ github.event.inputs.HZ_EE_REVISION }} \
+            --label hazelcast.ee.revision=${{ inputs.HZ_EE_REVISION }} \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification
