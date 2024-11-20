@@ -52,8 +52,7 @@ jobs:
               exit 1
               ;;
           esac
-          matrix=$(jq --compact-output '{"distribution-type": .}' <<< "${matrix}")
-          echo "distribution-type-matrix=$matrix" >> $GITHUB_OUTPUT
+          echo "distribution-type-matrix=${matrix}" >> $GITHUB_OUTPUT
 
           # https://unix.stackexchange.com/a/719752 + trim
           # Add an "empty" option for base image
