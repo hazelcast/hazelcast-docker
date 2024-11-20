@@ -53,7 +53,7 @@ jobs:
               ;;
           esac
           matrix=$(jq --compact-output '{"distribution-type": .}' <<< "${matrix}")
-          echo "distribution-type-matrix=${matrix}" >> $GITHUB_OUTPUT
+          echo "distribution-type-matrix=$matrix" >> $GITHUB_OUTPUT
 
           # https://unix.stackexchange.com/a/719752 + trim
           # Add an "empty" option for base image
@@ -69,8 +69,8 @@ jobs:
         variant: 
           - ''
           - 'slim'
-        jdk-image-variant: ${{ fromJson(needs.set-matrix.outputs.jdk-image-variants-matrix) }}
         distribution-type: ${{ fromJson(needs.set-matrix.outputs.distribution-type-matrix) }}
+        jdk-image-variant: ${{ fromJson(needs.set-matrix.outputs.jdk-image-variants-matrix) }}
 
     steps:
       - name: Checkout Code
