@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# This script finds and deletes orphaned docker layers that were skipped by flawed tag retention logic in Artifactory.
+#
+# It's a workaround for a bug in JFrog artifactory that leaves untagged images in the storage despite Tag retention set to 1
+#
+# More details:
+# - support.jfrog.com/s/tickets/500Tc00000Er7WN/digestbased-docker-images-are-not-deleted-when-removing-tags-that-reference-them
+# - jfrog.atlassian.net/browse/RTFACT-30850
+
 set -euo pipefail
 
 BASE_URL="https://repository.hazelcast.com"
