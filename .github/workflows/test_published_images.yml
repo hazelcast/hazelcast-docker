@@ -11,7 +11,12 @@ on:
         required: true
       DISTRIBUTION_TYPE:
         required: true
-        description: The distribution(s) to test - `oss`, `ee` or `all` (case-sensitive)
+        description: The distribution(s) to test (case-sensitive)
+        type: choice
+        options:
+          - oss
+          - ee
+          - all
       EXPECTED_DEFAULT_JAVA_VERSION:
         required: true
         description: The expected Java major version (e.g. `21`, `8`) used by default in the image
