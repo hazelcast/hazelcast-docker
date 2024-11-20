@@ -68,8 +68,8 @@ jobs:
         variant: 
           - ''
           - 'slim'
-        distribution_type: ${{ fromJson(needs.set-matrix.outputs.distribution-type-matrix) }}
         jdk-image-variant: ${{ fromJson(needs.set-matrix.outputs.jdk-image-variants-matrix) }}
+        distribution_type: ${{ fromJson(needs.set-matrix.outputs.distribution-type-matrix) }}
 
     steps:
       - name: Checkout Code
