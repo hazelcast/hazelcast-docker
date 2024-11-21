@@ -131,10 +131,6 @@ jobs:
           username: ${{ env.SCAN_REGISTRY_USER }}
           password: ${{ env.SCAN_REGISTRY_PASSWORD }}
 
-      - name: Log in to Red Hat Scan Registry
-        run: |
-          docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
-
       - name: Build the Hazelcast Enterprise image
         run: |
           . .github/scripts/get-tags-to-push.sh 
