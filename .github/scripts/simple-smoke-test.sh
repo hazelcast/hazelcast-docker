@@ -59,6 +59,11 @@ function install_clc() {
   clc config add default cluster.name=dev cluster.address=localhost
 }
 
+function start_container() {
+    echo "Starting container '${container_name}' from image '${image}'"
+    docker run -it --name "${container_name}" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "${image}"
+}
+
 function get_hz_logs() {
     docker logs "${container_name}"
 }
