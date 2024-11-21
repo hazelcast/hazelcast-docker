@@ -76,9 +76,14 @@ jobs:
         uses: actions/checkout@v4
 
       - uses: madhead/semver-utils@latest
-        id: version
+        id: image-version
         with:
           version: ${{ inputs.IMAGE_VERSION }}
+
+      - uses: madhead/semver-utils@latest
+        id: expected-hz-version
+        with:
+          version: ${{ inputs.EXPECTED_HZ_VERSION }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -178,13 +183,13 @@ jobs:
           if [[ "${{ matrix.distribution-type }}" == "ee" && -z "${{ matrix.variant }}" ]]; then
             # NLC repo only populated for absolute versions - not "latest", "latest-lts" etc tags
             # Identify absolute version based on earlier parsing of version number
-            if [[ -n "${{ steps.version.outputs.major }}" ]]; then
+            if [[ -n "${{ steps.image-version.outputs.major }}" ]]; then
               echo "Testing NLC"
               simple-smoke-test "${{ secrets.NLC_REPOSITORY }}/hazelcast_cloud" "hazelcast-nlc"
             fi
 
             echo "Testing Red Hat Catalog"
-            simple-smoke-test "registry.connect.redhat.com/hazelcast" "${image_name}-${{ steps.version.outputs.major }}-rhel8"
+            simple-smoke-test "registry.connect.redhat.com/hazelcast" "${image_name}-${{ steps.expected-hz-version.outputs.major }}-rhel8"
           fi
 
       - name: Get docker logs
