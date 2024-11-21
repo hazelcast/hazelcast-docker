@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       MINIMAL_SUPPORTED_VERSION:
-        description: 'Minimal supported version from which we should start checking images, e.g. 5.1, 5.0.1, 4.2.3. Default values is 5.2'
+        description: 'Minimal supported version from which we should start checking images, e.g. 5.1, 5.0.1, 4.2.3. Default values is 5.3'
         required: false
   schedule:
     - cron: '0 6 * * *'
@@ -16,8 +16,8 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     env:
-      MINIMAL_SUPPORTED_VERSION: ${{ github.event.inputs.MINIMAL_SUPPORTED_VERSION }}
-      DEFAULT_MINIMAL_SUPPORTED_VERSION: 5.2
+      MINIMAL_SUPPORTED_VERSION: ${{ inputs.MINIMAL_SUPPORTED_VERSION }}
+      DEFAULT_MINIMAL_SUPPORTED_VERSION: 5.3
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -43,9 +43,6 @@ jobs:
     name: Rebuild ${{ matrix.version }} if base image changed
     needs: get-latest-patch-versions
     env:
-      NLC_REPOSITORY: ${{ secrets.NLC_REPOSITORY }}
-      NLC_REPO_USERNAME: ${{ secrets.NLC_REPO_USERNAME }}
-      NLC_REPO_TOKEN: ${{ secrets.NLC_REPO_TOKEN }}
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
     strategy:
       fail-fast: false
@@ -60,7 +57,11 @@ jobs:
           path: v${{ matrix.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Login to NLC Docker Repository
-        run: echo "${NLC_REPO_TOKEN}" | docker login -u ${NLC_REPO_USERNAME} ${NLC_REPOSITORY} --password-stdin
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.NLC_REPOSITORY }}
+          username: ${{ secrets.NLC_REPO_USERNAME }}
+          password: ${{ secrets.NLC_REPO_TOKEN }}
       - name: Check if ${{ matrix.version }} base images updated
         run: |
           . .github/scripts/base-image-updated.sh

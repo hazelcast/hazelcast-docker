@@ -29,14 +29,12 @@ jobs:
           - variant: ''
     env:
       DOCKER_REGISTRY: ${{ secrets.HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY }}
-      DOCKER_USERNAME: ${{ secrets.JFROG_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
 
       # required by OSS get_hz_dist_zip function
       HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
       HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
 
-      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
     steps:
       - name: Compute Suffix
         run: |
@@ -83,7 +81,7 @@ jobs:
       - name: Run smoke test against OSS image
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${HZ_VERSION}
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${HZ_VERSION} ${{ matrix.jdk }}
 
       - name: Get docker logs
         if: ${{ always() }}
@@ -96,12 +94,16 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs${{ env.SUFFIX }}-jdk${{ matrix.jdk }}
+          name: docker-logs${{ env.SUFFIX }}-${{ github.job }}-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_OSS }}
 
       - name: Login to Docker Registry
-        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin $DOCKER_REGISTRY
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ secrets.JFROG_USERNAME }}
+          password: ${{ secrets.JFROG_PASSWORD }}
 
       - name: Build/Push OSS image
         run: |
@@ -126,7 +128,7 @@ jobs:
           PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --label hazelcast.revision=${{ github.event.inputs.HZ_REVISION }} \
+            --label hazelcast.revision=${{ inputs.HZ_REVISION }} \
             $TAGS_ARG \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -o errexit -o nounset -o pipefail
+set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
 # Performs simple validation tests on an already-running Hazelcast instance
 # Abstract as could be from Docker, Homebrew, local binary etc
@@ -83,5 +83,5 @@ function install_clc() {
 
 # Prints the given message to stderr
 function echoerr() {
-  echo "ERROR - $*" 1>&2;
+  echo "::error::ERROR - $*" 1>&2;
 }
