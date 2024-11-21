@@ -27,10 +27,6 @@ jobs:
       REQUIRED_HZ_MAJOR_VERSION: 5
       SCAN_REGISTRY: "quay.io"
       TIMEOUT_IN_MINS: 60
-      HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
-      OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
-      OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
-      OCP_CLUSTER_URL: ${{ secrets.OCP_CLUSTER_URL }}
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
@@ -120,6 +116,21 @@ jobs:
       - name: Install xmllint
         uses: ./.github/actions/install-xmllint
 
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            OCP_LOGIN_USERNAME,CN/OCP_USERNAME
+            OCP_LOGIN_PASSWORD,CN/OCP_PASSWORD
+            OCP_CLUSTER_URL,CN/OCP_CLUSTER_URL
+
+      - name: Log in to Red Hat Scan Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.SCAN_REGISTRY }}
+          username: ${{ env.SCAN_REGISTRY_USER }}
+          password: ${{ env.SCAN_REGISTRY_PASSWORD }}
+
       - name: Log in to Red Hat Scan Registry
         run: |
           docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
@@ -190,6 +201,7 @@ jobs:
 
         env:
           CLUSTER_SIZE: 3
+          HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
 
       - name: Validate Cluster Size
         run: |
