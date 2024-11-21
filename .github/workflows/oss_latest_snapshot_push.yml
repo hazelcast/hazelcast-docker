@@ -101,6 +101,7 @@ jobs:
       - name: Login to Docker Registry
         uses: docker/login-action@v3
         with:
+          registry: ${{ env.DOCKER_REGISTRY }}
           username: ${{ secrets.JFROG_USERNAME }}
           password: ${{ secrets.JFROG_PASSWORD }}
 
