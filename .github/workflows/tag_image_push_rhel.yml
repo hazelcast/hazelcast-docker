@@ -125,11 +125,8 @@ jobs:
             OCP_CLUSTER_URL,CN/OCP_CLUSTER_URL
 
       - name: Log in to Red Hat Scan Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.SCAN_REGISTRY }}
-          username: ${{ env.SCAN_REGISTRY_USER }}
-          password: ${{ env.SCAN_REGISTRY_PASSWORD }}
+        run: |
+          docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
 
       - name: Build the Hazelcast Enterprise image
         run: |
