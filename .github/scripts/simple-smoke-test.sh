@@ -59,6 +59,16 @@ function install_clc() {
   clc config add default cluster.name=dev cluster.address=localhost
 }
 
+function remove_container_if_exists() {
+    local containers
+    containers=$(docker ps --all --quiet --filter name="${container_name}")
+
+    if [[ -n "${containers}" ]]; then
+      echo "Removing existing '${container_name}' container"
+      docker container rm --force "${container_name}"
+    fi
+}
+
 function start_container() {
     echo "Starting container '${container_name}' from image '${image}'"
     docker run -it --name "${container_name}" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "${image}"
