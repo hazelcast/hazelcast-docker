@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
-set -e
-set -o pipefail
+set -o errexit ${RUNNER_DEBUG:+-x}
+
+# shellcheck source=../.github/scripts/abstract-simple-smoke-test.sh
+. .github/scripts/abstract-simple-smoke-test.sh
 
 function remove_container_if_exists() {
     local containers
