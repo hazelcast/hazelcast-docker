@@ -17,6 +17,7 @@ on:
       RELEASE_TYPE:
         description: 'What should be built'
         required: true
+        default: 'EE'
         type: choice
         options:
           - ALL
