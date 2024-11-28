@@ -67,26 +67,6 @@ jobs:
           fi
           echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
 
-      - name: Checkout to Management Center Openshift
-        uses: actions/checkout@v4
-        with:
-          repository: hazelcast/management-center-openshift
-          path: management-center-openshift
-          fetch-depth: 0
-
-      - uses: madhead/semver-utils@latest
-        id: version
-        with:
-          version: ${{ inputs.HZ_VERSION }}
-
-      - name: Set Management Center Version to be used in the tests
-        working-directory: management-center-openshift
-        run: |
-          FILTERED_TAGS=$(git tag --list "v${{ steps.version.outputs.major }}*" |  grep -E -v '.*(BETA|-).*' )
-          LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
-          echo $LATEST_TAG
-          echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
-
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
@@ -181,6 +161,10 @@ jobs:
           source .github/scripts/publish-rhel.sh
 
           wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
+
+      - name: Set MC version
+        run: |
+          echo "HZ_MC_VERSION=$(echo "${{ inputs.HZ_VERSION }}" | cut -d '.' -f 1,2)" >> $GITHUB_ENV
 
       - name: Deploy Hazelcast Cluster
         run: |
