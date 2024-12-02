@@ -2,9 +2,6 @@
 
 set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
-# shellcheck source=../.github/scripts/abstract-simple-smoke-test.sh
-. .github/scripts/abstract-simple-smoke-test.sh
-
 get_image()
 {
     local PUBLISHED=$1
@@ -207,4 +204,9 @@ wait_for_container_publish()
             return 42
         fi
     done
+}
+
+# Prints the given message to stderr
+function echoerr() {
+  echo "::error::ERROR - $*" 1>&2;
 }
