@@ -37,7 +37,7 @@ jobs:
       - name: Parse input into matrix
         id: set-matrix
         run: |
-          . .github/scripts/workflow-commands.functions.sh
+          . .github/scripts/logging.functions.sh
 
           case "${{ inputs.DISTRIBUTION_TYPE }}" in
             "oss")
@@ -128,8 +128,8 @@ jobs:
         run: |
           set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
-          # shellcheck source=../.github/scripts/workflow-commands.functions.sh
-          . .github/scripts/workflow-commands.functions.sh
+          # shellcheck source=../.github/scripts/logging.functions.sh
+          . .github/scripts/logging.functions.sh
 
           function simple-smoke-test() {
             local organization=$1

@@ -2,8 +2,8 @@
 
 set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
-# shellcheck source=../.github/scripts/workflow-commands.functions.sh
-. .github/scripts/workflow-commands.functions.sh
+# shellcheck source=../.github/scripts/logging.functions.sh
+. .github/scripts/logging.functions.sh
 
 get_image()
 {
