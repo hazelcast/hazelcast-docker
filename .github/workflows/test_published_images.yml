@@ -37,6 +37,7 @@ jobs:
       - name: Parse input into matrix
         id: set-matrix
         run: |
+          # shellcheck source=../.github/scripts/logging.functions.sh
           . .github/scripts/logging.functions.sh
 
           case "${{ inputs.DISTRIBUTION_TYPE }}" in
