@@ -2,6 +2,9 @@
 
 set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
+# shellcheck source=../.github/scripts/logging.functions.sh
+. .github/scripts/logging.functions.sh
+
 get_image()
 {
     local PUBLISHED=$1
@@ -204,9 +207,4 @@ wait_for_container_publish()
             return 42
         fi
     done
-}
-
-# Prints the given message to stderr
-function echoerr() {
-  echo "::error::ERROR - $*" 1>&2;
 }
