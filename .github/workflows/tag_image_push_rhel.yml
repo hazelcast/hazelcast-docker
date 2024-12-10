@@ -6,10 +6,11 @@ on:
       - "!*"
     tags:
       - "v5.*"
+      - "v6.*"
   workflow_dispatch:
     inputs:
       HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
         required: true
       RELEASE_VERSION:
         description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
@@ -38,9 +39,6 @@ jobs:
       HZ_VERSION: ${{ inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
-      SCAN_REGISTRY_USER: ${{ secrets.SCAN_REGISTRY_USER_V5 }}
-      SCAN_REGISTRY_PASSWORD: ${{ secrets.SCAN_REGISTRY_PASSWORD_V5 }}
-      RHEL_PROJECT_ID: ${{ secrets.RHEL_PROJECT_ID_V5 }}
 
     runs-on: ubuntu-latest
     needs: jdks
@@ -86,6 +84,11 @@ jobs:
         with:
           version: v0.5.1
 
+      - uses: madhead/semver-utils@latest
+        id: version
+        with:
+          version: ${{ inputs.HZ_VERSION }}
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -100,6 +103,12 @@ jobs:
             OCP_LOGIN_USERNAME,CN/OCP_USERNAME
             OCP_LOGIN_PASSWORD,CN/OCP_PASSWORD
             OCP_CLUSTER_URL,CN/OCP_CLUSTER_URL
+
+      - name: Set scan registry secrets
+        run: |
+          echo "SCAN_REGISTRY_USER=${{ secrets[format('SCAN_REGISTRY_USER_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
+          echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
+          echo "RHEL_PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
 
       - name: Log in to Red Hat Scan Registry
         uses: docker/login-action@v3
