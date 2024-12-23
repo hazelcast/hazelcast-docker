@@ -25,7 +25,7 @@ get_image()
     esac
 
     local FILTER="filter=deleted==false;${PUBLISHED_FILTER};repositories.tags=em=(name=='${VERSION}')"
-    local INCLUDE="include=total,data.repositories.tags.name,data.certified,data.container_grades,data._id,data.creation_date"
+    local INCLUDE="include=total,data.repositories,data.certified,data.container_grades,data._id,data.creation_date"
     local SORT_BY='sort_by=creation_date\[desc\]'
 
     local RESPONSE
@@ -189,14 +189,21 @@ wait_for_container_publish()
         local IMAGE
         local IS_PUBLISHED
 
-        IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
-        IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
+        IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+        AWAITING_PUBLISH=$(echo "${IMAGE}" | jq -r '.total')
 
-        if [[ ${IS_PUBLISHED} == "1" ]]; then
+        if [[ ${AWAITING_PUBLISH} == "0" ]]; then
             echo "Image is published, exiting."
             return 0
         else
             echo "Image is still not published, waiting..."
+
+            echo "${IMAGE}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
+                curl --silent \
+                    --request GET \
+                    --header "X-API-KEY: ${RHEL_API_KEY}" \
+                    "https://catalog.redhat.com/api/containers/${TEST_RESULTS_ENDPOINT}"
+            done
         fi
 
         sleep 30
