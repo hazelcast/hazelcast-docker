@@ -197,13 +197,6 @@ wait_for_container_publish()
             return 0
         else
             echo "Image is still not published, waiting..."
-
-            get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
-                curl --silent \
-                    --request GET \
-                    --header "X-API-KEY: ${RHEL_API_KEY}" \
-                    "https://catalog.redhat.com/api/containers/${TEST_RESULTS_ENDPOINT}"
-            done
         fi
 
         sleep 30
@@ -211,6 +204,17 @@ wait_for_container_publish()
         if [[ ${i} == "${NOF_RETRIES}" ]]; then
             echoerr "Timeout! Publish could not be finished"
             echoerr "${IMAGE}"
+
+            # Add additional logging context if possible
+            get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
+                local TEST_RESULTS
+                TEST_RESULTS=$(curl --silent \
+                    --request GET \
+                    --header "X-API-KEY: ${RHEL_API_KEY}" \
+                    "https://catalog.redhat.com/api/containers/${TEST_RESULTS_ENDPOINT}")
+                echoerr "${TEST_RESULTS}"
+            done
+
             return 42
         fi
     done
