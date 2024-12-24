@@ -203,9 +203,11 @@ wait_for_container_publish()
 
         if [[ ${i} == "${NOF_RETRIES}" ]]; then
             echoerr "Timeout! Publish could not be finished"
+            echoerr "Image Status:"
             echoerr "${IMAGE}"
 
             # Add additional logging context if possible
+            echoerr "Test Results:"
             get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
                 local TEST_RESULTS
                 TEST_RESULTS=$(curl --silent \
