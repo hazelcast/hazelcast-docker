@@ -189,16 +189,16 @@ wait_for_container_publish()
         local IMAGE
         local IS_PUBLISHED
 
-        IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
-        AWAITING_PUBLISH=$(echo "${IMAGE}" | jq -r '.total')
+        IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+        IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
 
-        if [[ ${AWAITING_PUBLISH} == "0" ]]; then
+        if [[ ${IS_PUBLISHED} == "1" ]]; then
             echo "Image is published, exiting."
             return 0
         else
             echo "Image is still not published, waiting..."
 
-            echo "${IMAGE}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
+            get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
                 curl --silent \
                     --request GET \
                     --header "X-API-KEY: ${RHEL_API_KEY}" \
