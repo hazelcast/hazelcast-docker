@@ -87,7 +87,7 @@ jobs:
       - uses: madhead/semver-utils@latest
         id: version
         with:
-          version: ${{ inputs.HZ_VERSION }}
+          version: ${{ env.HZ_VERSION }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
