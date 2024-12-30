@@ -5,6 +5,11 @@ function get_default_jdk() {
   awk -F= '/^ARG JDK_VERSION=/{print $2}' "$DIR/Dockerfile" | tr -d '"'
 }
 
+function get_hz_version() {
+  local DIR=$1
+  awk -F= '/^ARG HZ_VERSION=/{print $2}' "$DIR/Dockerfile" | tr -d '"'
+}
+
 function get_alpine_supported_platforms() {
   local JDK=$1
   local PLATFORMS="linux/arm64,linux/amd64,linux/s390x"
