@@ -29,6 +29,7 @@ get_image()
     local SORT_BY='sort_by=creation_date\[desc\]'
 
     local RESPONSE
+    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetImagesForCertProjectById.html
     RESPONSE=$( \
         curl --silent \
              --request GET \
@@ -126,6 +127,7 @@ publish_the_image()
     IMAGE_ID=$(echo "${IMAGE}" | jq -r '.data[0]._id')
 
     echo "Publishing the image ${IMAGE_ID}..."
+    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPostImageRequestByCertProjectId.html
     RESPONSE=$( \
         curl --silent \
             --retry 5 --retry-all-errors \
@@ -163,6 +165,7 @@ sync_tags()
     IMAGE_ID=$(echo "${IMAGE}" | jq -r '.data[0]._id')
 
     echo "Syncing tags of the image ${IMAGE_ID}..."
+    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPostImageRequestByCertProjectId.html
     RESPONSE=$( \
         curl --silent \
             --retry 5 --retry-all-errors \
@@ -208,6 +211,7 @@ wait_for_container_publish()
 
             # Add additional logging context if possible
             echoerr "Test Results:"
+            # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetTestResultsById.html
             get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
                 local TEST_RESULTS
                 TEST_RESULTS=$(curl --silent \
