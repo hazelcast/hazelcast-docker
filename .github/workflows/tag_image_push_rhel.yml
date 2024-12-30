@@ -24,6 +24,13 @@ on:
           - ''
           - 'false'
           - 'true'
+      DRY_RUN:
+        description: 'Skip pushing the images to remote registry'
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 jobs:
   jdks:
     uses: ./.github/workflows/get-supported-jdks.yaml
@@ -125,6 +132,7 @@ jobs:
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build the Hazelcast Enterprise image
+        if: inputs.DRY_RUN == 'false'
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
@@ -158,6 +166,7 @@ jobs:
           chmod +x preflight-linux-amd64
 
       - name: Run preflight scan
+        if: inputs.DRY_RUN == 'false'
         run: |
           ./preflight-linux-amd64 check container ${RHEL_IMAGE} \
           --submit --pyxis-api-token=${RHEL_API_KEY} \
@@ -165,6 +174,7 @@ jobs:
           --docker-config ~/.docker/config.json
 
       - name: Wait for Scan to Complete
+        if: inputs.DRY_RUN == 'false'
         run: |
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
@@ -176,6 +186,7 @@ jobs:
           echo "HZ_MC_VERSION=$(echo "${{ inputs.HZ_VERSION }}" | cut -d '.' -f 1,2)" >> $GITHUB_ENV
 
       - name: Deploy Hazelcast Cluster
+        if: inputs.DRY_RUN == 'false'
         run: |
           WORKDIR=$(pwd)/.github/scripts
           .github/scripts/smoke-test.sh \
@@ -198,6 +209,7 @@ jobs:
           HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
 
       - name: Validate Cluster Size
+        if: inputs.DRY_RUN == 'false'
         run: |
           NAME=hazelcast-enterprise
 
@@ -232,6 +244,7 @@ jobs:
           .github/scripts/clean-up.sh $PROJECT_NAME
 
       - name: Publish the Hazelcast Enterprise image
+        if: inputs.DRY_RUN == 'false'
         run: |
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
