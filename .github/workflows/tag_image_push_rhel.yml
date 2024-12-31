@@ -221,19 +221,19 @@ jobs:
           CLUSTER_SIZE: 3
 
       - name: Get OpenShift events
-        if: ${{ always() }}
+        if: inputs.DRY_RUN == 'false'
         run: |
           kubectl get events -n ${PROJECT_NAME} > openshift-events-jdk${{ matrix.jdk }}.log
 
       - name: Store OpenShift events as artifact
-        if: ${{ always() }}
+        if: inputs.DRY_RUN == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: openshift-events-jdk${{ matrix.jdk }}.log
           path: openshift-events-jdk${{ matrix.jdk }}.log
 
       - name: Clean up After Test
-        if: always()
+        if: inputs.DRY_RUN == 'false'
         run: |
           .github/scripts/clean-up.sh $PROJECT_NAME
 
