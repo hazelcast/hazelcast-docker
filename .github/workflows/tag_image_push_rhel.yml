@@ -126,7 +126,7 @@ jobs:
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build the Hazelcast Enterprise image
-        if: inputs.DRY_RUN == 'false'
+        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
@@ -160,7 +160,7 @@ jobs:
           chmod +x preflight-linux-amd64
 
       - name: Run preflight scan
-        if: inputs.DRY_RUN == 'false'
+        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
         run: |
           ./preflight-linux-amd64 check container ${RHEL_IMAGE} \
           --submit --pyxis-api-token=${RHEL_API_KEY} \
@@ -168,7 +168,7 @@ jobs:
           --docker-config ~/.docker/config.json
 
       - name: Wait for Scan to Complete
-        if: inputs.DRY_RUN == 'false'
+        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
         run: |
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
@@ -180,7 +180,7 @@ jobs:
           echo "HZ_MC_VERSION=${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}" >> $GITHUB_ENV
 
       - name: Deploy Hazelcast Cluster
-        if: inputs.DRY_RUN == 'false'
+        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
         run: |
           WORKDIR=$(pwd)/.github/scripts
           .github/scripts/smoke-test.sh \
@@ -203,7 +203,7 @@ jobs:
           HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
 
       - name: Validate Cluster Size
-        if: inputs.DRY_RUN == 'false'
+        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
         run: |
           NAME=hazelcast-enterprise
 
@@ -221,24 +221,24 @@ jobs:
           CLUSTER_SIZE: 3
 
       - name: Get OpenShift events
-        if: inputs.DRY_RUN == 'false'
+        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
         run: |
           kubectl get events -n ${PROJECT_NAME} > openshift-events-jdk${{ matrix.jdk }}.log
 
       - name: Store OpenShift events as artifact
-        if: inputs.DRY_RUN == 'false'
+        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: openshift-events-jdk${{ matrix.jdk }}.log
           path: openshift-events-jdk${{ matrix.jdk }}.log
 
       - name: Clean up After Test
-        if: inputs.DRY_RUN == 'false'
+        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
         run: |
           .github/scripts/clean-up.sh $PROJECT_NAME
 
       - name: Publish the Hazelcast Enterprise image
-        if: inputs.DRY_RUN == 'false'
+        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
         run: |
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
