@@ -64,7 +64,7 @@ jobs:
         if: env.HZ_VERSION == ''
         run: |
           . .github/scripts/docker.functions.sh
-          echo "HZ_VERSION=$(get_hz_version hazelcast-enterprise)" >> $GITHUB_ENV
+          echo "HZ_VERSION=$(get_dockerfile_hz_version hazelcast-enterprise)" >> $GITHUB_ENV
 
       - name: Set Release version as environment variable
         if: env.RELEASE_VERSION == ''

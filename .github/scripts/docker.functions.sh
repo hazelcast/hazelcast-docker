@@ -5,7 +5,7 @@ function get_default_jdk() {
   awk -F= '/^ARG JDK_VERSION=/{print $2}' "$DIR/Dockerfile" | tr -d '"'
 }
 
-function get_hz_version() {
+function get_dockerfile_hz_version() {
   local DIR=$1
   awk -F= '/^ARG HZ_VERSION=/{print $2}' "$DIR/Dockerfile" | tr -d '"'
 }
