@@ -31,7 +31,48 @@ on:
         options:
           - 'false'
           - 'true'
-  pull_request:
+  workflow_call:
+    inputs:
+      HZ_VERSION:
+        type: string
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
+        required: true
+      RELEASE_VERSION:
+        type: string
+        description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
+        required: false
+      IS_LTS_OVERRIDE:
+        description: 'Override is LTS release'
+        required: false
+        type: string
+        default: ''
+      DRY_RUN:
+        description: 'Skip pushing the images to remote registry'
+        default: 'false'
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      RHEL_API_KEY:
+        required: true
+      SCAN_REGISTRY_USER_V5:
+        required: true
+      SCAN_REGISTRY_PASSWORD_V5:
+        required: true
+      RHEL_PROJECT_ID_V5:
+        required: true
+      SCAN_REGISTRY_USER_V6:
+        required: true
+      SCAN_REGISTRY_PASSWORD_V6:
+        required: true
+      RHEL_PROJECT_ID_V6:
+        required: true
+      HZ_ENTERPRISE_LICENSE:
+        required: true
+      SLACK_WEBHOOK:
+        required: true
 jobs:
   jdks:
     uses: ./.github/workflows/get-supported-jdks.yaml
@@ -55,21 +96,28 @@ jobs:
       matrix:
         jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
     steps:
+      - name: Set HZ version as environment variable
+        run: |
+          if [ -z "${{ env.HZ_VERSION }}" ]; then
+             HZ_VERSION=${GITHUB_REF:11}
+          else
+             HZ_VERSION=${{ env.HZ_VERSION }}
+          fi
+          echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
+
+      - name: Set Release version as environment variable
+        run: |
+          if [ -z "${{ env.RELEASE_VERSION }}" ]; then
+             RELEASE_VERSION=${HZ_VERSION}
+          else
+             RELEASE_VERSION=${{ env.RELEASE_VERSION }}
+          fi
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
+
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set HZ version as environment variable
-        if: env.HZ_VERSION == ''
-        run: |
-          . .github/scripts/docker.functions.sh
-          echo "HZ_VERSION=$(get_dockerfile_hz_version hazelcast-enterprise)" >> $GITHUB_ENV
-
-      - name: Set Release version as environment variable
-        if: env.RELEASE_VERSION == ''
-        run: |
-          echo "RELEASE_VERSION=${{ env.HZ_VERSION }}" >> $GITHUB_ENV
 
       - name: Set RHEL image as environment variable
         run: |
@@ -126,7 +174,7 @@ jobs:
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build the Hazelcast Enterprise image
-        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
@@ -160,7 +208,7 @@ jobs:
           chmod +x preflight-linux-amd64
 
       - name: Run preflight scan
-        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         run: |
           ./preflight-linux-amd64 check container ${RHEL_IMAGE} \
           --submit --pyxis-api-token=${RHEL_API_KEY} \
@@ -168,7 +216,7 @@ jobs:
           --docker-config ~/.docker/config.json
 
       - name: Wait for Scan to Complete
-        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         run: |
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
@@ -180,7 +228,7 @@ jobs:
           echo "HZ_MC_VERSION=${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}" >> $GITHUB_ENV
 
       - name: Deploy Hazelcast Cluster
-        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         run: |
           WORKDIR=$(pwd)/.github/scripts
           .github/scripts/smoke-test.sh \
@@ -203,7 +251,7 @@ jobs:
           HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
 
       - name: Validate Cluster Size
-        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         run: |
           NAME=hazelcast-enterprise
 
@@ -221,24 +269,24 @@ jobs:
           CLUSTER_SIZE: 3
 
       - name: Get OpenShift events
-        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         run: |
           kubectl get events -n ${PROJECT_NAME} > openshift-events-jdk${{ matrix.jdk }}.log
 
       - name: Store OpenShift events as artifact
-        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: openshift-events-jdk${{ matrix.jdk }}.log
-          path: openshift-events-jdk${{ matrix.jdk }}.log
+          name: openshift-events-${{ github.job }}-jdk${{ matrix.jdk }}.log
+          path: openshift-events-${{ github.job }}-jdk${{ matrix.jdk }}.log
 
       - name: Clean up After Test
-        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         run: |
           .github/scripts/clean-up.sh $PROJECT_NAME
 
       - name: Publish the Hazelcast Enterprise image
-        if: inputs.DRY_RUN == 'false' || github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         run: |
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
