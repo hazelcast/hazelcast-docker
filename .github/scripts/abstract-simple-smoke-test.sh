@@ -2,6 +2,9 @@
 
 set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
+# shellcheck source=../.github/scripts/logging.functions.sh
+. .github/scripts/logging.functions.sh
+
 # Performs simple validation tests on an already-running Hazelcast instance
 # Abstract as could be from Docker, Homebrew, local binary etc
 # Because abstract, expects callers to implement required, but absent functions
@@ -79,9 +82,4 @@ function install_clc() {
     done
   export PATH=${PATH}:${HOME}/.hazelcast/bin
   clc config add default cluster.name=dev cluster.address=localhost
-}
-
-# Prints the given message to stderr
-function echoerr() {
-  echo "::error::ERROR - $*" 1>&2;
 }

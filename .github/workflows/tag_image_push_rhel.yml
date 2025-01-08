@@ -6,10 +6,11 @@ on:
       - "!*"
     tags:
       - "v5.*"
+      - "v6.*"
   workflow_dispatch:
     inputs:
       HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
         required: true
       RELEASE_VERSION:
         description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
@@ -34,17 +35,10 @@ jobs:
     env:
       SCAN_REGISTRY: "quay.io"
       TIMEOUT_IN_MINS: 60
-      HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
-      OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
-      OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
-      OCP_CLUSTER_URL: ${{ secrets.OCP_CLUSTER_URL }}
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
-      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
-      SCAN_REGISTRY_USER: ${{ secrets.SCAN_REGISTRY_USER_V5 }}
-      SCAN_REGISTRY_PASSWORD: ${{ secrets.SCAN_REGISTRY_PASSWORD_V5 }}
-      RHEL_PROJECT_ID: ${{ secrets.RHEL_PROJECT_ID_V5 }}
 
     runs-on: ubuntu-latest
     needs: jdks
@@ -71,26 +65,6 @@ jobs:
           fi
           echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
 
-      - name: Checkout to Management Center Openshift
-        uses: actions/checkout@v4
-        with:
-          repository: hazelcast/management-center-openshift
-          path: management-center-openshift
-          fetch-depth: 0
-
-      - uses: madhead/semver-utils@latest
-        id: version
-        with:
-          version: ${{ inputs.HZ_VERSION }}
-
-      - name: Set Management Center Version to be used in the tests
-        working-directory: management-center-openshift
-        run: |
-          FILTERED_TAGS=$(git tag --list "v${{ steps.version.outputs.major }}*" |  grep -E -v '.*(BETA|-).*' )
-          LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
-          echo $LATEST_TAG
-          echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
-
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
@@ -110,6 +84,11 @@ jobs:
         with:
           version: v0.5.1
 
+      - uses: madhead/semver-utils@latest
+        id: version
+        with:
+          version: ${{ inputs.HZ_VERSION }}
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -117,9 +96,26 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
 
-      - name: Log in to Red Hat Scan Registry
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            OCP_LOGIN_USERNAME,CN/OCP_USERNAME
+            OCP_LOGIN_PASSWORD,CN/OCP_PASSWORD
+            OCP_CLUSTER_URL,CN/OCP_CLUSTER_URL
+
+      - name: Set scan registry secrets
         run: |
-          docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
+          echo "SCAN_REGISTRY_USER=${{ secrets[format('SCAN_REGISTRY_USER_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
+          echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
+          echo "RHEL_PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
+
+      - name: Log in to Red Hat Scan Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.SCAN_REGISTRY }}
+          username: ${{ env.SCAN_REGISTRY_USER }}
+          password: ${{ env.SCAN_REGISTRY_PASSWORD }}
 
       - name: Check if latest EE LTS release
         id: is_latest_lts
@@ -151,7 +147,7 @@ jobs:
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}") \
+            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" "${{ env.HZ_VERSION }}") \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
@@ -175,6 +171,10 @@ jobs:
 
           wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
 
+      - name: Set MC version
+        run: |
+          echo "HZ_MC_VERSION=$(echo "${{ inputs.HZ_VERSION }}" | cut -d '.' -f 1,2)" >> $GITHUB_ENV
+
       - name: Deploy Hazelcast Cluster
         run: |
           WORKDIR=$(pwd)/.github/scripts
@@ -195,6 +195,7 @@ jobs:
 
         env:
           CLUSTER_SIZE: 3
+          HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
 
       - name: Validate Cluster Size
         run: |

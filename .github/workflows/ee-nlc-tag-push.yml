@@ -27,12 +27,9 @@ jobs:
       matrix:
         jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
     env:
-      NLC_REPOSITORY: ${{ secrets.NLC_REPOSITORY }}
-      NLC_REPO_USERNAME: ${{ secrets.NLC_REPO_USERNAME }}
-      NLC_REPO_TOKEN: ${{ secrets.NLC_REPO_TOKEN }}
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
-      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -65,7 +62,11 @@ jobs:
           echo "HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL}" >> $GITHUB_ENV
 
       - name: Login to Docker Hub
-        run: echo "${NLC_REPO_TOKEN}" | docker login -u ${NLC_REPO_USERNAME} ${NLC_REPOSITORY} --password-stdin
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.NLC_REPOSITORY }}
+          username: ${{ secrets.NLC_REPO_USERNAME }}
+          password: ${{ secrets.NLC_REPO_TOKEN }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.2.0
@@ -100,7 +101,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-jdk${{ matrix.jdk }}
+          name: docker-logs-${{ github.job }}-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_EE }}
 
