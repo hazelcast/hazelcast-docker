@@ -151,11 +151,12 @@ jobs:
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
-      - name: Install preflight tool
-        run: |
-          PREFLIGHT_VERSION=$(curl -s https://api.github.com/repos/redhat-openshift-ecosystem/openshift-preflight/releases/latest | grep 'tag_name' | cut -d\" -f4)
-          wget https://github.com/redhat-openshift-ecosystem/openshift-preflight/releases/download/${PREFLIGHT_VERSION}/preflight-linux-amd64
-          chmod +x preflight-linux-amd64
+      - uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          oc: "latest"
+          preflight: "latest"
+          source: github
+          skip_cache: true
 
       - name: Run preflight scan
         run: |
@@ -182,11 +183,6 @@ jobs:
           openshift_password: ${{ env.OCP_LOGIN_PASSWORD }}
           insecure_skip_tls_verify: true
 
-      - uses: redhat-actions/openshift-tools-installer@v1
-        with:
-          oc: "latest"
-          source: github
-          skip_cache: true
 
       - name: Deploy Hazelcast Cluster
         run: |
