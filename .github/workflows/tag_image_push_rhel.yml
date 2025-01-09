@@ -175,15 +175,25 @@ jobs:
         run: |
           echo "HZ_MC_VERSION=$(echo "${{ inputs.HZ_VERSION }}" | cut -d '.' -f 1,2)" >> $GITHUB_ENV
 
+      - uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: ${{ env.OCP_CLUSTER_URL }}
+          openshift_username: ${{ env.OCP_LOGIN_USERNAME }}
+          openshift_password: ${{ env.OCP_LOGIN_PASSWORD }}
+          insecure_skip_tls_verify: true
+
+      - uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          oc: "latest"
+          source: github
+          skip_cache: true
+
       - name: Deploy Hazelcast Cluster
         run: |
           WORKDIR=$(pwd)/.github/scripts
           .github/scripts/smoke-test.sh \
                         "$WORKDIR" \
                         "$PROJECT_NAME"  \
-                        "$OCP_LOGIN_USERNAME"  \
-                        "$OCP_LOGIN_PASSWORD" \
-                        "$OCP_CLUSTER_URL" \
                         "$SCAN_REGISTRY_USER" \
                         "$SCAN_REGISTRY_PASSWORD" \
                         "$SCAN_REPOSITORY" \
