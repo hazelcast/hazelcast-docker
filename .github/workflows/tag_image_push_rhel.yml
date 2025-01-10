@@ -154,6 +154,11 @@ jobs:
       - uses: redhat-actions/openshift-tools-installer@v1
         with:
           oc: "latest"
+          source: mirror
+          skip_cache: true
+
+      - uses: redhat-actions/openshift-tools-installer@v1
+        with:
           preflight: "latest"
           source: github
           skip_cache: true
