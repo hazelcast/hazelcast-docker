@@ -167,7 +167,7 @@ jobs:
 
       - name: Run preflight scan
         run: |
-          ./preflight-linux-amd64 check container ${RHEL_IMAGE} \
+          preflight check container ${RHEL_IMAGE} \
           --submit --pyxis-api-token=${RHEL_API_KEY} \
           --certification-project-id=${RHEL_PROJECT_ID} \
           --docker-config ~/.docker/config.json
