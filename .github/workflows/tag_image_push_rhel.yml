@@ -143,16 +143,23 @@ jobs:
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
-      - uses: redhat-actions/openshift-tools-installer@v1
+      - name: Install `oc` OpenShift tool from mirror
+        uses: redhat-actions/openshift-tools-installer@v1
         with:
           oc: "latest"
+          source: mirror
+          skip_cache: true
+
+      - name: Install `preflight` OpenShift tool from GitHub
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
           preflight: "latest"
           source: github
           skip_cache: true
 
       - name: Run preflight scan
         run: |
-          ./preflight-linux-amd64 check container ${RHEL_IMAGE} \
+          preflight check container ${RHEL_IMAGE} \
           --submit --pyxis-api-token=${RHEL_API_KEY} \
           --certification-project-id=${RHEL_PROJECT_ID} \
           --docker-config ~/.docker/config.json
