@@ -97,22 +97,14 @@ jobs:
         jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
     steps:
       - name: Set HZ version as environment variable
+        if: env.HZ_VERSION == ''
         run: |
-          if [ -z "${{ env.HZ_VERSION }}" ]; then
-             HZ_VERSION=${GITHUB_REF:11}
-          else
-             HZ_VERSION=${{ env.HZ_VERSION }}
-          fi
-          echo "HZ_VERSION=${HZ_VERSION}" >> $GITHUB_ENV
+          echo "HZ_VERSION=${GITHUB_REF:11}" >> $GITHUB_ENV
 
       - name: Set Release version as environment variable
+        if: env.RELEASE_VERSION == ''
         run: |
-          if [ -z "${{ env.RELEASE_VERSION }}" ]; then
-             RELEASE_VERSION=${HZ_VERSION}
-          else
-             RELEASE_VERSION=${{ env.RELEASE_VERSION }}
-          fi
-          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=${{ env.HZ_VERSION }}" >> $GITHUB_ENV
 
       - name: Checkout Code
         uses: actions/checkout@v4
