@@ -25,10 +25,11 @@ get_image()
     esac
 
     local FILTER="filter=deleted==false;${PUBLISHED_FILTER};repositories.tags=em=(name=='${VERSION}')"
-    local INCLUDE="include=total,data.repositories.tags.name,data.certified,data.container_grades,data._id,data.creation_date"
+    local INCLUDE="include=total,data.repositories,data.certified,data.container_grades,data._id,data.creation_date"
     local SORT_BY='sort_by=creation_date\[desc\]'
 
     local RESPONSE
+    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetImagesForCertProjectById.html
     RESPONSE=$( \
         curl --silent \
              --request GET \
@@ -126,6 +127,7 @@ publish_the_image()
     IMAGE_ID=$(echo "${IMAGE}" | jq -r '.data[0]._id')
 
     echo "Publishing the image ${IMAGE_ID}..."
+    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPostImageRequestByCertProjectId.html
     RESPONSE=$( \
         curl --silent \
             --retry 5 --retry-all-errors \
@@ -163,6 +165,7 @@ sync_tags()
     IMAGE_ID=$(echo "${IMAGE}" | jq -r '.data[0]._id')
 
     echo "Syncing tags of the image ${IMAGE_ID}..."
+    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPostImageRequestByCertProjectId.html
     RESPONSE=$( \
         curl --silent \
             --retry 5 --retry-all-errors \
@@ -203,7 +206,21 @@ wait_for_container_publish()
 
         if [[ ${i} == "${NOF_RETRIES}" ]]; then
             echoerr "Timeout! Publish could not be finished"
+            echoerr "Image Status:"
             echoerr "${IMAGE}"
+
+            # Add additional logging context if possible
+            echoerr "Test Results:"
+            # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetTestResultsById.html
+            get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
+                local TEST_RESULTS
+                TEST_RESULTS=$(curl --silent \
+                    --request GET \
+                    --header "X-API-KEY: ${RHEL_API_KEY}" \
+                    "https://catalog.redhat.com/api/containers/${TEST_RESULTS_ENDPOINT}")
+                echoerr "${TEST_RESULTS}"
+            done
+
             return 42
         fi
     done
