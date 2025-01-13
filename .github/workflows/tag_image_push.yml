@@ -6,6 +6,7 @@ on:
       - "!*"
     tags:
       - "v5.*"
+      - "v6.*"
   workflow_dispatch:
     inputs:
       HZ_VERSION:
