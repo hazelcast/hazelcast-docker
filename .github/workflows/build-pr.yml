@@ -215,3 +215,24 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+
+  test-push-rhel:
+    name: Test pushing RHEL image (dry run)
+    needs: [ prepare ]
+    uses: ./.github/workflows/tag_image_push_rhel.yml
+    with:
+      HZ_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      DRY_RUN: true
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
+      SCAN_REGISTRY_USER_V5: ${{ secrets.SCAN_REGISTRY_USER_V5 }}
+      SCAN_REGISTRY_PASSWORD_V5: ${{ secrets.SCAN_REGISTRY_PASSWORD_V5 }}
+      RHEL_PROJECT_ID_V5: ${{ secrets.RHEL_PROJECT_ID_V5 }}
+      SCAN_REGISTRY_USER_V6: ${{ secrets.SCAN_REGISTRY_USER_V6 }}
+      SCAN_REGISTRY_PASSWORD_V6: ${{ secrets.SCAN_REGISTRY_PASSWORD_V6 }}
+      RHEL_PROJECT_ID_V6: ${{ secrets.RHEL_PROJECT_ID_V6 }}
+      HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
