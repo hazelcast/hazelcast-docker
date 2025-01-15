@@ -207,7 +207,6 @@ jobs:
     uses: ./.github/workflows/tag_image_push.yml
     with:
       HZ_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
-      RELEASE_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       RELEASE_TYPE: ALL
       DRY_RUN: true
     secrets:
@@ -222,7 +221,6 @@ jobs:
     uses: ./.github/workflows/tag_image_push_rhel.yml
     with:
       HZ_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
-      RELEASE_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       DRY_RUN: true
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
