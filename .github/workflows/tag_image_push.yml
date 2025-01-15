@@ -269,16 +269,21 @@ jobs:
             TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
           
+          output=
+
           PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
+
           if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
-            echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
+            echo "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
           else
-            docker buildx build --push \
-              --build-arg JDK_VERSION=${{ matrix.jdk }} \
-              --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
-              ${TAGS_ARG} \
-              --platform=${PLATFORMS} $DOCKER_DIR
+            output=--push
           fi
+
+          docker buildx build ${output} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
+            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_OSS_ZIP_URL} \
+            ${TAGS_ARG} \
+            --platform=${PLATFORMS} ${DOCKER_DIR}
 
       - name: Check if latest EE LTS release
         id: is_latest_lts
@@ -306,18 +311,23 @@ jobs:
           do
             TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
-          
+
+          output=
+
           PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
+
           if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
-            echo "DRY RUN: Build and push for platforms ${PLATFORMS} and tags: $TAGS_TO_PUSH"
+            echo "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
           else
-            docker buildx build --push \
-              --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-              --build-arg JDK_VERSION=${{ matrix.jdk }} \
-              --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
-              ${TAGS_ARG} \
-              --platform=${PLATFORMS} $DOCKER_DIR
+            output=--push
           fi
+
+          docker buildx build ${output} \
+            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
+            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_EE_ZIP_URL} \
+            ${TAGS_ARG} \
+            --platform=${PLATFORMS} ${DOCKER_DIR}
 
       - name: Update Docker Hub Description
         if: inputs.DRY_RUN != 'true' && (needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes')
