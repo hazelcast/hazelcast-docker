@@ -50,29 +50,6 @@ on:
         description: 'Skip pushing the images to remote registry'
         default: 'false'
         type: string
-    secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
-      RHEL_API_KEY:
-        required: true
-      SCAN_REGISTRY_USER_V5:
-        required: true
-      SCAN_REGISTRY_PASSWORD_V5:
-        required: true
-      RHEL_PROJECT_ID_V5:
-        required: true
-      SCAN_REGISTRY_USER_V6:
-        required: true
-      SCAN_REGISTRY_PASSWORD_V6:
-        required: true
-      RHEL_PROJECT_ID_V6:
-        required: true
-      HZ_ENTERPRISE_LICENSE:
-        required: true
-      SLACK_WEBHOOK:
-        required: true
 jobs:
   jdks:
     uses: ./.github/workflows/get-supported-jdks.yaml

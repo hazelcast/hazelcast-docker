@@ -65,15 +65,6 @@ on:
         description: 'Skip pushing the images to remote registry'
         default: 'false'
         type: string
-    secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
-      HZ_ENTERPRISE_LICENSE:
-        required: true
-      SLACK_WEBHOOK:
-        required: true
 
 env:
   test_container_name_oss: hazelcast-oss-test
