@@ -70,7 +70,10 @@ wait_for_container_scan()
         SCAN_STATUS=$(echo "${IMAGE}" | jq -r '.data[0].container_grades.status')
         IMAGE_CERTIFIED=$(echo "${IMAGE}" | jq -r '.data[0].certified')
 
-        if [[ ${SCAN_STATUS} == "pending" ]]; then
+        if _is_stopwatch_expired; then
+            RESULT=42
+            echo "Timeout'! Scan could not be finished"
+        elif [[ ${SCAN_STATUS} == "pending" ]]; then
             echo "Scanning pending, waiting..."
         elif [[ ${SCAN_STATUS} == "in progress" ]]; then
             echo "Scanning in progress, waiting..."
@@ -79,9 +82,6 @@ wait_for_container_scan()
         elif [[ ${SCAN_STATUS} == "completed" && "${IMAGE_CERTIFIED}" == "true" ]]; then
             RESULT=0
             echo "Scan passed!"
-        elif _is_stopwatch_expired; then
-            RESULT=42
-            echoerr "Timeout'! Scan could not be finished"
         else
             RESULT=1
             echoerr "Scan failed with '${SCAN_STATUS}!"
@@ -206,12 +206,12 @@ wait_for_container_publish()
         IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
         IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
 
-        if [[ ${IS_PUBLISHED} == "1" ]]; then
+        if _is_stopwatch_expired; then
+            RESULT=42
+            echo "Timeout! Publish could not be finished"
+        elif [[ ${IS_PUBLISHED} == "1" ]]; then
             RESULT=0
             echo "Image is published, exiting."
-        elif _is_stopwatch_expired; then
-            RESULT=42
-            echoerr "Timeout! Publish could not be finished"
         else
             echo "Image is still not published, waiting..."
         fi
@@ -278,7 +278,7 @@ function delete_unpublished_images() {
     done
 
     # verify we have actually deleted the images. returning explictly to make it clearer
-    return $(verify_no_unpublished_images "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY")
+    verify_no_unpublished_images "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
 }
 
 # this will actually send request to delete a single unpublished image
@@ -296,9 +296,6 @@ function do_delete_unpublished_images() {
             --header "X-API-KEY: ${RHEL_API_KEY}" \
             --data '{"deleted": true}' \
             "https://catalog.redhat.com/api/containers/v1/images/id/${IMAGE_ID}")
-
-    # TODO: PUT UNDER DEBUG?
-    #echo "${RESPONSE}"
 }
 
 # verifies there are no unblished images for given version
@@ -320,21 +317,22 @@ function verify_no_unpublished_images() {
 }
 
 # Starts timer with default timeout of 4h. See RedHat ticket https://connect.redhat.com/support/partner-acceleration-desk/#/case/04042093
-# Only use this within this script as only designed for single use for now.
-# The stopwatch funstions start with '_' to denote them as private
+# The scan/publish can take from 2m to 3hrs but we set higher just in case
 STOPWATCH_PID=-1
 STOPWATCH_DEFAULT_TIMEOUT=4h
 function _start_stopwatch() {
-    local timeout_secs="${1:-$STOPWATCH_DEFAULT_TIMEOUT}"
-    echo "Starting timeout timer for ${timeout_secs}"
-    sleep $timeout_secs &
+    # Only use this within this script as only designed for single use for now.
+    # The stopwatch funstions start with '_' to denote them as private
+    local timeout="${1:-$STOPWATCH_DEFAULT_TIMEOUT}"
+    echo "Starting timeout timer for ${timeout}"
+    sleep $timeout &
     STOPWATCH_PID=$!
 }
 
 # Private function to stop current stopwatch
 function _cancel_stopwatch() {
-    echo "Stoppping timeout timer"
-    kill $STOPWATCH_PID
+    echo "Stoppping stopwatch timer"
+    kill $STOPWATCH_PID > /dev/null 2>&1 || true
     STOPWATCH_PID=-1
 }
 
