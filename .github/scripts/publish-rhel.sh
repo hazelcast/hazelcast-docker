@@ -327,12 +327,13 @@ function _start_stopwatch() {
     echo "Starting timeout timer for ${timeout}"
     sleep $timeout &
     STOPWATCH_PID=$!
+    echo "Stopwatch PID=${STOPWATCH_PID}"
 }
 
 # Private function to stop current stopwatch
 function _cancel_stopwatch() {
-    echo "Stoppping stopwatch timer"
-    kill $STOPWATCH_PID > /dev/null 2>&1 || true
+    echo "Stoppping stopwatch timer PID=${STOPWATCH_PID}"
+    kill ${STOPWATCH_PID} > /dev/null 2>&1 || true
     STOPWATCH_PID=-1
 }
 
