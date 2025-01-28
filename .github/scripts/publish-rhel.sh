@@ -44,8 +44,7 @@ wait_for_container_scan()
     local RHEL_PROJECT_ID=$1
     local VERSION=$2
     local RHEL_API_KEY=$3
-    local TIMEOUT_IN_MINS=$4
-    
+
     local IMAGE
     local IS_PUBLISHED
 
@@ -57,12 +56,15 @@ wait_for_container_scan()
         return 0
     fi
 
-    local NOF_RETRIES=$(( TIMEOUT_IN_MINS / 2 ))
-    # Wait until the image is scanned
-    for i in $(seq 1 "${NOF_RETRIES}"); do
+    # start timer
+    _start_stopwatch
+
+    while [ 1 ]
+    do
         local IMAGE
         local SCAN_STATUS
         local IMAGE_CERTIFIED
+        local RESULT=-1
 
         IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
         SCAN_STATUS=$(echo "${IMAGE}" | jq -r '.data[0].container_grades.status')
@@ -75,20 +77,28 @@ wait_for_container_scan()
         elif [[ ${SCAN_STATUS} == "null" ]];  then
             echo "Image is still not present in the registry!"
         elif [[ ${SCAN_STATUS} == "completed" && "${IMAGE_CERTIFIED}" == "true" ]]; then
-            echo "Scan passed!" ; return 0
+            RESULT=0
+            echo "Scan passed!"
+        elif _is_stopwatch_expired; then
+            RESULT=42
+            echoerr "Timeout'! Scan could not be finished"
         else
+            RESULT=1
             echoerr "Scan failed with '${SCAN_STATUS}!"
-            echoerr "${IMAGE}"
-            return 1
         fi
 
+        if [[ $RESULT -ge 0 ]]; then
+            # cancel stopwatch if error or sucess
+            _cancel_stopwatch
+
+            if [[ $RESULT -gt 0 ]]; then
+                echoerr "${IMAGE}"
+            fi
+            return $RESULT
+        fi
+
+        # Wait a little before next retry
         sleep 120
-
-        if [[ ${i} == "${NOF_RETRIES}" ]]; then
-            echoerr "Timeout! Scan could not be finished"
-            echoerr "${IMAGE}"
-            return 42
-        fi
     done
 }
 
@@ -141,7 +151,6 @@ publish_the_image()
     echo "Created a publish request, please check if the image is published."
 }
 
-
 sync_tags()
 {
     local RHEL_PROJECT_ID=$1
@@ -184,44 +193,153 @@ wait_for_container_publish()
     local RHEL_PROJECT_ID=$1
     local VERSION=$2
     local RHEL_API_KEY=$3
-    local TIMEOUT_IN_MINS=$4
 
-    local NOF_RETRIES=$(( TIMEOUT_IN_MINS * 2 ))
-    # Wait until the image is published
-    for i in $(seq 1 "${NOF_RETRIES}"); do
+    # start timer
+    _start_stopwatch
+
+    while [ 1 ]
+    do
         local IMAGE
         local IS_PUBLISHED
+        local RESULT=-1
 
         IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
         IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
 
         if [[ ${IS_PUBLISHED} == "1" ]]; then
+            RESULT=0
             echo "Image is published, exiting."
-            return 0
+        elif _is_stopwatch_expired; then
+            RESULT=42
+            echoerr "Timeout! Publish could not be finished"
         else
             echo "Image is still not published, waiting..."
         fi
 
-        sleep 30
+        if [[ $RESULT -ge 0 ]]; then
+            # cancel stopwatch if error or sucess
+            _cancel_stopwatch
 
-        if [[ ${i} == "${NOF_RETRIES}" ]]; then
-            echoerr "Timeout! Publish could not be finished"
-            echoerr "Image Status:"
-            echoerr "${IMAGE}"
-
-            # Add additional logging context if possible
-            echoerr "Test Results:"
-            # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetTestResultsById.html
-            get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
-                local TEST_RESULTS
-                TEST_RESULTS=$(curl --silent \
-                    --request GET \
-                    --header "X-API-KEY: ${RHEL_API_KEY}" \
-                    "https://catalog.redhat.com/api/containers/${TEST_RESULTS_ENDPOINT}")
-                echoerr "${TEST_RESULTS}"
-            done
-
-            return 42
+            if [[ $RESULT -gt 0 ]]; then
+                echoerr "Image Status:"
+                echoerr "${IMAGE}"
+                print_test_results_on_error "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}"
+            fi
+            return $RESULT
         fi
+
+        # Wait a little before next retry
+        sleep 30
     done
 }
+
+# Prints test result for additional debug info after error
+function print_test_results_on_error() {
+    local RHEL_PROJECT_ID=$1
+    local VERSION=$2
+    local RHEL_API_KEY=$3
+
+    # Add additional logging context if possible
+    echoerr "Test Results:"
+    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetTestResultsById.html
+    get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
+        local TEST_RESULTS
+        TEST_RESULTS=$(curl --silent \
+            --request GET \
+            --header "X-API-KEY: ${RHEL_API_KEY}" \
+            "https://catalog.redhat.com/api/containers/${TEST_RESULTS_ENDPOINT}")
+        echoerr "${TEST_RESULTS}"
+    done
+}
+
+# Marks unpublished images as deleted for given version and then verifies if they were truly deleted
+function delete_unpublished_images() {
+    local RHEL_PROJECT_ID=$1
+    local VERSION=$2
+    local RHEL_API_KEY=$3
+
+    local IMAGE
+    local IS_PUBLISHED
+
+    UNPUBLISHED_IMAGES=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+    UNPUBLISHED_COUNT=$(echo "${UNPUBLISHED_IMAGES}" | jq -r '.total')
+
+    if [[ ${UNPUBLISHED_COUNT} == "0" ]]; then
+        echo "No unpublished images found for ${VERSION}"
+        return 0
+    fi
+
+    # mark images as deleted
+    echo "Found '${UNPUBLISHED_COUNT}' unpublished images for '${VERSION}'"
+    for ((idx = 0 ; idx < $((UNPUBLISHED_COUNT)) ; idx++));
+    do
+        local IMAGE_ID=$(echo "${UNPUBLISHED_IMAGES}" | jq -r .data[${idx}]._id)
+        do_delete_unpublished_images "${RHEL_API_KEY}" "${IMAGE_ID}"
+    done
+
+    # verify we have actually deleted the images. returning explictly to make it clearer
+    return $(verify_no_unpublished_images "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY")
+}
+
+# this will actually send request to delete a single unpublished image
+function do_delete_unpublished_images() {
+    local RHEL_API_KEY=$1
+    local IMAGE_ID=$2
+    echo "Marking image with ID=${IMAGE_ID} as deleted"
+
+    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPatchImage.html
+    RESPONSE=$( \
+        curl --silent \
+            --request PATCH \
+            --header "accept: application/json" \
+            --header "Content-Type: application/json" \
+            --header "X-API-KEY: ${RHEL_API_KEY}" \
+            --data '{"deleted": true}' \
+            "https://catalog.redhat.com/api/containers/v1/images/id/${IMAGE_ID}")
+
+    # TODO: PUT UNDER DEBUG?
+    #echo "${RESPONSE}"
+}
+
+# verifies there are no unblished images for given version
+function verify_no_unpublished_images() {
+    local RHEL_PROJECT_ID=$1
+    local VERSION=$2
+    local RHEL_API_KEY=$3
+
+    UNPUBLISHED_IMAGES=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+    UNPUBLISHED_COUNT=$(echo "${UNPUBLISHED_IMAGES}" | jq -r '.total')
+
+    if [[ ${UNPUBLISHED_COUNT} == "0" ]]; then
+        echo "No unpublished images found for '${VERSION}' after cleanup"
+        return 0
+    fi
+
+    echoerr "Exiting as found '${UNPUBLISHED_COUNT}' unblished images for '${VERSION}'"
+    return 1
+}
+
+# Starts timer with default timeout of 4h. See RedHat ticket https://connect.redhat.com/support/partner-acceleration-desk/#/case/04042093
+# Only use this within this script as only designed for single use for now.
+# The stopwatch funstions start with '_' to denote them as private
+STOPWATCH_PID=-1
+STOPWATCH_DEFAULT_TIMEOUT=4h
+function _start_stopwatch() {
+    local timeout_secs="${1:-$STOPWATCH_DEFAULT_TIMEOUT}"
+    echo "Starting timeout timer for ${timeout_secs}"
+    sleep $timeout_secs &
+    STOPWATCH_PID=$!
+}
+
+# Private function to stop current stopwatch
+function _cancel_stopwatch() {
+    echo "Stoppping timeout timer"
+    kill $STOPWATCH_PID
+    STOPWATCH_PID=-1
+}
+
+# Private function to check if stopwatch timer is still running
+function _is_stopwatch_expired() {
+    ! kill -0 ${STOPWATCH_PID} > /dev/null 2>&1
+}
+
