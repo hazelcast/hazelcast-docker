@@ -314,8 +314,9 @@ function verify_no_unpublished_images() {
     return 1
 }
 
-# Starts timer with default timeout of 4h. See RedHat ticket https://connect.redhat.com/support/partner-acceleration-desk/#/case/04042093
-# The scan/publish can take from 2m to 3hrs but we set higher just in case
+# Starts timer with default timeout of 4h. The scan/publish can take
+# from 2mins to 3hrs (RedHat Case: 04042093) but we set it higher to
+# account for edge cases
 STOPWATCH_PID=-1
 STOPWATCH_DEFAULT_TIMEOUT=4h
 function _start_stopwatch() {
