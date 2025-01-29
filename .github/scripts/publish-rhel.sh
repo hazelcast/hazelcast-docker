@@ -91,10 +91,10 @@ wait_for_container_scan()
             # cancel stopwatch if error or sucess
             _cancel_stopwatch
 
-            if [[ $RESULT -gt 0 ]]; then
+            if [[ ${RESULT} -gt 0 ]]; then
                 echoerr "${IMAGE}"
             fi
-            return $RESULT
+            return ${RESULT}
         fi
 
         # Wait a little before next retry
