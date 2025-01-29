@@ -72,7 +72,7 @@ wait_for_container_scan()
 
         if _is_stopwatch_expired; then
             RESULT=42
-            echoerr "Timeout'! Scan could not be finished"
+            echoerr "Timeout! Scan could not be finished"
         elif [[ ${SCAN_STATUS} == "pending" ]]; then
             echo "Scanning pending, waiting..."
         elif [[ ${SCAN_STATUS} == "in progress" ]]; then
