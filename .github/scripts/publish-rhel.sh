@@ -44,7 +44,6 @@ wait_for_container_scan()
     local RHEL_PROJECT_ID=$1
     local VERSION=$2
     local RHEL_API_KEY=$3
-
     local IMAGE
     local IS_PUBLISHED
 
