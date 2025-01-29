@@ -308,10 +308,10 @@ function verify_no_unpublished_images() {
     if [[ ${UNPUBLISHED_COUNT} == "0" ]]; then
         echo "No unpublished images found for '${VERSION}' after cleanup"
         return 0
+    else
+        echoerr "Exiting as found '${UNPUBLISHED_COUNT}' unblished images for '${VERSION}'"
+        return 1
     fi
-
-    echoerr "Exiting as found '${UNPUBLISHED_COUNT}' unblished images for '${VERSION}'"
-    return 1
 }
 
 # Starts timer with default timeout of 4h. The scan/publish can take
