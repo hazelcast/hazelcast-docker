@@ -312,7 +312,10 @@ function verify_no_unpublished_images() {
         echo "No unpublished images found for '${VERSION}' after cleanup"
         return 0
     else
-        echoerr "Exiting as found '${UNPUBLISHED_COUNT}' unblished images for '${VERSION}'"
+        echoerr "Exiting as found '${UNPUBLISHED_COUNT}' unpublished images for '${VERSION}'"
+        echo_group "Unpublished images"
+        echoerr "${UNPUBLISHED_IMAGES}"
+        echo_group_end
         return 1
     fi
 }
