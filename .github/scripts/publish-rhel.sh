@@ -216,16 +216,16 @@ wait_for_container_publish()
             echo "Image is still not published, waiting..."
         fi
 
-        if [[ $RESULT -ge 0 ]]; then
+        if [[ ${RESULT} -ge 0 ]]; then
             # cancel stopwatch if error or sucess
             _cancel_stopwatch
 
-            if [[ $RESULT -gt 0 ]]; then
+            if [[ ${RESULT} -gt 0 ]]; then
                 echoerr "Image Status:"
                 echoerr "${IMAGE}"
                 print_test_results_on_error "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}"
             fi
-            return $RESULT
+            return ${RESULT}
         fi
 
         # Wait a little before next retry
