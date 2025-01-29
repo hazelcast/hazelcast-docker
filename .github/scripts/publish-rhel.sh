@@ -59,7 +59,7 @@ wait_for_container_scan()
     # start timer
     _start_stopwatch
 
-    while [ 1 ]
+    while true
     do
         local IMAGE
         local SCAN_STATUS
@@ -197,7 +197,7 @@ wait_for_container_publish()
     # start timer
     _start_stopwatch
 
-    while [ 1 ]
+    while true
     do
         local IMAGE
         local IS_PUBLISHED
