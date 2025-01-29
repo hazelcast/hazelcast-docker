@@ -72,7 +72,7 @@ wait_for_container_scan()
 
         if _is_stopwatch_expired; then
             RESULT=42
-            echo "Timeout'! Scan could not be finished"
+            echoerr "Timeout'! Scan could not be finished"
         elif [[ ${SCAN_STATUS} == "pending" ]]; then
             echo "Scanning pending, waiting..."
         elif [[ ${SCAN_STATUS} == "in progress" ]]; then
@@ -208,7 +208,7 @@ wait_for_container_publish()
 
         if _is_stopwatch_expired; then
             RESULT=42
-            echo "Timeout! Publish could not be finished"
+            echoerr "Timeout! Publish could not be finished"
         elif [[ ${IS_PUBLISHED} == "1" ]]; then
             RESULT=0
             echo "Image is published, exiting."
