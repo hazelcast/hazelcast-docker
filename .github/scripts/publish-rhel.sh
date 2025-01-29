@@ -294,6 +294,9 @@ function do_delete_unpublished_images() {
             --header "X-API-KEY: ${RHEL_API_KEY}" \
             --data '{"deleted": true}' \
             "https://catalog.redhat.com/api/containers/v1/images/id/${IMAGE_ID}")
+
+    echo "::debug::HTTP response after image deletion"
+    echo "::debug::${RESPONSE}"
 }
 
 # verifies there are no unblished images for given version
