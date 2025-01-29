@@ -87,7 +87,7 @@ wait_for_container_scan()
             echoerr "Scan failed with '${SCAN_STATUS}!"
         fi
 
-        if [[ $RESULT -ge 0 ]]; then
+        if [[ ${RESULT} -ge 0 ]]; then
             # cancel stopwatch if error or sucess
             _cancel_stopwatch
 
