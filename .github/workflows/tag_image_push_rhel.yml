@@ -147,7 +147,7 @@ jobs:
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
 
-          delete_unpublished_images "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+          delete_unpublished_images "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}"
 
       - name: Build the Hazelcast Enterprise image
         run: |
