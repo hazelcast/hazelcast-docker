@@ -264,21 +264,19 @@ function delete_unpublished_images() {
     UNPUBLISHED_IMAGES=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
     UNPUBLISHED_COUNT=$(echo "${UNPUBLISHED_IMAGES}" | jq -r '.total')
 
-    if [[ ${UNPUBLISHED_COUNT} == "0" ]]; then
-        echo "No unpublished images found for ${VERSION}"
-        return 0
-    fi
+    echo "Found '${UNPUBLISHED_COUNT}' unpublished images for '${VERSION}'"
 
     # mark images as deleted
-    echo "Found '${UNPUBLISHED_COUNT}' unpublished images for '${VERSION}'"
     for ((idx = 0 ; idx < $((UNPUBLISHED_COUNT)) ; idx++));
     do
         local IMAGE_ID=$(echo "${UNPUBLISHED_IMAGES}" | jq -r .data[${idx}]._id)
         do_delete_unpublished_images "${RHEL_API_KEY}" "${IMAGE_ID}"
     done
 
-    # verify we have actually deleted the images. returning explictly to make it clearer
-    verify_no_unpublished_images "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+    # verify we have actually deleted the images
+    if [[ ${UNPUBLISHED_COUNT} -gt 0 ]]; then
+        verify_no_unpublished_images "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+    fi
 }
 
 # this will actually send request to delete a single unpublished image
