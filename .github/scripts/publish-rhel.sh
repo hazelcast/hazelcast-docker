@@ -272,32 +272,33 @@ function delete_unpublished_images() {
     for ((idx = 0 ; idx < $((UNPUBLISHED_COUNT)) ; idx++));
     do
         local IMAGE_ID=$(echo "${UNPUBLISHED_IMAGES}" | jq -r .data[${idx}]._id)
-        do_delete_unpublished_images "${RHEL_API_KEY}" "${IMAGE_ID}"
+        delete_image "${RHEL_PROJECT_ID}" "${RHEL_API_KEY}" "${IMAGE_ID}"
     done
 
     # verify we have actually deleted the images
     if [[ ${UNPUBLISHED_COUNT} -gt 0 ]]; then
-        verify_no_unpublished_images "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+        verify_no_unpublished_images "${RHEL_PROJECT_ID}" "{$VERSION}" "${RHEL_API_KEY}"
     fi
 }
 
 # this will actually send request to delete a single unpublished image
 function delete_image() {
-    local RHEL_API_KEY=$1
-    local IMAGE_ID=$2
+    local RHEL_PROJECT_ID=$1
+    local RHEL_API_KEY=$2
+    local IMAGE_ID=$3
 
-    echo "Marking image with ID=${IMAGE_ID} as deleted"
+    echo "Deleting image with ID=${IMAGE_ID}"
 
-    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPatchImage.html
+    # https://catalog.redhat.com/api/containers/docs/objects/CertProjectImageRequest.html?tab=Fields
     RESPONSE=$( \
         curl --silent \
             --retry 5 --retry-all-errors \
-            --request PATCH \
-            --header "accept: application/json" \
-            --header "Content-Type: application/json" \
+            --request POST \
             --header "X-API-KEY: ${RHEL_API_KEY}" \
-            --data '{"deleted": true}' \
-            "https://catalog.redhat.com/api/containers/v1/images/id/${IMAGE_ID}")
+            --header 'Cache-Control: no-cache' \
+            --header 'Content-Type: application/json' \
+            --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"delete\" }" \
+            "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
 
     echo "::debug::HTTP response after image deletion"
     echo "::debug::${RESPONSE}"
