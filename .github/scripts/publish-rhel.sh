@@ -285,6 +285,7 @@ function delete_unpublished_images() {
 function do_delete_unpublished_images() {
     local RHEL_API_KEY=$1
     local IMAGE_ID=$2
+
     echo "Marking image with ID=${IMAGE_ID} as deleted"
 
     # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPatchImage.html
