@@ -282,7 +282,7 @@ function delete_unpublished_images() {
 }
 
 # this will actually send request to delete a single unpublished image
-function do_delete_unpublished_images() {
+function delete_image() {
     local RHEL_API_KEY=$1
     local IMAGE_ID=$2
 
