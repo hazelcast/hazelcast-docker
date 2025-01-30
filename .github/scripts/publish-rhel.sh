@@ -146,6 +146,7 @@ publish_the_image()
             --header 'Content-Type: application/json' \
             --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"publish\" }" \
             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
+
     echo "Response: ${RESPONSE}"
     echo "Created a publish request, please check if the image is published."
 }
@@ -183,6 +184,7 @@ sync_tags()
             --header 'Content-Type: application/json' \
             --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"sync-tags\" }" \
             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
+
     echo "Response: ${RESPONSE}"
     echo "Created a sync-tags request, please check if the tags image are in sync."
 }
@@ -240,6 +242,7 @@ function print_test_results_on_error() {
 
     # Add additional logging context if possible
     echoerr "Test Results:"
+
     # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetTestResultsById.html
     get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
         local TEST_RESULTS
@@ -287,6 +290,7 @@ function do_delete_unpublished_images() {
     # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPatchImage.html
     RESPONSE=$( \
         curl --silent \
+            --retry 5 --retry-all-errors \
             --request PATCH \
             --header "accept: application/json" \
             --header "Content-Type: application/json" \
