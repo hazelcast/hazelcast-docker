@@ -60,6 +60,7 @@ jobs:
         shell: bash
     env:
       SCAN_REGISTRY: "quay.io"
+      TIMEOUT_IN_MINS: 240
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
@@ -213,7 +214,7 @@ jobs:
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
 
-          wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+          wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
 
       - name: Set MC version
         run: |
@@ -289,7 +290,7 @@ jobs:
           source .github/scripts/publish-rhel.sh
 
           publish_the_image "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
-          wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+          wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
           sync_tags "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
 
       - name: Slack notification
