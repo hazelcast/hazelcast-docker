@@ -34,7 +34,7 @@ jobs:
     env:
       REQUIRED_HZ_MAJOR_VERSION: 5
       SCAN_REGISTRY: "quay.io"
-      TIMEOUT_IN_MINS: 60
+      TIMEOUT_IN_MINS: 240
       HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
       OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
       OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
@@ -140,6 +140,14 @@ jobs:
           else
               echo "File '$IS_LATEST_LTS_FILE' does not exist. Assuming NON-latest-lts release"
           fi
+
+      - name: Delete unpublished images
+        if: inputs.DRY_RUN != 'true'
+        run: |
+          VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
+          source .github/scripts/publish-rhel.sh
+
+          delete_unpublished_images "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}"
 
       - name: Build the Hazelcast Enterprise image
         run: |
