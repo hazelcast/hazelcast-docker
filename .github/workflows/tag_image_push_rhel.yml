@@ -26,7 +26,7 @@ jobs:
     env:
       REQUIRED_HZ_MAJOR_VERSION: 5
       SCAN_REGISTRY: "quay.io"
-      TIMEOUT_IN_MINS: 60
+      TIMEOUT_IN_MINS: 240
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
@@ -124,6 +124,14 @@ jobs:
       - name: Log in to Red Hat Scan Registry
         run: |
           docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
+
+      - name: Delete unpublished images
+        if: inputs.DRY_RUN != 'true'
+        run: |
+          VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
+          source .github/scripts/publish-rhel.sh
+
+          delete_unpublished_images "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}"
 
       - name: Build the Hazelcast Enterprise image
         run: |
@@ -230,7 +238,7 @@ jobs:
 
       - name: Store OpenShift events as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: openshift-events-jdk${{ matrix.jdk }}.log
           path: openshift-events-jdk${{ matrix.jdk }}.log
