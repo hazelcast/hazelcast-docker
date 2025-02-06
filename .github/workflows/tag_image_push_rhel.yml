@@ -216,9 +216,15 @@ jobs:
 
           wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
 
-      - name: Set MC version
+      - name: Set Management Center Version to be used in the tests
         run: |
-          echo "HZ_MC_VERSION=${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}" >> $GITHUB_ENV
+          # Find the latest, non BETA or otherwise suffix-ed tag in the repo
+          LATEST_TAG=$(gh api repos/hazelcast/management-center/tags \
+            --paginate \
+            --jq '[.[].name | select(test("^v'"${HZ_MAJOR_VERSION}"'") and (test("BETA") | not) and (test("-") | not))] | sort | last' \
+          )
+          echo ${LATEST_TAG}
+          echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
 
       - uses: redhat-actions/oc-login@v1
         with:
@@ -233,16 +239,16 @@ jobs:
         run: |
           WORKDIR=$(pwd)/.github/scripts
           .github/scripts/smoke-test.sh \
-                        "$WORKDIR" \
-                        "$PROJECT_NAME"  \
-                        "$SCAN_REGISTRY_USER" \
-                        "$SCAN_REGISTRY_PASSWORD" \
-                        "$SCAN_REPOSITORY" \
-                        "$RELEASE_VERSION" \
-                        "$CLUSTER_SIZE" \
-                        "$HZ_ENTERPRISE_LICENSE" \
-                        "$HZ_MC_VERSION" \
-                        "$SCAN_REGISTRY"
+                        "${WORKDIR}" \
+                        "${PROJECT_NAME}"  \
+                        "${SCAN_REGISTRY_USER}" \
+                        "${SCAN_REGISTRY_PASSWORD}" \
+                        "${SCAN_REPOSITORY}" \
+                        "${RELEASE_VERSION}" \
+                        "${CLUSTER_SIZE}" \
+                        "${HZ_ENTERPRISE_LICENSE}" \
+                        "${HZ_MC_VERSION}" \
+                        "${SCAN_REGISTRY}"
 
         env:
           CLUSTER_SIZE: 3
