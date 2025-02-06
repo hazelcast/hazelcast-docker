@@ -226,7 +226,7 @@ jobs:
           echo ${LATEST_TAG}
           echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
 
       - uses: redhat-actions/oc-login@v1
         with:
