@@ -1,0 +1,23 @@
+name: GH Test
+
+on:
+  pull_request:
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Management Center Version to be used in the tests
+        run: |
+          # Find the latest, non BETA or otherwise suffix-ed tag in the repo
+          LATEST_TAG=$(gh api repos/hazelcast/management-center/tags \
+            --paginate \
+            --jq '[.[].name | select(test("^v'"${HZ_MAJOR_VERSION}"'") and (test("BETA") | not) and (test("-") | not))] | sort | last' \
+          )
+          echo ${LATEST_TAG}
+          echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ github.token }}
