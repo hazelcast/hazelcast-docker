@@ -14,4 +14,4 @@ jobs:
         run: |
           gh api repos/hazelcast/management-center/tags
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
