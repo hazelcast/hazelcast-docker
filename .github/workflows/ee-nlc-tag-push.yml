@@ -98,7 +98,7 @@ jobs:
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-logs-jdk${{ matrix.jdk }}
           path: |
