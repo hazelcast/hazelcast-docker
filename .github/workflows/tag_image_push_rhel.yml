@@ -220,8 +220,7 @@ jobs:
         run: |
           # Find the latest, non BETA or otherwise suffix-ed tag in the repo
           LATEST_TAG=$(gh api repos/hazelcast/management-center/tags \
-            --paginate \
-            --jq '[.[].name | select(test("^v'"${HZ_MAJOR_VERSION}"'") and (test("BETA") | not) and (test("-") | not))] | sort | last' \
+            --jq '[.[].name | select((test("BETA") | not) and (test("-") | not) and test("\\d+"))] | sort_by(.) | last \
           )
           echo ${LATEST_TAG}
           echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
