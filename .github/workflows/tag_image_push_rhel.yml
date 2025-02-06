@@ -95,10 +95,7 @@ jobs:
       - name: Set Management Center Version to be used in the tests
         working-directory: management-center-openshift
         run: |
-          FILTERED_TAGS=$(git tag --list "v${HZ_MAJOR_VERSION}*" |  grep -E -v '.*(BETA|-).*' )
-          LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
-          echo $LATEST_TAG
-          echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
+          echo "HZ_MC_VERSION=5.6.0" >> $GITHUB_ENV
 
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -244,6 +241,11 @@ jobs:
           verify_management_center $CLUSTER_SIZE
         env:
           CLUSTER_SIZE: 3
+
+      - name: Get OpenShift events
+        if: ${{ always() }}
+        run: |
+          kubectl get events -n ${PROJECT_NAME} > openshift-events-jdk${{ matrix.jdk }}.log
 
       - name: Get OpenShift events
         if: ${{ always() }}
