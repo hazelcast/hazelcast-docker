@@ -62,3 +62,10 @@ function get_last_version_with_file() {
     fi
   done
 }
+
+# Find the latest, non BETA or otherwise suffix-ed tag in the repo
+function get_last_version_tag_from_github() {
+  local repo=$1
+  gh api repos/"${repo}"/tags \
+      --jq '[.[].name | select((test("BETA") | not) and (test("-") | not) and test("\\d+"))] | sort_by(.) | last'
+}

@@ -218,11 +218,11 @@ jobs:
 
       - name: Set Management Center Version to be used in the tests
         run: |
-          # Find the latest, non BETA or otherwise suffix-ed tag in the repo
-          LATEST_MC_TAG=$(gh api repos/hazelcast/management-center/tags \
-            --jq '[.[].name | select((test("BETA") | not) and (test("-") | not) and test("\\d+"))] | sort_by(.) | last' \
-          )
-          echo LATEST_MC_TAG=${LATEST_MC_TAG}
+          source .github/scripts/versions.functions.sh
+
+          LATEST_MC_TAG=$(get_last_version_tag_from_github hazelcast/management-center)
+          echo ::debug::LATEST_MC_TAG=${LATEST_MC_TAG}
+          # Remove "v" prefix
           echo "HZ_MC_VERSION=${LATEST_MC_TAG:1}" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
