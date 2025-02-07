@@ -102,6 +102,8 @@ assert_get_last_version_with_file ".github/actions/install-xmllint/action.yml" "
 assert_get_last_version_with_file "dummy-non-existing-file" ""
 
 log_header "Tests for get_last_version_tag_from_github"
+# Use archived repos for tests to ensure constant results
 assert_get_last_version_tag_from_github hazelcast/management-center-openshift v5.3.2
+assert_get_last_version_tag_from_github hazelcast/hazelcast-jet v4.5.4
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"

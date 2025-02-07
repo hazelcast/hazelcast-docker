@@ -218,7 +218,7 @@ jobs:
 
       - name: Set Management Center Version to be used in the tests
         run: |
-          source .github/scripts/versions.functions.sh
+          source .github/scripts/version.functions.sh
 
           LATEST_MC_TAG=$(get_last_version_tag_from_github hazelcast/management-center)
           echo ::debug::LATEST_MC_TAG=${LATEST_MC_TAG}
