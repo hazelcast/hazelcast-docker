@@ -67,5 +67,5 @@ function get_last_version_with_file() {
 function get_last_version_tag_from_github() {
   local repo=$1
   gh api repos/"${repo}"/tags \
-      --jq '[.[].name | select((test("BETA") | not) and (test("-") | not) and test("\\d+"))] | sort_by(.) | last'
+      --jq 'first(.[] | select(.name | test("^v\\d+(\\.\\d+)*$")) | .name)'
 }
