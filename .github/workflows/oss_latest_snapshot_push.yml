@@ -81,14 +81,14 @@ jobs:
       - name: Run smoke test against OSS image
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${HZ_VERSION} ${{ matrix.jdk }}
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test "${{ env.test_container_name_oss }}" oss ${HZ_VERSION} "${{ matrix.jdk }}"
 
       - name: Get docker logs
         if: ${{ always() }}
         run: |
           DOCKER_LOG_FILE_OSS=docker-${{ env.test_container_name_oss }}${{ env.SUFFIX }}-jdk${{ matrix.jdk }}.log
           echo "DOCKER_LOG_FILE_OSS=${DOCKER_LOG_FILE_OSS}" >> $GITHUB_ENV
-          docker logs ${{ env.test_container_name_oss }} > ${DOCKER_LOG_FILE_OSS}
+          docker logs "${{ env.test_container_name_oss }}" > ${DOCKER_LOG_FILE_OSS}
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
