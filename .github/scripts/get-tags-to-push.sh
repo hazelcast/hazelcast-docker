@@ -22,7 +22,7 @@ function get_version_only_tags_to_push() {
     exit 1;
   fi
 
-  if [[ "$VERSION_TO_RELEASE" =~ .*(BETA|DEVEL).* ]]; then
+  if [[ "$VERSION_TO_RELEASE" =~ BETA|DEVEL ]]; then
     echo "$VERSION_TO_RELEASE"
     return
   fi
