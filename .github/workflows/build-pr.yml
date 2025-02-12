@@ -83,7 +83,7 @@ jobs:
           docker buildx build --load \
           --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-oss:test \
-          ${DOCKER_PATH}
+          "${DOCKER_PATH}"
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
@@ -100,7 +100,7 @@ jobs:
           docker buildx build --load \
           --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-ee:test \
-          ${DOCKER_PATH}
+          "${DOCKER_PATH}"
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
@@ -161,7 +161,7 @@ jobs:
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
           --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-oss:test \
-          ${DOCKER_PATH}
+          "${DOCKER_PATH}"
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
@@ -178,7 +178,7 @@ jobs:
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
           --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-ee:test \
-          ${DOCKER_PATH}
+          "${DOCKER_PATH}"
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
