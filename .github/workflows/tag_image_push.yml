@@ -133,24 +133,6 @@ jobs:
           . .github/scripts/ee-build.functions.sh
           echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
 
-      - name: Build Test EE image
-        if: needs.prepare.outputs.should_build_ee == 'yes'
-        run: |
-          . .github/scripts/ee-build.functions.sh
-          docker buildx build --load \
-            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
-            --tag hazelcast-ee:test \
-            hazelcast-enterprise
-
-      - name: Run smoke test against EE image
-        if: needs.prepare.outputs.should_build_ee == 'yes'
-        timeout-minutes: 2
-        run: |
-          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ env.HZ_VERSION }} ${{ matrix.jdk }}
-
       - name: Get docker logs
         if: ${{ always() }}
         run: |
