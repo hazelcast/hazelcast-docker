@@ -88,7 +88,7 @@ jobs:
         run: |
           DOCKER_LOG_FILE_OSS=docker-${{ env.test_container_name_oss }}${{ env.SUFFIX }}-jdk${{ matrix.jdk }}.log
           echo "DOCKER_LOG_FILE_OSS=${DOCKER_LOG_FILE_OSS}" >> $GITHUB_ENV
-          docker logs "${{ env.test_container_name_oss }}" > ${DOCKER_LOG_FILE_OSS}
+          docker logs "${{ env.test_container_name_oss }}" > "${DOCKER_LOG_FILE_OSS}"
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
