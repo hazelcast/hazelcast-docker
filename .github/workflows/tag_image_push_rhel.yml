@@ -179,7 +179,7 @@ jobs:
             output=--push
           fi
 
-          docker buildx build "${output}" \
+          docker buildx build ${output} \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" "${{ env.HZ_VERSION }}") \
