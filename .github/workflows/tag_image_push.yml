@@ -61,6 +61,7 @@ jobs:
     steps:
       - name: Set environment variables
         run: |
+          set -x
           if [ -z "${{ env.HZ_VERSION }}" ]; then
              HZ_VERSION=${GITHUB_REF:11}
           else
