@@ -243,9 +243,3 @@ jobs:
           publish_the_image "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
           wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
           sync_tags "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
-
-      - name: Slack notification
-        uses: ./.github/actions/slack-notification
-        if: failure()
-        with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
