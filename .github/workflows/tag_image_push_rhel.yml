@@ -141,9 +141,6 @@ jobs:
             TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
 
-          echo "XXXXXXXXXXXXX ${TAGS_ARG}"
-          exit 1
-
           PLATFORMS="linux/amd64"
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
