@@ -133,7 +133,7 @@ jobs:
 
           PUSH_TAGS=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           add_non_moveable_tag_to_push PUSH_TAGS "${{ env.RELEASE_VERSION }}" "${{ matrix.suffix }}" "${{ matrix.jdk }}"
-          echo "PUSH_TAGS=$PUSH_TAGS"
+          echo "PUSH_TAGS=${PUSH_TAGS[*]}"
 
           TAGS_ARG=""
           for tag in ${PUSH_TAGS[@]}
