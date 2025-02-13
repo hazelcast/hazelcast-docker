@@ -87,3 +87,15 @@ function augment_with_suffixed_tags() {
 
   echo "${TAGS_TO_PUSH[@]}"
 }
+
+function add_non_moveable_tag_to_push() {
+  local -n CURRENT_TAGS="$1"
+  local VERSION_TO_RELEASE=$2
+  local SUFFIX=$3
+  local CURRENT_JDK=$4
+
+  local dt=$(date "+%Y%m%d%H%M%S")
+  local ver_array=("${VERSION_TO_RELEASE}")
+  local aug_tag=$(augment_with_suffixed_tags "${ver_array[*]}" "${SUFFIX}" "${CURRENT_JDK}" "")
+  CURRENT_TAGS+=("${aug_tag[0]}-$dt")
+}
