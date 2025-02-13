@@ -94,8 +94,16 @@ function add_non_moveable_tag_to_push() {
   local SUFFIX=$3
   local CURRENT_JDK=$4
 
+  echo "AAAAAAAAAAAAAAAA ${CURRENT_TAGS[*]}"
+
   local dt=$(date "+%Y%m%d%H%M%S")
   local ver_array=("${VERSION_TO_RELEASE}")
+
+  echo "111111111111 ${dt} :::: "${ver_array[*]}""
   local aug_tag=$(augment_with_suffixed_tags "${ver_array[*]}" "${SUFFIX}" "${CURRENT_JDK}" "")
+
+  echo "2222222222222 ${aug_tag}"
   CURRENT_TAGS+=("${aug_tag[0]}-$dt")
+
+  echo "33333333333 ${CURRENT_TAGS[*]}"
 }
