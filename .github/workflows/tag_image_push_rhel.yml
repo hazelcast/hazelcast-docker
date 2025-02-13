@@ -132,9 +132,9 @@ jobs:
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
           TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}"" "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
-          add_non_moveable_tag_to_push TAGS_TO_PUSH "${{ env.RELEASE_VERSION }}" "${{ matrix.suffix }}" "${{ matrix.jdk }}"
 
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
           do
