@@ -75,14 +75,14 @@ jobs:
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${HZ_VERSION} ${{ matrix.jdk }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test "${{ env.test_container_name_ee }}" ee ${HZ_VERSION} "${{ matrix.jdk }}"
 
       - name: Get docker logs
         if: ${{ always() }}
         run: |
           DOCKER_LOG_FILE_EE=docker-${{ env.test_container_name_ee }}${{ env.SUFFIX }}-jdk${{ matrix.jdk }}.log
           echo "DOCKER_LOG_FILE_EE=${DOCKER_LOG_FILE_EE}" >> $GITHUB_ENV
-          docker logs ${{ env.test_container_name_ee }} > ${DOCKER_LOG_FILE_EE}
+          docker logs "${{ env.test_container_name_ee }}" > "${DOCKER_LOG_FILE_EE}"
 
       - name: Store docker logs as artifact
         if: ${{ always() }}

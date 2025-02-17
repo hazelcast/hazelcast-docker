@@ -161,7 +161,7 @@ jobs:
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
           IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -184,7 +184,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" "${{ env.HZ_VERSION }}") \
             ${TAGS_ARG} \
-            --platform=${PLATFORMS} ${DOCKER_DIR}
+            --platform=${PLATFORMS} "${DOCKER_DIR}"
 
       - name: Install `oc` OpenShift tool from mirror
         uses: redhat-actions/openshift-tools-installer@v1
@@ -203,7 +203,7 @@ jobs:
       - name: Run preflight scan
         if: inputs.DRY_RUN != 'true'
         run: |
-          preflight check container ${RHEL_IMAGE} \
+          preflight check container "${RHEL_IMAGE}" \
           --submit --pyxis-api-token=${RHEL_API_KEY} \
           --certification-project-id=${RHEL_PROJECT_ID} \
           --docker-config ~/.docker/config.json
@@ -260,7 +260,7 @@ jobs:
           verify_cluster_size $CLUSTER_SIZE
 
           echo "Waiting for ${PROJECT_NAME}-${NAME}-mancenter-0 pod to be ready"
-          oc wait --for=condition=Ready --timeout=120s pod ${PROJECT_NAME}-${NAME}-mancenter-0
+          oc wait --for=condition=Ready --timeout=120s pod "${PROJECT_NAME}-${NAME}-mancenter-0"
 
           verify_management_center $CLUSTER_SIZE
         env:
@@ -269,7 +269,7 @@ jobs:
       - name: Get OpenShift logs
         if: inputs.DRY_RUN != 'true'
         run: |
-          kubectl get events -n ${PROJECT_NAME} > events.log
+          kubectl get events -n "${PROJECT_NAME}" > events.log
           kubectl describe pods > pods.log
 
       - name: Store OpenShift logs as artifact
