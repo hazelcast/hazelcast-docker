@@ -233,17 +233,18 @@ jobs:
         env:
           CLUSTER_SIZE: 3
 
-      - name: Get OpenShift events
+      - name: Get OpenShift logs
         if: ${{ always() }}
         run: |
-          kubectl get events -n ${PROJECT_NAME} > openshift-events-jdk${{ matrix.jdk }}.log
+          kubectl get events -n ${PROJECT_NAME} > events.log
+          kubectl describe pods > pods.log
 
-      - name: Store OpenShift events as artifact
+      - name: Store OpenShift logs as artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: openshift-events-jdk${{ matrix.jdk }}.log
-          path: openshift-events-jdk${{ matrix.jdk }}.log
+          name: openshift-logs-${{ github.job }}-jdk${{ matrix.jdk }}
+          path: '*.log'
 
       - name: Clean up After Test
         if: always()
