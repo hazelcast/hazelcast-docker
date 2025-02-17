@@ -26,12 +26,11 @@ oc create secret docker-registry hz-pull-secret \
 helm repo add hazelcast https://hazelcast-charts.s3.amazonaws.com/
 helm repo update
 
-sed -i "s|SCAN_REPOSITORY|\"${SCAN_REPOSITORY}\"|g" ${WORKDIR}/values.yaml
-sed -i "s/RELEASE_VERSION/\"${RELEASE_VERSION}\"/g" ${WORKDIR}/values.yaml
-sed -i "s/PULL_SECRET/hz-pull-secret/g" ${WORKDIR}/values.yaml
-sed -i "s/HAZELCAST_CLUSTER_SIZE/${HAZELCAST_CLUSTER_SIZE}/g" ${WORKDIR}/values.yaml
-sed -i "s/HZ_ENTERPRISE_LICENSE/${HZ_ENTERPRISE_LICENSE}/g" ${WORKDIR}/values.yaml
-sed -i "s/HZ_MC_VERSION/\"${HZ_MC_VERSION}\"/g" ${WORKDIR}/values.yaml
-sed -i "s/MC_MAJOR_VERSION/${HZ_MC_VERSION:0:1}/g" ${WORKDIR}/values.yaml
+sed -i "s|SCAN_REPOSITORY|\"${SCAN_REPOSITORY}\"|g" "${WORKDIR}/values.yaml"
+sed -i "s/RELEASE_VERSION/\"${RELEASE_VERSION}\"/g" "${WORKDIR}/values.yaml"
+sed -i "s/HAZELCAST_CLUSTER_SIZE/${HAZELCAST_CLUSTER_SIZE}/g" "${WORKDIR}/values.yaml"
+sed -i "s/HZ_ENTERPRISE_LICENSE/${HZ_ENTERPRISE_LICENSE}/g" "${WORKDIR}/values.yaml"
+sed -i "s/HZ_MC_VERSION/\"${HZ_MC_VERSION}\"/g" "${WORKDIR}/values.yaml"
+sed -i "s/MC_MAJOR_VERSION/${HZ_MC_VERSION:0:1}/g" "${WORKDIR}/values.yaml"
 
-helm install ${PROJECT} -f ${WORKDIR}/values.yaml hazelcast/hazelcast-enterprise 
+helm install "${PROJECT}" -f "${WORKDIR}/values.yaml" hazelcast/hazelcast-enterprise 

@@ -83,13 +83,13 @@ jobs:
           docker buildx build --load \
           --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-oss:test \
-          ${DOCKER_PATH}
+          "${DOCKER_PATH}"
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
         run: |          
           . .github/scripts/docker.functions.sh
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ needs.prepare.outputs.HZ_VERSION_OSS }} "$(get_default_jdk hazelcast-oss)"
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test "${{ env.test_container_name_oss }}" oss "${{ needs.prepare.outputs.HZ_VERSION_OSS }}" "$(get_default_jdk hazelcast-oss)"
 
       - name: Build Test EE image
         run: |
@@ -100,20 +100,20 @@ jobs:
           docker buildx build --load \
           --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-ee:test \
-          ${DOCKER_PATH}
+          "${DOCKER_PATH}"
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
         run: |
           . .github/scripts/docker.functions.sh
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ needs.prepare.outputs.HZ_VERSION_EE }} "$(get_default_jdk hazelcast-enterprise)"
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test "${{ env.test_container_name_ee }}" ee "${{ needs.prepare.outputs.HZ_VERSION_EE }}" "$(get_default_jdk hazelcast-enterprise)"
 
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          docker logs ${{ env.test_container_name_oss }} > ${{ env.docker_log_file_oss }}
-          docker logs ${{ env.test_container_name_ee }} > ${{ env.docker_log_file_ee }}
+          docker logs "${{ env.test_container_name_oss }}" > "${{ env.docker_log_file_oss }}"
+          docker logs "${{ env.test_container_name_ee }}" > "${{ env.docker_log_file_ee }}"
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
@@ -161,12 +161,12 @@ jobs:
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
           --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-oss:test \
-          ${DOCKER_PATH}
+          "${DOCKER_PATH}"
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ needs.prepare.outputs.HZ_VERSION_OSS }} ${{ matrix.jdk }}
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test "${{ env.test_container_name_oss }}" oss "${{ needs.prepare.outputs.HZ_VERSION_OSS }}" "${{ matrix.jdk }}"
 
       - name: Build Test EE image
         run: |
@@ -178,19 +178,19 @@ jobs:
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
           --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-ee:test \
-          ${DOCKER_PATH}
+          "${DOCKER_PATH}"
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ needs.prepare.outputs.HZ_VERSION_EE }} ${{ matrix.jdk }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test "${{ env.test_container_name_ee }}" ee "${{ needs.prepare.outputs.HZ_VERSION_EE }}" "${{ matrix.jdk }}"
 
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          docker logs ${{ env.test_container_name_oss }} > ${{ env.docker_log_file_oss }}
-          docker logs ${{ env.test_container_name_ee }} > ${{ env.docker_log_file_ee }}
+          docker logs "${{ env.test_container_name_oss }}" > "${{ env.docker_log_file_oss }}"
+          docker logs "${{ env.test_container_name_ee }}" > "${{ env.docker_log_file_ee }}"
 
       - name: Store docker logs as artifact
         if: ${{ always() }}

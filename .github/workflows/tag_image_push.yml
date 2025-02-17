@@ -202,7 +202,7 @@ jobs:
         if: needs.prepare.outputs.should_build_oss == 'yes'
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test ${{ env.test_container_name_oss }} oss ${{ env.HZ_VERSION }} ${{ matrix.jdk }}
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test "${{ env.test_container_name_oss }}" oss "${{ env.HZ_VERSION }}" "${{ matrix.jdk }}"
 
       - name: Get EE dist ZIP URL
         if: needs.prepare.outputs.should_build_ee == 'yes'
@@ -226,13 +226,13 @@ jobs:
         timeout-minutes: 2
         run: |
           export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test ${{ env.test_container_name_ee }} ee ${{ env.HZ_VERSION }} ${{ matrix.jdk }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test "${{ env.test_container_name_ee }}" ee "${{ env.HZ_VERSION }}" "${{ matrix.jdk }}"
 
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          docker logs ${{ env.test_container_name_oss }} > ${{ env.DOCKER_LOG_FILE_OSS }} || true
-          docker logs ${{ env.test_container_name_ee }} > ${{ env.DOCKER_LOG_FILE_EE }} || true
+          docker logs "${{ env.test_container_name_oss }}" > "${{ env.DOCKER_LOG_FILE_OSS }}" || true
+          docker logs "${{ env.test_container_name_ee }}" > "${{ env.DOCKER_LOG_FILE_EE }}" || true
 
       - name: Store docker logs as artifact
         if: ${{ always() && ( needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes') }}
@@ -253,7 +253,7 @@ jobs:
           
           # OSS has no LTS releases
           IS_LATEST_LTS=false
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -275,7 +275,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_OSS_ZIP_URL} \
             ${TAGS_ARG} \
-            --platform=${PLATFORMS} ${DOCKER_DIR}
+            --platform=${PLATFORMS} "${DOCKER_DIR}"
 
       - name: Check if latest EE LTS release
         id: is_latest_lts
@@ -296,7 +296,7 @@ jobs:
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
           IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -319,7 +319,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_EE_ZIP_URL} \
             ${TAGS_ARG} \
-            --platform=${PLATFORMS} ${DOCKER_DIR}
+            --platform=${PLATFORMS} "${DOCKER_DIR}"
 
       - name: Update Docker Hub Description
         if: inputs.DRY_RUN != 'true' && (needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes')
