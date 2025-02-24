@@ -26,6 +26,8 @@ jobs:
       - name: Test scripts
         run: |
           .github/scripts/test_scripts.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Build OSS image
         run: |
