@@ -217,9 +217,16 @@ jobs:
 
           wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
 
-      - name: Set MC version
+      - name: Set Management Center Version to be used in the tests
         run: |
-          echo "HZ_MC_VERSION=${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}" >> $GITHUB_ENV
+          source .github/scripts/version.functions.sh
+
+          LATEST_MC_TAG=$(get_last_version_tag_from_github hazelcast/management-center)
+          echo ::debug::LATEST_MC_TAG=${LATEST_MC_TAG}
+          # Remove "v" prefix
+          echo "HZ_MC_VERSION=${LATEST_MC_TAG:1}" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
 
       - uses: redhat-actions/oc-login@v1
         with:
@@ -234,16 +241,16 @@ jobs:
         run: |
           WORKDIR=$(pwd)/.github/scripts
           .github/scripts/smoke-test.sh \
-                        "$WORKDIR" \
-                        "$PROJECT_NAME"  \
-                        "$SCAN_REGISTRY_USER" \
-                        "$SCAN_REGISTRY_PASSWORD" \
-                        "$SCAN_REPOSITORY" \
-                        "$RELEASE_VERSION" \
-                        "$CLUSTER_SIZE" \
-                        "$HZ_ENTERPRISE_LICENSE" \
-                        "$HZ_MC_VERSION" \
-                        "$SCAN_REGISTRY"
+                        "${WORKDIR}" \
+                        "${PROJECT_NAME}"  \
+                        "${SCAN_REGISTRY_USER}" \
+                        "${SCAN_REGISTRY_PASSWORD}" \
+                        "${SCAN_REPOSITORY}" \
+                        "${RELEASE_VERSION}" \
+                        "${CLUSTER_SIZE}" \
+                        "${HZ_ENTERPRISE_LICENSE}" \
+                        "${HZ_MC_VERSION}" \
+                        "${SCAN_REGISTRY}"
 
         env:
           CLUSTER_SIZE: 3
