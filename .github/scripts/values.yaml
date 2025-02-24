@@ -3,7 +3,7 @@ image:
   tag: RELEASE_VERSION
   pullPolicy: Always
   pullSecrets:
-    - PULL_SECRET
+    - hz-pull-secret
 cluster:
   memberCount: HAZELCAST_CLUSTER_SIZE
 hazelcast:
