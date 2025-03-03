@@ -235,6 +235,9 @@ jobs:
         run: |
           kubectl get events -n ${PROJECT_NAME} > events.log
           kubectl describe pods > pods.log
+          kubectl get pods -n "${PROJECT_NAME}" --output json | jq -r '.items[].metadata.name' | while read pod; do
+             kubectl logs --all-containers "${pod}" -n "${PROJECT_NAME}" > "${pod}.log"
+          done      
 
       - name: Store OpenShift logs as artifact
         if: ${{ always() }}
