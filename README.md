@@ -6,7 +6,7 @@ This repository contains Dockerfiles for the official Hazelcast Docker images.
 
 ### Hazelcast
 
-You can launch a Hazelcast Docker Container by running the following command. Check [Hazelcast Versions](#hazelcast-versions) for the versions to replace $HAZELCAST_VERSION.
+You can launch a Hazelcast Docker Container by running the following command. Check [Hazelcast Versions](https://github.com/hazelcast/hazelcast-docker#hazelcast-versions) for the versions to replace $HAZELCAST_VERSION.
 
 ```
 $ docker run hazelcast/hazelcast:$HAZELCAST_VERSION
@@ -36,7 +36,7 @@ After setting up the cluster, you can start the [client](https://github.com/haze
 
 ### Hazelcast Enterprise
 
-You can launch a Hazelcast Enterprise Docker Container by running the following command. Check [Hazelcast Enterprise Versions](#hazelcast-enterprise-versions) for the versions to replace $HAZELCAST_VERSION.
+You can launch a Hazelcast Enterprise Docker Container by running the following command. Check [Hazelcast Enterprise Versions](https://github.com/hazelcast/hazelcast-docker#hazelcast-enterprise-versions) for the versions to replace $HAZELCAST_VERSION.
 
 Please request a trial license [here](https://hazelcast.com/hazelcast-enterprise-download/) or contact sales@hazelcast.com.
 
@@ -164,7 +164,7 @@ If you need to configure Hazelcast with your own `hazelcast.yaml` (or `hazelcast
 $ docker run -e JAVA_OPTS="-Dhazelcast.config=/opt/hazelcast/config_ext/hazelcast.yaml" -v /home/ubuntu/hazelcast:/opt/hazelcast/config_ext hazelcast/hazelcast
 ```
 
-Alternatively, you can [extend Hazelcast base image](#extending-hazelcast-base-image) adding your Hazelcast configuration file.
+Alternatively, you can [extend Hazelcast base image](https://github.com/hazelcast/hazelcast-docker#extending-hazelcast-base-image) adding your Hazelcast configuration file.
 
 ### Extending CLASSPATH with new jars or files
 
@@ -174,7 +174,7 @@ Hazelcast has several extension points i.e MapStore API where you can provide yo
 $ docker run -e CLASSPATH="/opt/hazelcast/CLASSPATH_EXT/*" -v /home/ubuntu/hazelcast:/opt/hazelcast/CLASSPATH_EXT hazelcast/hazelcast
 ```
 
-Alternatively, you can [extend Hazelcast base image](#extending-hazelcast-base-image) adding your custom JARs.
+Alternatively, you can [extend Hazelcast base image](https://github.com/hazelcast/hazelcast-docker#extending-hazelcast-base-image) adding your custom JARs.
 
 
 ### Using TLS (Hazelcast Enterprise Only)
