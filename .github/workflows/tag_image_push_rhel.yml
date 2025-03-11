@@ -36,7 +36,7 @@ jobs:
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
 
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-8
     needs: jdks
     strategy:
       fail-fast: false
