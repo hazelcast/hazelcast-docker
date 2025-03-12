@@ -6,13 +6,14 @@ This repository contains Dockerfiles for the official Hazelcast Docker images.
 
 ### Hazelcast
 
-You can launch a Hazelcast Docker Container by running the following command. Check [Hazelcast Versions](https://github.com/hazelcast/hazelcast-docker#hazelcast-versions) for the versions to replace $HAZELCAST_VERSION.
+You can launch a Hazelcast Docker Container by running the following command. Check [Hazelcast Versions](#hazelcast-versions) for the versions to replace $HAZELCAST_VERSION.
 
 ```
 $ docker run hazelcast/hazelcast:$HAZELCAST_VERSION
 ```
 This command will pull a Hazelcast Docker image and run a new Hazelcast instance.
 
+<a name="hazelcast-versions"></a>
 ### Hazelcast Versions
 
 You can find the full list of Hazelcast versions at the [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast/tags).
@@ -36,7 +37,7 @@ After setting up the cluster, you can start the [client](https://github.com/haze
 
 ### Hazelcast Enterprise
 
-You can launch a Hazelcast Enterprise Docker Container by running the following command. Check [Hazelcast Enterprise Versions](https://github.com/hazelcast/hazelcast-docker#hazelcast-enterprise-versions) for the versions to replace $HAZELCAST_VERSION.
+You can launch a Hazelcast Enterprise Docker Container by running the following command. Check [Hazelcast Enterprise Versions](#hazelcast-enterprise-versions) for the versions to replace $HAZELCAST_VERSION.
 
 Please request a trial license [here](https://hazelcast.com/hazelcast-enterprise-download/) or contact sales@hazelcast.com.
 
@@ -44,6 +45,7 @@ Please request a trial license [here](https://hazelcast.com/hazelcast-enterprise
 $ docker run -e HZ_LICENSEKEY=<your_license_key> hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
 ```
 
+<a name="hazelcast-enterprise-versions"></a>
 ### Hazelcast Enterprise Versions
 
 You can find the full list of Hazelcast Enterprise versions at the [Official Hazelcast Docker Hub](https://store.docker.com/community/images/hazelcast/hazelcast-enterprise/tags).
@@ -164,7 +166,7 @@ If you need to configure Hazelcast with your own `hazelcast.yaml` (or `hazelcast
 $ docker run -e JAVA_OPTS="-Dhazelcast.config=/opt/hazelcast/config_ext/hazelcast.yaml" -v /home/ubuntu/hazelcast:/opt/hazelcast/config_ext hazelcast/hazelcast
 ```
 
-Alternatively, you can [extend Hazelcast base image](https://github.com/hazelcast/hazelcast-docker#extending-hazelcast-base-image) adding your Hazelcast configuration file.
+Alternatively, you can [extend Hazelcast base image](#extending-hazelcast-base-image) adding your Hazelcast configuration file.
 
 ### Extending CLASSPATH with new jars or files
 
@@ -174,7 +176,7 @@ Hazelcast has several extension points i.e MapStore API where you can provide yo
 $ docker run -e CLASSPATH="/opt/hazelcast/CLASSPATH_EXT/*" -v /home/ubuntu/hazelcast:/opt/hazelcast/CLASSPATH_EXT hazelcast/hazelcast
 ```
 
-Alternatively, you can [extend Hazelcast base image](https://github.com/hazelcast/hazelcast-docker#extending-hazelcast-base-image) adding your custom JARs.
+Alternatively, you can [extend Hazelcast base image](#extending-hazelcast-base-image) adding your custom JARs.
 
 
 ### Using TLS (Hazelcast Enterprise Only)
@@ -199,6 +201,7 @@ $ docker run -e HZ_LICENSEKEY=<your_license_key> \
     hazelcast/hazelcast-enterprise
 ```
 
+<a name="extending-hazelcast-base-image"></a>
 ### Extending Hazelcast Base Image
 
 If you'd like to customize your Hazelcast member, you can extend the Hazelcast base image and provide your configuration file or/and custom JARs. To do that, you need to create a new `Dockerfile` and build it with `docker build` command.
