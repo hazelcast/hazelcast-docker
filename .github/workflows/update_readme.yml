@@ -1,0 +1,29 @@
+name: Push `README` changes to Docker Hub
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - README.md
+      - .github/actions/update-dockerhub-description
+      - .github/workflows/update_readme.yml
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Update Docker Hub Description
+        uses: ./.github/actions/update-dockerhub-description
+        with:
+          docker_username: ${{ secrets.DOCKER_USERNAME }}
+          docker_password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Slack notification
+        uses: ./.github/actions/slack-notification
+        if: failure()
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
