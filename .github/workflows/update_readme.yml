@@ -1,4 +1,4 @@
-name: Push `README` changes to Docker Hub
+name: Update `README` on Docker Hub
 
 on:
   workflow_dispatch:
