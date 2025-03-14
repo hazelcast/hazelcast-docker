@@ -68,7 +68,7 @@ Whether you started the Hazelcast or Hazelcast Enterprise cluster, you could use
 
 ```
 docker run \
-  -e MC_INIT_CMD="./mc-conf.sh cluster add -H=/data -ma <host_ip>:5701 -cn dev" \
+  -e MC_INIT_CMD="./bin/hz-mc conf cluster add -H=/data -ma <host_ip>:5701 -cn dev" \
   -p 8080:8080 hazelcast/management-center:$MANAGEMENT_CENTER_VERSION
 ```
 
