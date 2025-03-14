@@ -1,6 +1,7 @@
 name: Push `README` changes to Docker Hub
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
