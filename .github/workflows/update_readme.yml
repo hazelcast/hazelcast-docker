@@ -11,7 +11,7 @@ on:
       - .github/workflows/update_readme.yml
 
 jobs:
-  push:
+  update-readme:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
