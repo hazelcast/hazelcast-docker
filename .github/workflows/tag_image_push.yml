@@ -25,7 +25,6 @@ on:
           - ALL
           - OSS
           - EE
-          - README
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
         required: false
@@ -82,8 +81,6 @@ jobs:
     outputs:
       should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
-      should_build_readme_ee: ${{ steps.which_editions.outputs.should_build_readme_ee }}
-      should_build_readme_oss: ${{ steps.which_editions.outputs.should_build_readme_oss }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -108,12 +105,8 @@ jobs:
           triggered_by=${{ github.event_name }}
           should_build_oss=$(should_build_oss "$release_type")
           should_build_ee=$(should_build_ee "$release_type")
-          should_build_readme_ee=$(should_build_readme_ee "$release_type")
-          should_build_readme_oss=$(should_build_readme_oss "$release_type")
           echo "should_build_ee=${should_build_ee}" >> $GITHUB_OUTPUT
           echo "should_build_oss=${should_build_oss}" >> $GITHUB_OUTPUT
-          echo "should_build_readme_ee=${should_build_readme_ee}" >> $GITHUB_OUTPUT
-          echo "should_build_readme_oss=${should_build_readme_oss}" >> $GITHUB_OUTPUT
 
   push:
     runs-on: ubuntu-latest
@@ -317,13 +310,6 @@ jobs:
             ${TAGS_ARG} \
             --platform=${PLATFORMS} "${DOCKER_DIR}"
 
-      - name: Update Docker Hub Description
-        if: inputs.DRY_RUN != 'true' && (needs.prepare.outputs.should_build_readme_ee == 'yes' || needs.prepare.outputs.should_build_readme_oss == 'yes')
-        uses: ./.github/actions/update-dockerhub-description
-        with:
-          docker_username: ${{ secrets.DOCKER_USERNAME }}
-          docker_password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Create release
         if: github.event_name == 'push'
         uses: ncipollo/release-action@v1
@@ -336,3 +322,9 @@ jobs:
         if: failure()
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+
+  readme:
+    needs: [ prepare, push ]
+    if: inputs.DRY_RUN != 'true' && (needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes')
+    uses: ./.github/workflows/update_readme.yml
+    secrets: inherit
