@@ -300,7 +300,7 @@ See the full list here: https://github.com/hazelcast/hazelcast-docker/releases
 
 ### Management Center
 
-Please see [Management Center Repository](https://github.com/hazelcast/management-center-docker) for Dockerfile definitions and have a look at available images on [Docker Hub]([https://store.docker.com/profiles/hazelcast](https://hub.docker.com/r/hazelcast/management-center) page.
+Please see [Management Center Repository](https://github.com/hazelcast/management-center-docker) for Dockerfile definitions and have a look at available images on [Docker Hub](https://hub.docker.com/r/hazelcast/management-center) page.
 
 ### Hazelcast Kubernetes
 
