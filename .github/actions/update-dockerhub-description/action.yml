@@ -9,6 +9,14 @@ inputs:
     required: true
 
 runs:
+  strategy:
+    matrix:
+      include:
+        - repository: hazelcast/hazelcast
+          short-description: Hazelcast Docker Image
+        - repository: hazelcast/hazelcast-enterprise
+          short-description: Hazelcast Enterprise Docker Image
+
   using: 'composite'
   steps:
     - name: Generate Docker Hub Description
@@ -16,20 +24,11 @@ runs:
       run: |
         .github/scripts/generate-docker-hub-description.sh
 
-    - name: Update Docker Hub Description for OSS image
+    - name: Update Docker Hub Description
       uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
       with:
         username: ${{ inputs.docker_username }}
         password: ${{ inputs.docker_password }}
-        repository: hazelcast/hazelcast
-        short-description: Hazelcast Docker Image
-        readme-filepath: ./README-docker.md
-
-    - name: Update Docker Hub Description for EE image
-      uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
-      with:
-        username: ${{ inputs.docker_username }}
-        password: ${{ inputs.docker_password }}
-        repository: hazelcast/hazelcast-enterprise
-        short-description: Hazelcast Enterprise Docker Image
+        repository: ${{ matrix.repository }}
+        short-description: ${{ matrix.short-description }}
         readme-filepath: ./README-docker.md
