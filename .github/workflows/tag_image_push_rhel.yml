@@ -32,7 +32,8 @@ jobs:
       RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
 
-    runs-on: ubuntu-latest
+    # Deliberately use a faster instance to avoid timeouts during smoke test
+    runs-on: ubicloud-standard-4
     needs: jdks
     strategy:
       fail-fast: false
