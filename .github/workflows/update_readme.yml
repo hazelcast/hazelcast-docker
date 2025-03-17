@@ -3,13 +3,6 @@ name: Update `README` on Docker Hub
 on:
   workflow_dispatch:
   workflow_call:
-  push:
-    branches:
-      - master
-    paths:
-      - README.md
-      - .github/scripts/generate-docker-hub-description.sh
-      - .github/workflows/update_readme.yml
 
 jobs:
   update-readme:
