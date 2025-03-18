@@ -1,5 +1,3 @@
-#!/bin/bash
-
 set -euo pipefail ${RUNNER_DEBUG:+-x}
 
 function get_hz_dist_zip() {
