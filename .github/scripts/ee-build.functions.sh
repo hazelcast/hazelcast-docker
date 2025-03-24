@@ -1,5 +1,3 @@
-#!/bin/bash
-
 set -euo pipefail ${RUNNER_DEBUG:+-x}
 
 # This is a simple script imitating what maven does for snapshot versions. We are not using maven because currently Docker Buildx and QEMU on Github Actions

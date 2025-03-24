@@ -1,5 +1,3 @@
-#!/bin/bash
-
 set -euo pipefail ${RUNNER_DEBUG:+-x}
 
 # THIS FILE IS DUPLICATED AND MUST BE KEPT IN SYNC MANUALLY
