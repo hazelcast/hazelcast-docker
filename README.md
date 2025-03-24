@@ -303,7 +303,7 @@ See the full list here: https://github.com/hazelcast/hazelcast-docker/releases
 
 ### Management Center
 
-Please see [Management Center Repository](https://github.com/hazelcast/management-center-docker) for Dockerfile definitions and have a look at available images on [Docker Hub](https://store.docker.com/profiles/hazelcast) page.
+Please see [Management Center Repository](https://github.com/hazelcast/management-center-docker) for Dockerfile definitions and have a look at available images on [Docker Hub](https://store.docker.com/community/images/hazelcast/management-center) page.
 
 ### Hazelcast Kubernetes
 
@@ -311,7 +311,7 @@ Hazelcast is prepared to work in the Kubernetes environment. For details, please
 
 * [Hazelcast Platform Operator](https://github.com/hazelcast/hazelcast-platform-operator)
 * Hazelcast Helm Charts:
-  * [Hazelcast](https://github.com/helm/charts/tree/master/stable/hazelcast)
+  * [Hazelcast](https://github.com/hazelcast/charts/tree/master/stable/hazelcast)
   * [Hazelcast Enterprise](https://github.com/hazelcast/charts/tree/master/stable/hazelcast-enterprise)
 
 ### Automatic rebuilding (Hazelcast Enterprise only)
