@@ -1,5 +1,3 @@
-#!/bin/bash
-
 set -euo pipefail ${RUNNER_DEBUG:+-x}
 
 # Checks if we should build the OSS artefacts.

@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 if command -v tput &>/dev/null && tty -s; then
   RED=$(tput setaf 1)
   GREEN=$(tput setaf 2)
