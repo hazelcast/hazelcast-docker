@@ -7,7 +7,9 @@ on:
 
 jobs:
   get-maintenance-versions:
-    uses: hazelcast/hazelcast-mono/.github/actions/get-supported-maintenance-versions@DI-349
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hazelcast/hazelcast-mono/.github/actions/get-supported-maintenance-versions/action.yml@DI-349
 
   get-minimal-version:
     runs-on: ubuntu-latest
