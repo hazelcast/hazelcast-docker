@@ -1,0 +1,15 @@
+name: Get supported maintenance versions
+
+on:
+  workflow_call:
+    outputs:
+      versions:
+        value: ${{ jobs.get-maintenance-versions.outputs.versions }}
+
+jobs:
+  get-maintenance-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: "['5.3', '5.4', '5.5']"
+    steps:
+      - run: exit 0
