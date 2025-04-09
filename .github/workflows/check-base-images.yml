@@ -14,28 +14,19 @@ jobs:
         - id: get-maintenance-versions
           uses: hazelcast/hazelcast/.github/actions/get-supported-maintenance-versions
 
-  get-minimal-version:
-    runs-on: ubuntu-latest
-    needs: get-maintenance-versions
-    outputs:
-      minimal: ${{ steps.get-first.outputs.minimal }}
-    steps:
-      - id: get-first
-        run: echo "minimal=$(echo '${{ needs.get-maintenance-versions.outputs.versions }}' | jq '.[0]')" >> ${GITHUB_OUTPUT}
-
   get-latest-patch-versions:
     runs-on: ubuntu-latest
     name: Get latest patch versions
-    needs: get-minimal-version
+    needs: get-maintenance-versions
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-    env:
-      MINIMAL_SUPPORTED_VERSION: ${{ needs.get-minimal-version.outputs.minimal }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Calculate minimal supported version
+        run: echo "MINIMAL_SUPPORTED_VERSION=$(echo '${{ needs.get-maintenance-versions.outputs.versions }}' | jq '.[0]')" >> $GITHUB_ENV
       - id: set-matrix
         name: Get latest patch versions
         run: |
