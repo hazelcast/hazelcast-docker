@@ -12,7 +12,7 @@ jobs:
         versions: ${{ steps.get-maintenance-versions.outputs.versions }}
     steps:
       - id: get-maintenance-versions
-        uses: ${{ github.repository }}/.github/actions/get-supported-maintenance-versions@${{ github.ref }}
+        uses: hazelcast/hazelcast-docker/.github/actions/get-supported-maintenance-versions@DI-349-Composite
 
   get-latest-patch-versions:
     runs-on: ubuntu-latest
