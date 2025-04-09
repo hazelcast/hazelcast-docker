@@ -12,7 +12,7 @@ jobs:
           versions: ${{ steps.get-maintenance-versions.outputs.versions }}
       steps:
         - id: get-maintenance-versions
-          uses: hazelcast/hazelcast/hazelcast/.github/actions/get-supported-maintenance-versions
+          uses: hazelcast/hazelcast/.github/actions/get-supported-maintenance-versions
 
   get-minimal-version:
     runs-on: ubuntu-latest
