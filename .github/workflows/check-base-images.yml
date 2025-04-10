@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
       - id: get-maintenance-versions
-        uses: hazelcast/hazelcast/.github/actions/get-supported-maintenance-versions
+        uses: hazelcast/hazelcast/.github/actions/get-supported-maintenance-versions@master
       - name: Calculate minimal supported version
         run: echo "DEFAULT_MINIMAL_SUPPORTED_VERSION=$(echo '${{ steps.get-maintenance-versions.outputs.versions }}' | jq '.[0]')" >> $GITHUB_ENV
       - id: set-matrix
