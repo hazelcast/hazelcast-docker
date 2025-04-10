@@ -2,6 +2,10 @@ name: Check base images
 
 on:
   workflow_dispatch:
+    inputs:
+      MINIMAL_SUPPORTED_VERSION:
+        description: 'Minimal supported version from which we should start checking images, e.g. 5.1, 5.0.1, 4.2.3. Default derived from supported maintenance versions'
+        required: false
   schedule:
     - cron: '0 6 * * *'
 
@@ -15,19 +19,22 @@ jobs:
     needs: get-maintenance-versions
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+    env:
+      MINIMAL_SUPPORTED_VERSION: ${{ inputs.MINIMAL_SUPPORTED_VERSION }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Calculate minimal supported version
-        run: echo "MINIMAL_SUPPORTED_VERSION=$(echo '${{ needs.get-maintenance-versions.outputs.versions }}' | jq '.[0]')" >> $GITHUB_ENV
+        run: echo "DEFAULT_MINIMAL_SUPPORTED_VERSION=$(echo '${{ needs.get-maintenance-versions.outputs.versions }}' | jq '.[0]')" >> $GITHUB_ENV
       - id: set-matrix
         name: Get latest patch versions
         run: |
           . .github/scripts/version.functions.sh
-          echo "Getting latest patch versions starting from ${MINIMAL_SUPPORTED_VERSION}"
-          versions=$(printf '%s\n' $(get_latest_patch_versions "${MINIMAL_SUPPORTED_VERSION}") | jq -R . | jq -c -s .)
+          MIN_VERSION=${MINIMAL_SUPPORTED_VERSION:-$DEFAULT_MINIMAL_SUPPORTED_VERSION}
+          echo "Getting latest patch versions starting from $MIN_VERSION"
+          versions=$(printf '%s\n' $(get_latest_patch_versions "${MIN_VERSION}") | jq -R . | jq -c -s .)
           echo "Found latest patch versions: $versions"
           echo "matrix={\"version\":$versions}" >> $GITHUB_OUTPUT
       - name: Slack notification
