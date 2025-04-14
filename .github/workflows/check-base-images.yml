@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       MINIMAL_SUPPORTED_VERSION:
-        description: 'Minimal supported version from which we should start checking images, e.g. 5.1, 5.0.1, 4.2.3. Default values is 5.3'
+        description: 'Minimal supported version from which we should start checking images, e.g. 5.1, 5.0.1, 4.2.3. Default derived from supported maintenance versions'
         required: false
   schedule:
     - cron: '0 6 * * *'
@@ -17,12 +17,15 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     env:
       MINIMAL_SUPPORTED_VERSION: ${{ inputs.MINIMAL_SUPPORTED_VERSION }}
-      DEFAULT_MINIMAL_SUPPORTED_VERSION: 5.3
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - id: get-maintenance-versions
+        uses: hazelcast/hazelcast/.github/actions/get-supported-maintenance-versions@master
+      - name: Calculate minimal supported version
+        run: echo "DEFAULT_MINIMAL_SUPPORTED_VERSION=$(echo '${{ steps.get-maintenance-versions.outputs.versions }}' | jq '.[0]')" >> $GITHUB_ENV
       - id: set-matrix
         name: Get latest patch versions
         run: |
