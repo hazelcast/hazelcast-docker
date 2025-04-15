@@ -1,7 +1,6 @@
 name: Build PR
 
 on:
-  workflow_dispatch:
   pull_request_target:
 
 env:
