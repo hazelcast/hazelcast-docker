@@ -1,8 +1,7 @@
 name: Build PR
 
 on:
-  workflow_dispatch:
-  pull_request:
+  pull_request_target:
 
 env:
   test_container_name_oss: hazelcast-oss-test
@@ -11,8 +10,23 @@ env:
   docker_log_file_ee: docker-hazelcast-ee-test.log
 
 jobs:
+  check_for_membership:
+    runs-on: ubuntu-latest
+    name: Check PR author membership
+    outputs:
+      check-result: ${{ steps.composite.outputs.check-result }}
+    steps: 
+      - name: Action for membership check
+        id: composite
+        uses: hazelcast/hazelcast-tpm/membership@main
+        with:
+          organization-name: 'hazelcast'
+          member-name: ${{ github.actor }}
+          token: ${{ secrets.GH_TOKEN }}
+
   prepare:
     runs-on: ubuntu-latest
+    needs: check_for_membership
     name: Prepare environment
     outputs:
       HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.HZ_VERSION_OSS }}
@@ -20,9 +34,16 @@ jobs:
       LAST_RELEASED_HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       HAZELCAST_EE_ZIP_URL: ${{ steps.get_ee_vars.outputs.HAZELCAST_EE_ZIP_URL }}
     steps:
+      - name: Detect untrusted community PR
+        if: ${{ needs.check_for_membership.outputs.check-result == 'false' }}
+        run: |
+          echo "::error::ERROR: Untrusted external PR. Must be reviewed and executed by Hazelcast" 1>&2;
+          exit 1
+
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
           fetch-depth: 0
 
       - name: Forbid .github/release_type file
@@ -64,6 +85,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
           fetch-depth: 0
 
       - name: Set up Docker
@@ -141,6 +163,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
           fetch-depth: 0
 
       - name: Set up Docker
