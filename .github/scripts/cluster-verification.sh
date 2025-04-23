@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
+
+# shellcheck source=../.github/scripts/logging.functions.sh
+. .github/scripts/logging.functions.sh
 
 #CHECK IF THE LAST MEMBER POD IS READY
 wait_for_last_member_initialization() {
@@ -10,11 +14,11 @@ wait_for_last_member_initialization() {
             kubectl get pods
             echo "waiting for pod ${PROJECT_NAME}-${NAME}-${LAST_MEMBER} to be ready..." && sleep 30
             if [ "$i" = "10" ]; then
-            echo "${PROJECT_NAME}-${NAME}-${LAST_MEMBER} pod failed to be ready!"
-            kubectl get pods
-            echo ""
-            kubectl logs "${PROJECT_NAME}-${NAME}-${LAST_MEMBER}"
-            return 1
+                echoerr "${PROJECT_NAME}-${NAME}-${LAST_MEMBER} pod failed to be ready!"
+                kubectl get pods
+                echo ""
+                kubectl logs "${PROJECT_NAME}-${NAME}-${LAST_MEMBER}"
+                return 1
             fi
         else
             echo "${PROJECT_NAME}-${NAME}-${LAST_MEMBER} is ready!"
@@ -35,11 +39,11 @@ verify_cluster_size() {
         else
             echo "Waiting for cluster size to be ${SIZE}..." && sleep 4
             if [ "$i" = "5" ]; then
-            echo "Hazelcast cluster size is not ${SIZE}!"
-            kubectl get pods
-            echo ""
-            kubectl logs "${PROJECT_NAME}-${NAME}-${LAST_MEMBER}"
-            return 1 
+                echoerr "Hazelcast cluster size is not ${SIZE}!"
+                kubectl get pods
+                echo ""
+                kubectl logs "${PROJECT_NAME}-${NAME}-${LAST_MEMBER}"
+                return 1
             fi
         fi
     done
@@ -58,11 +62,11 @@ verify_management_center() {
         else
             echo "Waiting for management center to find all ${SIZE} members..." && sleep 4
             if [ "$i" = "5" ]; then
-            echo "Management center could not find all ${SIZE} members!"
-            kubectl get pods
-            echo ""
-            kubectl logs "${PROJECT_NAME}-${NAME}-mancenter-0"
-            return 1 
+                echoerr "Management center could not find all ${SIZE} members!"
+                kubectl get pods
+                echo ""
+                kubectl logs "${PROJECT_NAME}-${NAME}-mancenter-0"
+                return 1 
             fi
         fi  
     done
