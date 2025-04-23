@@ -10,6 +10,6 @@ jobs:
   get-supported-jdks:
     runs-on: ubuntu-latest
     outputs:
-      jdks: "['17', '21']"
+      jdks: "['21']"
     steps:
       - run: exit 0
