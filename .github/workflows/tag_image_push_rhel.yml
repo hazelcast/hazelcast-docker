@@ -273,7 +273,7 @@ jobs:
           verify_management_center ${CLUSTER_SIZE}
 
       - name: Get OpenShift logs
-        if: inputs.DRY_RUN != 'true'
+        if: ${{ always() && inputs.DRY_RUN != 'true' }}
         run: |
           kubectl get events -n "${PROJECT_NAME}" > events.log
           kubectl describe pods > pods.log
@@ -282,7 +282,7 @@ jobs:
           done      
 
       - name: Store OpenShift logs as artifact
-        if: inputs.DRY_RUN != 'true'
+        if: ${{ always() && inputs.DRY_RUN != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: openshift-logs-${{ github.job }}-jdk${{ matrix.jdk }}
