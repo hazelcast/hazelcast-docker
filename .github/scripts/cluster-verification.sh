@@ -53,14 +53,14 @@ verify_cluster_size() {
 #CHECK IF ALL MEMBERS CAN COMMUNICATE WITH MANAGEMENT CENTER
 verify_management_center() {
     local SIZE=$1
-    echo "Verifying management center"
+    echo "Verifying Management Center"
     for i in `seq 1 5`; do
         local MEMBER_COUNT=$(kubectl logs "${PROJECT_NAME}-${NAME}-mancenter-0" | grep -E "Started communication with (a new )?member" | wc -l)
         if [ "$MEMBER_COUNT" = "${SIZE}" ]; then
             echo "Management Center monitoring ${SIZE} members!"
             return 0
         else
-            echo "Waiting for management center to find all ${SIZE} members..." && sleep 4
+            echo "Waiting for Management Center to find all ${SIZE} members..." && sleep 4
             if [ "$i" = "5" ]; then
                 echoerr "Management Center could not find all ${SIZE} members!"
                 kubectl get pods
