@@ -62,7 +62,7 @@ verify_management_center() {
         else
             echo "Waiting for management center to find all ${SIZE} members..." && sleep 4
             if [ "$i" = "5" ]; then
-                echoerr "Management center could not find all ${SIZE} members!"
+                echoerr "Management Center could not find all ${SIZE} members!"
                 kubectl get pods
                 echo ""
                 kubectl logs "${PROJECT_NAME}-${NAME}-mancenter-0"
