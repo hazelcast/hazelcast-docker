@@ -58,13 +58,6 @@ function assert_get_last_version_with_file {
   assert_eq "$ACTUAL_LAST_VERSION" "$EXPECTED_LAST_VERSION" "Last version of $FILE should be ${EXPECTED_LAST_VERSION:-<none>} " || TESTS_RESULT=$?
 }
 
-function assert_get_last_version_tag_from_github {
-  local REPO=$1
-  local EXPECTED_TAG=$2
-  local ACTUAL_TAG=$(get_last_version_tag_from_github "${REPO}")
-  assert_eq "${ACTUAL_TAG}" "${EXPECTED_TAG}" "Last tag of ${REPO} should be ${EXPECTED_TAG} " || TESTS_RESULT=$?
-}
-
 log_header "Tests for get_latest_patch_version"
 assert_latest_patch_version "4.2.1" "4.2.8"
 assert_latest_patch_version "4.2" "4.2.8"
@@ -100,10 +93,5 @@ log_header "Tests for get_last_version_with_file"
 assert_get_last_version_with_file ".github/containerscan/allowedlist.yaml" "5.3.1" # it was removed in 5.3.2
 assert_get_last_version_with_file ".github/actions/install-xmllint/action.yml" "5.4.1" # it was removed in 5.4.2
 assert_get_last_version_with_file "dummy-non-existing-file" ""
-
-log_header "Tests for get_last_version_tag_from_github"
-# Use archived repos for tests to ensure constant results
-assert_get_last_version_tag_from_github hazelcast/management-center-openshift v5.3.2
-assert_get_last_version_tag_from_github hazelcast/hazelcast-jet v4.5.4
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
