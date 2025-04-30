@@ -20,17 +20,10 @@ jobs:
     uses: ./.github/workflows/get-supported-jdks.yaml
 
   build:
-    defaults:
-      run:
-        shell: bash
     env:
       REQUIRED_HZ_MAJOR_VERSION: 5
       SCAN_REGISTRY: "quay.io"
       TIMEOUT_IN_MINS: 240
-      HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
-      OCP_LOGIN_USERNAME: ${{ secrets.OCP_LOGIN_USERNAME }}
-      OCP_LOGIN_PASSWORD: ${{ secrets.OCP_LOGIN_PASSWORD }}
-      OCP_CLUSTER_URL: ${{ secrets.OCP_CLUSTER_URL }}
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
@@ -83,14 +76,6 @@ jobs:
           path: management-center-openshift
           fetch-depth: 0
 
-      - name: Set Management Center Version to be used in the tests
-        working-directory: management-center-openshift
-        run: |
-          FILTERED_TAGS=$(git tag --list "v${HZ_MAJOR_VERSION}*" |  grep -E -v '.*(BETA|-).*' )
-          LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
-          echo $LATEST_TAG
-          echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
-
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
@@ -119,6 +104,14 @@ jobs:
 
       - name: Install xmllint
         uses: ./.github/actions/install-xmllint
+
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            OCP_LOGIN_USERNAME,CN/OCP_USERNAME
+            OCP_LOGIN_PASSWORD,CN/OCP_PASSWORD
+            OCP_CLUSTER_URL,CN/OCP_CLUSTER_URL
 
       - name: Log in to Red Hat Scan Registry
         run: |
