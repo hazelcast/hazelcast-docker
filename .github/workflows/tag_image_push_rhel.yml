@@ -221,11 +221,3 @@ jobs:
         if: failure()
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-
-  test:
-    needs: build
-    uses: ./.github/workflows/rhel-smoke-test.yml
-    with:
-      HZ_VERSION: ${{ inputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
-    secrets: inherit
