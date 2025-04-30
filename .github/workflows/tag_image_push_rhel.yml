@@ -125,13 +125,12 @@ jobs:
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
-          . .github/scripts/ee-build.functions.sh
 
           DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${SCAN_REPOSITORY}
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -143,7 +142,6 @@ jobs:
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}") \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
