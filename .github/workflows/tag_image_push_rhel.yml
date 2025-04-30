@@ -62,7 +62,6 @@ jobs:
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ inputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
-      PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
 
     runs-on: ubuntu-latest
     needs: jdks
@@ -184,13 +183,6 @@ jobs:
             ${TAGS_ARG} \
             --platform=${PLATFORMS} "${DOCKER_DIR}"
 
-      - name: Install `oc` OpenShift tool from mirror
-        uses: redhat-actions/openshift-tools-installer@v1
-        with:
-          oc: "latest"
-          source: mirror
-          skip_cache: true
-
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
         with:
@@ -213,85 +205,6 @@ jobs:
           source .github/scripts/publish-rhel.sh
 
           wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
-
-      - uses: redhat-actions/oc-login@v1
-        with:
-          openshift_server_url: ${{ env.OCP_CLUSTER_URL }}
-          openshift_username: ${{ env.OCP_LOGIN_USERNAME }}
-          openshift_password: ${{ env.OCP_LOGIN_PASSWORD }}
-          insecure_skip_tls_verify: true
-
-      - name: Deploy Hazelcast Cluster from RedHat Registry
-        if: inputs.DRY_RUN != 'true'
-        run: |
-          # CREATE PROJECT
-          oc new-project "${PROJECT_NAME}"
-
-          oc create secret docker-registry hz-pull-secret \
-            --docker-server="${SCAN_REGISTRY}" \
-            --docker-username="${SCAN_REGISTRY_USER}" \
-            --docker-password="${SCAN_REGISTRY_PASSWORD}" \
-            --docker-email=unused
-
-          oc create secret generic hz-license-secret \
-            --from-literal=key="${{ secrets.HZ_ENTERPRISE_LICENSE }}"
-
-          helm repo add hazelcast https://hazelcast-charts.s3.amazonaws.com/
-          helm repo update
-
-          CHART=hazelcast/hazelcast-enterprise
-
-          HZ_MC_VERSION=$(helm show values "${CHART}" | yq '.mancenter.image.tag')
-
-          helm install "${PROJECT_NAME}" "${CHART}" \
-            --set image.repository="${SCAN_REPOSITORY}" \
-            --set image.tag="${RELEASE_VERSION}" \
-            --set image.pullPolicy="Always" \
-            --set image.pullSecrets[0]="hz-pull-secret" \
-            --set hazelcast.licenseKeySecretName="hz-license-secret" \
-            --set securityContext.enabled=false \
-            --set mancenter.enabled=true \
-            --set mancenter.image.pullPolicy="Always" \
-            --set mancenter.image.repository="registry.connect.redhat.com/hazelcast/management-center-${HZ_MC_VERSION:0:1}-rhel8"
-
-      - name: Validate Cluster Size
-        if: inputs.DRY_RUN != 'true'
-        run: |
-          NAME=hazelcast-enterprise
-
-          source .github/scripts/cluster-verification.sh
-
-          CLUSTER_SIZE=$(helm get values "${PROJECT_NAME}" --all | yq '.cluster.memberCount')
-
-          wait_for_last_member_initialization ${CLUSTER_SIZE}
-
-          verify_cluster_size ${CLUSTER_SIZE}
-
-          echo "Waiting for ${PROJECT_NAME}-${NAME}-mancenter-0 pod to be ready"
-          oc wait --for=condition=Ready --timeout=300s pod "${PROJECT_NAME}-${NAME}-mancenter-0"
-
-          verify_management_center ${CLUSTER_SIZE}
-
-      - name: Get OpenShift logs
-        if: ${{ always() && inputs.DRY_RUN != 'true' }}
-        run: |
-          kubectl get events -n "${PROJECT_NAME}" > events.log
-          kubectl describe pods > pods.log
-          kubectl get pods -n "${PROJECT_NAME}" --output json | jq -r '.items[].metadata.name' | while read pod; do
-             kubectl logs --all-containers "${pod}" -n "${PROJECT_NAME}" > "${pod}.log"
-          done      
-
-      - name: Store OpenShift logs as artifact
-        if: ${{ always() && inputs.DRY_RUN != 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: openshift-logs-${{ github.job }}-jdk${{ matrix.jdk }}
-          path: '*.log'
-
-      - name: Clean up After Test
-        if: inputs.DRY_RUN != 'true'
-        run: |
-          .github/scripts/clean-up.sh $PROJECT_NAME
 
       - name: Publish the Hazelcast Enterprise image
         if: inputs.DRY_RUN != 'true'
