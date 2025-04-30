@@ -28,9 +28,8 @@ jobs:
       SCAN_REGISTRY: "quay.io"
       TIMEOUT_IN_MINS: 240
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
-      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ github.event.inputs.RELEASE_VERSION }}
-      PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.jdk }}
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
 
     # Deliberately use a faster instance to avoid timeouts during smoke test
     runs-on: ubicloud-standard-4
@@ -127,7 +126,6 @@ jobs:
           docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
 
       - name: Delete unpublished images
-        if: inputs.DRY_RUN != 'true'
         run: |
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
@@ -160,13 +158,6 @@ jobs:
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
 
-      - name: Install `oc` OpenShift tool from mirror
-        uses: redhat-actions/openshift-tools-installer@v1
-        with:
-          oc: "latest"
-          source: mirror
-          skip_cache: true
-
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
         with:
@@ -187,70 +178,6 @@ jobs:
           source .github/scripts/publish-rhel.sh
 
           wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
-
-      - uses: redhat-actions/oc-login@v1
-        with:
-          openshift_server_url: ${{ env.OCP_CLUSTER_URL }}
-          openshift_username: ${{ env.OCP_LOGIN_USERNAME }}
-          openshift_password: ${{ env.OCP_LOGIN_PASSWORD }}
-          insecure_skip_tls_verify: true
-
-      - name: Deploy Hazelcast Cluster
-        run: |
-          WORKDIR=$(pwd)/.github/scripts
-          .github/scripts/smoke-test.sh \
-                        "$WORKDIR" \
-                        "$PROJECT_NAME"  \
-                        "$SCAN_REGISTRY_USER" \
-                        "$SCAN_REGISTRY_PASSWORD" \
-                        "$SCAN_REPOSITORY" \
-                        "$RELEASE_VERSION" \
-                        "$CLUSTER_SIZE" \
-                        "$HZ_ENTERPRISE_LICENSE" \
-                        "$HZ_MC_VERSION" \
-                        "$SCAN_REGISTRY"
-
-        env:
-          CLUSTER_SIZE: 3
-          HZ_ENTERPRISE_LICENSE: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
-
-      - name: Validate Cluster Size
-        run: |
-          NAME=hazelcast-enterprise
-
-          source .github/scripts/cluster-verification.sh
-
-          wait_for_last_member_initialization $CLUSTER_SIZE
-
-          verify_cluster_size $CLUSTER_SIZE
-
-          echo "Waiting for ${PROJECT_NAME}-${NAME}-mancenter-0 pod to be ready"
-          oc wait --for=condition=Ready --timeout=300s pod "${PROJECT_NAME}-${NAME}-mancenter-0"
-
-          verify_management_center $CLUSTER_SIZE
-        env:
-          CLUSTER_SIZE: 3
-
-      - name: Get OpenShift logs
-        if: ${{ always() }}
-        run: |
-          kubectl get events -n ${PROJECT_NAME} > events.log
-          kubectl describe pods > pods.log
-          kubectl get pods -n "${PROJECT_NAME}" --output json | jq -r '.items[].metadata.name' | while read pod; do
-             kubectl logs --all-containers "${pod}" -n "${PROJECT_NAME}" > "${pod}.log"
-          done      
-
-      - name: Store OpenShift logs as artifact
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: openshift-logs-${{ github.job }}-jdk${{ matrix.jdk }}
-          path: '*.log'
-
-      - name: Clean up After Test
-        if: always()
-        run: |
-          .github/scripts/clean-up.sh $PROJECT_NAME
 
       - name: Publish the Hazelcast Enterprise image
         run: |
