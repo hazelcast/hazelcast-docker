@@ -20,9 +20,6 @@ jobs:
     uses: ./.github/workflows/get-supported-jdks.yaml
 
   build:
-    defaults:
-      run:
-        shell: bash
     env:
       REQUIRED_HZ_MAJOR_VERSION: 5
       SCAN_REGISTRY: "quay.io"
@@ -78,14 +75,6 @@ jobs:
           repository: hazelcast/management-center-openshift
           path: management-center-openshift
           fetch-depth: 0
-
-      - name: Set Management Center Version to be used in the tests
-        working-directory: management-center-openshift
-        run: |
-          FILTERED_TAGS=$(git tag --list "v${HZ_MAJOR_VERSION}*" |  grep -E -v '.*(BETA|-).*' )
-          LATEST_TAG=$(echo -en "${FILTERED_TAGS}" | sort | tail -n 1)
-          echo $LATEST_TAG
-          echo "HZ_MC_VERSION=${LATEST_TAG:1}" >> $GITHUB_ENV
 
       - name: Checkout Code
         uses: actions/checkout@v4
