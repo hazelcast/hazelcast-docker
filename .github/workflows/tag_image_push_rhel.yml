@@ -130,10 +130,12 @@ jobs:
           IMAGE_NAME=${SCAN_REPOSITORY}
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
-          TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
-          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+          PUSH_TAGS=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ matrix.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          add_non_moveable_tag_to_push PUSH_TAGS "${{ env.RELEASE_VERSION }}" "${{ matrix.suffix }}" "${{ matrix.jdk }}"
+          echo "PUSH_TAGS=${PUSH_TAGS[*]}"
+
           TAGS_ARG=""
-          for tag in ${TAGS_TO_PUSH[@]}
+          for tag in ${PUSH_TAGS[@]}
           do
             TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
@@ -175,8 +177,3 @@ jobs:
           wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
           sync_tags "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
 
-      - name: Slack notification
-        uses: ./.github/actions/slack-notification
-        if: failure()
-        with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
