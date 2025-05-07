@@ -1,0 +1,67 @@
+name: Recreate tags on release branch change
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+    inputs:
+      BRANCH_NAME:
+        description: The branch to recreate the tag from
+
+jobs:
+  retag:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
+    steps:
+      - name: Calculate branch name
+        if: env.BRANCH_NAME == ''
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> ${GITHUB_ENV}
+
+      - name: Check if is release branch
+        run: |
+          if [[ ! "${BRANCH_NAME}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::notice::\"${BRANCH_NAME}\" is not a release branch, skipping"
+            echo "SKIP=true" >> ${GITHUB_ENV}
+          fi
+
+      - uses: actions/checkout@v4
+        if: ${{ env.SKIP != 'true' }}
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+
+      - name: List tags
+        if: runner.debug == '1'
+        run: |
+          git tag --list
+
+      - name: Calculate tag name
+        if: ${{ env.SKIP != 'true' }}
+        run: |
+          echo "TAG_NAME=v${BRANCH_NAME}" >> ${GITHUB_ENV}
+
+      - name: Check `${{ env.TAG_NAME }}` tag exists
+        if: ${{ env.SKIP != 'true' }}
+        run: |
+          if ! git show-ref --tags ${TAG_NAME}; then
+            echo "\"${TAG_NAME}\" tag not found to replace, skipping"
+            echo "SKIP=true" >> ${GITHUB_ENV}
+          fi
+
+      - name: Recreate `${{ env.TAG_NAME }}` tag
+        if: ${{ env.SKIP != 'true' }}
+        run: |
+          # Delete local tag
+          git tag -d ${TAG_NAME}
+
+          # Create local tag
+          git tag ${TAG_NAME} origin/${BRANCH_NAME}
+
+          # Delete remote tag
+          git push origin :refs/tags/${TAG_NAME}
+
+          # Create remote tag
+          git push origin ${TAG_NAME}
