@@ -49,6 +49,8 @@ wait_for_container_scan()
     local IMAGE
     local IS_PUBLISHED
 
+    echo "3333333333333333333333333333333333333333333333333333333333333333"
+
     IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
     IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
 
@@ -117,7 +119,7 @@ publish_the_image()
             echoerr "Image you are trying to publish did not pass the certification test, its status is \"${SCAN_STATUS}\" and certified is \"${IMAGE_CERTIFIED}\""
             return 1
         fi
-    else
+    else    
         echoerr "Image you are trying to publish does not exist."
         echoerr "${IMAGE}"
         return 1

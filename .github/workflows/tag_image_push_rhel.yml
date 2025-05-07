@@ -142,6 +142,7 @@ jobs:
       - name: Delete unpublished images
         if: inputs.DRY_RUN != 'true'
         run: |
+          echo "111111111111111111111111111111111111111111111111111111"
           VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
 
@@ -193,6 +194,7 @@ jobs:
       - name: Run preflight scan
         if: inputs.DRY_RUN != 'true'
         run: |
+          echo "2222222222222222222222222222222222222222222222222222222222222"
           preflight check container "${RHEL_IMAGE}" \
           --submit --pyxis-api-token=${RHEL_API_KEY} \
           --certification-component-id=${RHEL_PROJECT_ID} \
