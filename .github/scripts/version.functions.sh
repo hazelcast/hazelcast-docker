@@ -25,3 +25,40 @@ function get_latest_patch_versions() {
     done
     echo "${LATEST_PATCH_VERSIONS[@]}"
 }
+
+function version_less_or_equal() {
+  [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
+}
+
+function get_tags_descending() {
+  git tag -l "v*" | sort -V -r | grep -v '-'
+}
+
+function file_exists_in_tag() {
+  local file=$1
+  local tag=$2
+  if [ "$#" -ne 2 ]; then
+    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} <file> <tag>"
+    exit 1
+  fi
+  # subshell to wrap directory change
+  (
+    set -e
+    cd -- "$(git rev-parse --show-toplevel)"
+    git ls-tree -r "$tag" --name-only | grep "^$file$" | grep -q "^$file$"
+  )
+}
+
+function get_last_version_with_file() {
+  local file=$1
+  if [ "$#" -ne 1 ]; then
+    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} <file>"
+    exit 1
+  fi
+  for tag in $(get_tags_descending); do
+    if file_exists_in_tag "$file" "$tag"; then
+      echo "$tag" | cut -c2-
+      return
+    fi
+  done
+}
