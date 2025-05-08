@@ -3,7 +3,7 @@ name: Recreate tags on release branch change
 on:
   push:
     branches:
-      - '**'
+      - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
     inputs:
       BRANCH_NAME:
@@ -20,12 +20,18 @@ jobs:
         run: |
           echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> ${GITHUB_ENV}
 
-      - name: Check if release branch
+      - name: Calculate tag name
         run: |
-          if [[ ! "${BRANCH_NAME}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::notice::\"${BRANCH_NAME}\" is not a release branch, skipping"
+          echo "TAG_NAME=v${BRANCH_NAME}" >> ${GITHUB_ENV}
+
+      - name: Check `${{ env.TAG_NAME }}` tag exists
+        run: |
+          if ! gh release view --repo ${GITHUB_REPOSITORY} ${TAG_NAME}; then
+            echo "::notice::\"${TAG_NAME}\" tag not found to replace, skipping" 
             echo "SKIP=true" >> ${GITHUB_ENV}
           fi
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - uses: actions/checkout@v4
         if: ${{ env.SKIP != 'true' }}
@@ -37,19 +43,6 @@ jobs:
         if: runner.debug == '1'
         run: |
           git tag --list
-
-      - name: Calculate tag name
-        if: ${{ env.SKIP != 'true' }}
-        run: |
-          echo "TAG_NAME=v${BRANCH_NAME}" >> ${GITHUB_ENV}
-
-      - name: Check `${{ env.TAG_NAME }}` tag exists
-        if: ${{ env.SKIP != 'true' }}
-        run: |
-          if ! git show-ref --tags ${TAG_NAME}; then
-            echo "\"${TAG_NAME}\" tag not found to replace, skipping"
-            echo "SKIP=true" >> ${GITHUB_ENV}
-          fi
 
       - name: Recreate `${{ env.TAG_NAME }}` tag
         if: ${{ env.SKIP != 'true' }}
