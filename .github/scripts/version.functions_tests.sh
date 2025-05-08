@@ -1,27 +1,6 @@
 #!/usr/bin/env bash
 
-function findScriptDir() {
-  CURRENT=$PWD
-
-  DIR=$(dirname "$0")
-  cd "$DIR" || exit
-  TARGET_FILE=$(basename "$0")
-
-  # Iterate down a (possible) chain of symlinks
-  while [ -L "$TARGET_FILE" ]
-  do
-      TARGET_FILE=$(readlink "$TARGET_FILE")
-      DIR=$(dirname "$TARGET_FILE")
-      cd "$DIR" || exit
-      TARGET_FILE=$(basename "$TARGET_FILE")
-  done
-
-  SCRIPT_DIR=$(pwd -P)
-  # Restore current directory
-  cd "$CURRENT" || exit
-}
-
-findScriptDir
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 . "$SCRIPT_DIR"/assert.sh/assert.sh
 . "$SCRIPT_DIR"/version.functions.sh
@@ -64,6 +43,13 @@ function assert_latest_patch_versions_not_contain {
   assert_not_contain "$ACTUAL_LATEST_PATCH_VERSIONS" "$EXPECTED_VERSION" "Latest patch versions starting from $MINIMAL_SUPPORTED_VERSION should NOT contain $EXPECTED_VERSION " || TESTS_RESULT=$?
 }
 
+function assert_get_last_version_with_file {
+  local FILE=$1
+  local EXPECTED_LAST_VERSION=$2
+  local ACTUAL_LAST_VERSION=$(get_last_version_with_file "$FILE")
+  assert_eq "$ACTUAL_LAST_VERSION" "$EXPECTED_LAST_VERSION" "Last version of $FILE should be ${EXPECTED_LAST_VERSION:-<none>} " || TESTS_RESULT=$?
+}
+
 log_header "Tests for get_latest_patch_version"
 assert_latest_patch_version "4.2.1" "4.2.8"
 assert_latest_patch_version "4.2" "4.2.8"
@@ -94,5 +80,10 @@ assert_latest_patch_versions_not_contain "4.2" "3.9.4"
 assert_latest_patch_versions_not_contain "4.2" "4.1.10"
 LATEST_5_4_DEVEL="$(git tag | sort -V | grep 'v5.4.0-DEVEL-' | tail -n 1 | cut -c2-)"
 assert_latest_patch_versions_not_contain "5.3" "$LATEST_5_4_DEVEL"
+
+log_header "Tests for get_last_version_with_file"
+assert_get_last_version_with_file ".github/containerscan/allowedlist.yaml" "5.3.1" # it was removed in 5.3.2
+assert_get_last_version_with_file ".github/actions/install-xmllint/action.yml" "5.4.1" # it was removed in 5.4.2
+assert_get_last_version_with_file "dummy-non-existing-file" ""
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
