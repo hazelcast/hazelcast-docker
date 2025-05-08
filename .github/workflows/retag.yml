@@ -15,12 +15,12 @@ jobs:
     env:
       BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
     steps:
-      - name: Calculate branch name
+      - name: Set branch name
         if: env.BRANCH_NAME == ''
         run: |
           echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> ${GITHUB_ENV}
 
-      - name: Check if is release branch
+      - name: Check if release branch
         run: |
           if [[ ! "${BRANCH_NAME}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::notice::\"${BRANCH_NAME}\" is not a release branch, skipping"
