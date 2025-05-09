@@ -15,6 +15,7 @@ wait_for_container_scan()
 
     if [[ ${IS_PUBLISHED} == "1" ]]; then
         echo "Image is already published, exiting"
+        echo "::debug::${IMAGE}"
         return 0
     fi
 
@@ -26,6 +27,13 @@ wait_for_container_scan()
         local IMAGE_CERTIFIED
 
         IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+        NOT_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
+
+        if [[ ${NOT_PUBLISHED} != "1" ]]; then
+            echoerr "Unexpected number (${NOT_PUBLISHED}) of 'not_published' images - should be only one!"
+            echoerr "${IMAGE}"
+        fi
+
         SCAN_STATUS=$(echo "${IMAGE}" | jq -r '.data[0].container_grades.status')
         IMAGE_CERTIFIED=$(echo "${IMAGE}" | jq -r '.data[0].certified')
 
