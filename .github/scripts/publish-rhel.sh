@@ -9,7 +9,7 @@ get_image()
 {
     local PUBLISHED=$1
     local RHEL_PROJECT_ID=$2
-    local VERSION=$3
+    local IMAGE_ID=$3
     local RHEL_API_KEY=$4
 
     case "${PUBLISHED}" in
@@ -24,9 +24,8 @@ get_image()
         ;;
     esac
 
-    local FILTER="filter=deleted==false;${PUBLISHED_FILTER};repositories.tags=em=(name=='${VERSION}')"
+    local FILTER="filter=deleted==false;${PUBLISHED_FILTER};_id==${IMAGE_ID}"
     local INCLUDE="include=total,data.repositories,data.certified,data.container_grades,data._id,data.creation_date"
-    local SORT_BY='sort_by=creation_date\[desc\]'
 
     local RESPONSE
     # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetImagesForCertProjectById.html
@@ -34,7 +33,7 @@ get_image()
         curl --silent \
              --request GET \
              --header "X-API-KEY: ${RHEL_API_KEY}" \
-             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}&${INCLUDE}&${SORT_BY}")
+             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}&${INCLUDE}")
 
     echo "${RESPONSE}"
 }
@@ -42,14 +41,14 @@ get_image()
 wait_for_container_scan()
 {
     local RHEL_PROJECT_ID=$1
-    local VERSION=$2
+    local IMAGE_ID=$2
     local RHEL_API_KEY=$3
     local TIMEOUT_IN_MINS=$4
     
     local IMAGE
     local IS_PUBLISHED
 
-    IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+    IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
     IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
 
     if [[ ${IS_PUBLISHED} == "1" ]]; then
@@ -64,7 +63,7 @@ wait_for_container_scan()
         local SCAN_STATUS
         local IMAGE_CERTIFIED
 
-        IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+        IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
         SCAN_STATUS=$(echo "${IMAGE}" | jq -r '.data[0].container_grades.status')
         IMAGE_CERTIFIED=$(echo "${IMAGE}" | jq -r '.data[0].certified')
 
@@ -95,15 +94,15 @@ wait_for_container_scan()
 publish_the_image()
 {
     local RHEL_PROJECT_ID=$1
-    local VERSION=$2
+    local IMAGE_ID=$2
     local RHEL_API_KEY=$3
 
-    echo "Starting publishing the image for ${VERSION}"
+    echo "Starting publishing the image for ${IMAGE_ID}"
 
     local IMAGE
     local IMAGE_EXISTS
 
-    IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+    IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
     IMAGE_EXISTS=$(echo "${IMAGE}" | jq -r '.total')
 
     if [[ ${IMAGE_EXISTS} == "1" ]]; then
@@ -122,9 +121,6 @@ publish_the_image()
         echoerr "${IMAGE}"
         return 1
     fi
-
-    local IMAGE_ID
-    IMAGE_ID=$(echo "${IMAGE}" | jq -r '.data[0]._id')
 
     echo "Publishing the image ${IMAGE_ID}..."
     # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPostImageRequestByCertProjectId.html
@@ -145,24 +141,21 @@ publish_the_image()
 sync_tags()
 {
     local RHEL_PROJECT_ID=$1
-    local VERSION=$2
+    local IMAGE_ID=$2
     local RHEL_API_KEY=$3
 
-    echo "Starting sync tags for ${VERSION}"
+    echo "Starting sync tags for ${IMAGE_ID}"
 
     local IMAGE
     local IMAGE_EXISTS
 
-    IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+    IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
     IMAGE_EXISTS=$(echo "${IMAGE}" | jq -r '.total')
 
     if [[ ${IMAGE_EXISTS} == "0" ]]; then
         echo "Image you are trying to sync does not exist."
         return 1
     fi
-
-    local IMAGE_ID
-    IMAGE_ID=$(echo "${IMAGE}" | jq -r '.data[0]._id')
 
     echo "Syncing tags of the image ${IMAGE_ID}..."
     # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPostImageRequestByCertProjectId.html
@@ -183,7 +176,7 @@ sync_tags()
 wait_for_container_publish()
 {
     local RHEL_PROJECT_ID=$1
-    local VERSION=$2
+    local IMAGE_ID=$2
     local RHEL_API_KEY=$3
     local TIMEOUT_IN_MINS=$4
 
@@ -193,7 +186,7 @@ wait_for_container_publish()
         local IMAGE
         local IS_PUBLISHED
 
-        IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
+        IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
         IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
 
         if [[ ${IS_PUBLISHED} == "1" ]]; then
@@ -213,7 +206,7 @@ wait_for_container_publish()
             # Add additional logging context if possible
             echoerr "Test Results:"
             # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetTestResultsById.html
-            get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
+            get_image not_published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
                 local TEST_RESULTS
                 TEST_RESULTS=$(curl --silent \
                     --request GET \
@@ -225,74 +218,4 @@ wait_for_container_publish()
             return 42
         fi
     done
-}
-
-# Marks unpublished images as deleted for given version and then verifies if they were truly deleted
-function delete_unpublished_images() {
-    local RHEL_PROJECT_ID=$1
-    local VERSION=$2
-    local RHEL_API_KEY=$3
-
-    local IMAGE
-    local IS_PUBLISHED
-
-    UNPUBLISHED_IMAGES=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
-    UNPUBLISHED_COUNT=$(echo "${UNPUBLISHED_IMAGES}" | jq -r '.total')
-
-    echo "Found '${UNPUBLISHED_COUNT}' unpublished images for '${VERSION}'"
-
-    # mark images as deleted
-    for ((idx = 0 ; idx < $((UNPUBLISHED_COUNT)) ; idx++));
-    do
-        local IMAGE_ID=$(echo "${UNPUBLISHED_IMAGES}" | jq -r .data[${idx}]._id)
-        delete_image "${RHEL_API_KEY}" "${IMAGE_ID}"
-    done
-
-    # verify we have actually deleted the images
-    if [[ ${UNPUBLISHED_COUNT} -gt 0 ]]; then
-        verify_no_unpublished_images "${RHEL_PROJECT_ID}" "{$VERSION}" "${RHEL_API_KEY}"
-    fi
-}
-
-# this will actually send request to delete a single unpublished image
-function delete_image() {
-    local RHEL_API_KEY=$1
-    local IMAGE_ID=$2
-
-    echo "Marking image with ID=${IMAGE_ID} as deleted"
-
-    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPatchImage.html
-    RESPONSE=$( \
-        curl --silent \
-            --retry 5 --retry-all-errors \
-            --request PATCH \
-            --header "accept: application/json" \
-            --header "Content-Type: application/json" \
-            --header "X-API-KEY: ${RHEL_API_KEY}" \
-            --data '{"deleted": true}' \
-            "https://catalog.redhat.com/api/containers/v1/images/id/${IMAGE_ID}")
-
-    echo "::debug::HTTP response after image deletion"
-    echo "::debug::${RESPONSE}"
-}
-
-# verifies there are no unblished images for given version
-function verify_no_unpublished_images() {
-    local RHEL_PROJECT_ID=$1
-    local VERSION=$2
-    local RHEL_API_KEY=$3
-
-    UNPUBLISHED_IMAGES=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
-    UNPUBLISHED_COUNT=$(echo "${UNPUBLISHED_IMAGES}" | jq -r '.total')
-
-    if [[ ${UNPUBLISHED_COUNT} == "0" ]]; then
-        echo "No unpublished images found for '${VERSION}' after cleanup"
-        return 0
-    else
-        echoerr "Exiting as found '${UNPUBLISHED_COUNT}' unpublished images for '${VERSION}'"
-        echo_group "Unpublished images"
-        echoerr "${UNPUBLISHED_IMAGES}"
-        echo_group_end
-        return 1
-    fi
 }
