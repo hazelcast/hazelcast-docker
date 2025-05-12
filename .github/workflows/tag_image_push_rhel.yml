@@ -193,7 +193,7 @@ jobs:
             --docker-config ~/.docker/config.json \
             2>&1)
 
-          echo "::debug::${preflight_output}"
+          echodebug "${preflight_output}"
 
           image_id=$(grep --perl-regexp --only-matching "image id is: \K[a-f0-9]+" <<< "${preflight_output}" || true)
 
