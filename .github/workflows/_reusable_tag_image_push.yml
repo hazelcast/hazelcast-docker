@@ -1,0 +1,295 @@
+name: Build OS and EE image
+
+on:
+  workflow_call:
+    inputs:
+      HZ_VERSION:
+        type: string
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
+        required: true
+      RELEASE_VERSION:
+        type: string
+        description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
+        required: false
+      RELEASE_TYPE:
+        description: 'What should be built'
+        required: true
+        default: 'EE'
+        type: string
+      IS_LTS_OVERRIDE:
+        description: 'Override is LTS release'
+        required: false
+        type: string
+        default: ''
+      DRY_RUN:
+        description: 'Skip pushing the images to remote registry'
+        default: 'false'
+        type: string
+      EVENT_NAME:
+        description: 'Event name that triggered the calling workflow'
+        required: false
+        type: string
+        default: ''
+
+env:
+  test_container_name_oss: hazelcast-oss-test
+  test_container_name_ee: hazelcast-ee-test
+
+jobs:
+  jdks:
+    uses: ./.github/workflows/get-supported-jdks.yaml
+
+  prepare:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
+    outputs:
+      should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
+      should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Read release type from the file
+        if: inputs.EVENT_NAME == 'push'
+        run: |
+          RELEASE_TYPE_FILE=.github/release_type
+          if [ -f $RELEASE_TYPE_FILE ]; then
+              echo "RELEASE_TYPE=$(cat $RELEASE_TYPE_FILE)" >> $GITHUB_ENV
+          else
+              echo "File '$RELEASE_TYPE_FILE' does not exist."
+              exit 1
+          fi
+
+      - name: Check which editions should be built
+        id: which_editions
+        run: |
+          . .github/scripts/build.functions.sh
+          
+          release_type=${{ env.RELEASE_TYPE }}
+          triggered_by=${{ inputs.EVENT_NAME }}
+          should_build_oss=$(should_build_oss "$release_type")
+          should_build_ee=$(should_build_ee "$release_type")
+          echo "should_build_ee=${should_build_ee}" >> $GITHUB_OUTPUT
+          echo "should_build_oss=${should_build_oss}" >> $GITHUB_OUTPUT
+
+  push:
+    runs-on: ubuntu-latest
+    needs: [ jdks, prepare ]
+    strategy:
+      matrix:
+        jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
+        variant: [ 'slim','' ]
+        include:
+          - variant: slim
+          - variant: ''
+    env:
+      DOCKER_ORG: hazelcast
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
+    steps:
+      - name: Set HZ version as environment variable
+        if: env.HZ_VERSION == ''
+        run: |
+          echo "HZ_VERSION=${GITHUB_REF:11}" >> $GITHUB_ENV
+
+      - name: Set Release version as environment variable
+        if: env.RELEASE_VERSION == ''
+        run: |
+          echo "RELEASE_VERSION=${{ env.HZ_VERSION }}" >> $GITHUB_ENV
+
+      - name: Set environment variables
+        run: |
+          if [ -n "${{ matrix.variant }}" ]; then
+            SUFFIX=-${{ matrix.variant }}
+          else
+            SUFFIX=
+          fi
+          echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
+
+          echo "DOCKER_LOG_FILE_OSS=docker-${{ env.test_container_name_oss }}${SUFFIX}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
+          echo "DOCKER_LOG_FILE_EE=docker-${{ env.test_container_name_ee }}${SUFFIX}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.6.0
+
+      - name:  Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: v0.5.1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Login to Docker Hub
+        if: inputs.DRY_RUN != 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Get OSS dist ZIP URL
+        if: needs.prepare.outputs.should_build_oss == 'yes'
+        run: |
+          . .github/scripts/oss-build.functions.sh
+          echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
+
+      - name: Build Test OSS image
+        if: needs.prepare.outputs.should_build_oss == 'yes'
+        run: |
+          docker buildx build --load \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
+            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
+            --tag hazelcast-oss:test \
+            hazelcast-oss
+
+      - name: Run smoke test against OSS image
+        if: needs.prepare.outputs.should_build_oss == 'yes'
+        timeout-minutes: 2
+        run: |
+          .github/scripts/simple-smoke-test.sh hazelcast-oss:test "${{ env.test_container_name_oss }}" oss "${{ env.HZ_VERSION }}" "${{ matrix.jdk }}"
+
+      - name: Get EE dist ZIP URL
+        if: needs.prepare.outputs.should_build_ee == 'yes'
+        run: |
+          . .github/scripts/ee-build.functions.sh
+          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
+
+      - name: Build Test EE image
+        if: needs.prepare.outputs.should_build_ee == 'yes'
+        run: |
+          . .github/scripts/ee-build.functions.sh
+          docker buildx build --load \
+            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
+            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
+            --tag hazelcast-ee:test \
+            hazelcast-enterprise
+
+      - name: Run smoke test against EE image
+        if: needs.prepare.outputs.should_build_ee == 'yes'
+        timeout-minutes: 2
+        run: |
+          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
+          .github/scripts/simple-smoke-test.sh hazelcast-ee:test "${{ env.test_container_name_ee }}" ee "${{ env.HZ_VERSION }}" "${{ matrix.jdk }}"
+
+      - name: Get docker logs
+        if: ${{ always() }}
+        run: |
+          docker logs "${{ env.test_container_name_oss }}" > "${{ env.DOCKER_LOG_FILE_OSS }}" || true
+          docker logs "${{ env.test_container_name_ee }}" > "${{ env.DOCKER_LOG_FILE_EE }}" || true
+
+      - name: Store docker logs as artifact
+        if: ${{ always() && ( needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs${{ env.SUFFIX }}-${{ github.job }}-jdk${{ matrix.jdk }}
+          path: docker-*.log
+
+      - name: Build and Push OSS image
+        if: needs.prepare.outputs.should_build_oss == 'yes'
+        run: |
+          . .github/scripts/get-tags-to-push.sh 
+          . .github/scripts/docker.functions.sh
+          
+          DOCKER_DIR=hazelcast-oss
+          IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
+          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          
+          # OSS has no LTS releases
+          IS_LATEST_LTS=false
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+          TAGS_ARG=""
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
+          done
+          
+          output=
+
+          PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
+
+          if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
+            echo "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
+          else
+            output=--push
+          fi
+
+          docker buildx build ${output} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
+            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_OSS_ZIP_URL} \
+            ${TAGS_ARG} \
+            --platform=${PLATFORMS} "${DOCKER_DIR}"
+
+      - name: Check if latest EE LTS release
+        id: is_latest_lts
+        uses: ./.github/actions/check-if-latest-lts-release
+        with:
+          release_version: ${{ env.RELEASE_VERSION }}
+          is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
+
+      - name: Build/Push EE image
+        if: needs.prepare.outputs.should_build_ee == 'yes'
+        run: |
+          . .github/scripts/get-tags-to-push.sh 
+          . .github/scripts/docker.functions.sh
+          . .github/scripts/ee-build.functions.sh
+          
+          DOCKER_DIR=hazelcast-enterprise
+          IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
+          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          
+          IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+          TAGS_ARG=""
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
+          done
+
+          output=
+
+          PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
+
+          if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
+            echo "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
+          else
+            output=--push
+          fi
+
+          docker buildx build ${output} \
+            --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
+            --build-arg JDK_VERSION=${{ matrix.jdk }} \
+            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_EE_ZIP_URL} \
+            ${TAGS_ARG} \
+            --platform=${PLATFORMS} "${DOCKER_DIR}"
+
+      - name: Create release
+        if: inputs.EVENT_NAME == 'push'
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+
+      - name: Slack notification
+        uses: ./.github/actions/slack-notification
+        if: failure()
+        with:
+          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+
+  readme:
+    needs: [ prepare, push ]
+    if: inputs.DRY_RUN != 'true' && (needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes')
+    uses: ./.github/workflows/update_readme.yml
+    secrets: inherit
