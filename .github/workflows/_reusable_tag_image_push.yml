@@ -281,15 +281,23 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
+      - name: Update readme
+        if: inputs.DRY_RUN != 'true' && (needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes')
+        run: |
+          RUN_ID=$(gh workflow run update_readme.yml --ref master --json id -q .id)
+          echo "RUN_ID=$RUN_ID"
+          gh run watch $RUN_ID
+          STATUS=$(gh run view $RUN_ID --json conclusion -q .conclusion)
+          echo "Conclusion: $STATUS"
+          if [ "$STATUS" != "success" ]; then
+            echo "Readme update failed"
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Slack notification
         uses: ./.github/actions/slack-notification
         if: failure()
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-
-  readme:
-    needs: [ prepare, push ]
-    if: inputs.DRY_RUN != 'true' && (needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes')
-    uses: ./.github/workflows/update_readme.yml
-    secrets: inherit
