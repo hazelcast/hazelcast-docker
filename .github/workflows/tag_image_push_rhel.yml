@@ -187,21 +187,21 @@ jobs:
         run: |
           source .github/scripts/logging.functions.sh
 
-          PRELIGHT_OUTPUT=$(preflight check container "${RHEL_IMAGE}" \
+          PREFLIGHT_OUTPUT=$(preflight check container "${RHEL_IMAGE}" \
             --submit --pyxis-api-token=${RHEL_API_KEY} \
             --certification-component-id=${RHEL_PROJECT_ID} \
             --docker-config ~/.docker/config.json \
             2>&1)
 
-          echodebug "${PRELIGHT_OUTPUT}"
+          echodebug "${PREFLIGHT_OUTPUT}"
 
-          image_id=$(grep --perl-regexp --only-matching "image id is: \K[a-f0-9]+" <<< "${PRELIGHT_OUTPUT}" || true)
+          IMAGE_ID=$(grep --perl-regexp --only-matching "image id is: \K[a-f0-9]+" <<< "${PREFLIGHT_OUTPUT}" || true)
 
-          if [[ -n "${image_id}" ]]; then
-            echo "IMAGE_ID=${image_id}" >> $GITHUB_ENV
+          if [[ -n "${IMAGE_ID}" ]]; then
+            echo "IMAGE_ID=${IMAGE_ID}" >> $GITHUB_ENV
           else
             echoerr "Unable to extract image ID from preflight output:"
-            echoerr "${PRELIGHT_OUTPUT}"
+            echoerr "${PREFLIGHT_OUTPUT}"
             exit 1
           fi
 
