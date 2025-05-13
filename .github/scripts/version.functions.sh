@@ -28,6 +28,10 @@ function version_less_or_equal() {
   [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
 
+function version_less_than() {
+  [ "$1" != "$2" ] && version_less_or_equal "$1" "$2"
+}
+
 function get_tags_descending() {
   git tag -l "v*" | sort -V -r | grep -v '-'
 }

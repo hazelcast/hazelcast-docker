@@ -1,0 +1,23 @@
+name: Get supported JDKs
+description: Get supported JDKs
+inputs:
+  HZ_VERSION:
+    description: HZ Version
+    required: true
+outputs:
+  jdks:
+    value: ${{ steps.get-supported-jdks.outputs.jdks }}
+    description: Returns supported JDKs
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      id: get-supported-jdks
+      run: |
+        . .github/scripts/version.functions.sh
+        HZ_VERSION="${{ inputs.HZ_VERSION }}"
+        if version_less_than "$HZ_VERSION" "5.4.0"; then
+          echo "jdks=['11', '17']" >> $GITHUB_OUTPUT
+        else 
+          echo "jdks=['17', '21']" >> $GITHUB_OUTPUT
+        fi
