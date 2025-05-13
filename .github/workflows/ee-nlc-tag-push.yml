@@ -127,6 +127,9 @@ jobs:
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} $DOCKER_DIR
+      - name: Check RedHat status
+        if: failure()
+        uses: ./.github/actions/check-redhat-service-status
       - name: Slack notification
         uses: ./.github/actions/slack-notification
         if: failure()
