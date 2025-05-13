@@ -4,7 +4,7 @@
 function echoerr() {
   # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-an-error-message
   # Support multi-line strings by replacing line separator with GitHub Actions compatible one
-  echo "::error::ERROR - ${*//$'\n'/%0A}"
+  echo "::error::ERROR - ${*//$'\n'/%0A}" 1>&2;
 }
 
 # Create group
