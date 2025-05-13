@@ -36,9 +36,6 @@ env:
   test_container_name_ee: hazelcast-ee-test
 
 jobs:
-  jdks:
-    uses: ./.github/workflows/get-supported-jdks.yaml
-
   prepare:
     runs-on: ubuntu-latest
     env:
@@ -46,6 +43,7 @@ jobs:
     outputs:
       should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
+      jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -72,13 +70,18 @@ jobs:
           should_build_ee=$(should_build_ee "$release_type")
           echo "should_build_ee=${should_build_ee}" >> $GITHUB_OUTPUT
           echo "should_build_oss=${should_build_oss}" >> $GITHUB_OUTPUT
+      - name: Get supported JDKs
+        id: jdks
+        uses: ./.github/actions/get-supported-jdks
+        with:
+          HZ_VERSION: '${{ inputs.HZ_VERSION }}'
 
   push:
     runs-on: ubuntu-latest
-    needs: [ jdks, prepare ]
+    needs: [ prepare ]
     strategy:
       matrix:
-        jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
+        jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
         variant: [ 'slim','' ]
         include:
           - variant: slim
