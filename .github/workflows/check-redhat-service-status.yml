@@ -2,6 +2,7 @@ name: Redhat status test
 # Entry point to debug the `check-redhat-service-status` action
 
 on:
+  pull_request:
   workflow_dispatch:
 
 jobs:
