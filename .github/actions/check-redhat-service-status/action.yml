@@ -15,4 +15,5 @@ runs:
           echoerr "❌ RedHat service status"
           echoerr "$(jq '.status' <<< ${STATUS})"
           echoerr "$(curl --silent https://status.redhat.com/api/v2/incidents/unresolved.json | jq)"
+          exit 1
         fi
