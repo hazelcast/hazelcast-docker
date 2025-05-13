@@ -18,6 +18,7 @@ jobs:
       HZ_VERSION_EE: ${{ steps.get_ee_vars.outputs.HZ_VERSION_EE }}
       LAST_RELEASED_HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       HAZELCAST_EE_ZIP_URL: ${{ steps.get_ee_vars.outputs.HAZELCAST_EE_ZIP_URL }}
+      jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -52,6 +53,12 @@ jobs:
           . .github/scripts/ee-build.functions.sh
           echo "HZ_VERSION_EE=$HZ_VERSION_EE" >> $GITHUB_OUTPUT
           echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION_EE})" >> $GITHUB_OUTPUT
+
+      - name: Get supported JDKs
+        id: jdks
+        uses: ./.github/actions/get-supported-jdks
+        with:
+          HZ_VERSION: '${{ steps.get_ee_vars.outputs.HZ_VERSION_EE }}'
 
   build-pr:
     runs-on: ubuntu-latest
@@ -124,17 +131,14 @@ jobs:
             ${{ env.docker_log_file_oss }}
             ${{ env.docker_log_file_ee }}
 
-  jdks:
-    uses: ./.github/workflows/get-supported-jdks.yaml
-
   build-pr-custom-jdk:
     runs-on: ubuntu-latest
-    needs: [ jdks, prepare ]
+    needs: [ prepare ]
     name: Build with jdk-${{ matrix.jdk }}
     strategy:
       fail-fast: false
       matrix:
-        jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
+        jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
