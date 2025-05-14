@@ -202,6 +202,10 @@ jobs:
         run: |
           .github/scripts/rhel/publish.sh "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
 
+      - name: Check RedHat service status
+        if: failure()
+        uses: ./.github/actions/check-redhat-service-status
+
       - name: Slack notification
         uses: ./.github/actions/slack-notification
         if: failure()
