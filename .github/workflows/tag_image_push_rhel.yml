@@ -177,6 +177,10 @@ jobs:
           wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
           sync_tags "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
 
+      - name: Check RedHat service status
+        if: failure()
+        uses: ./.github/actions/check-redhat-service-status
+
       - name: Slack notification
         uses: ./.github/actions/slack-notification
         if: failure()
