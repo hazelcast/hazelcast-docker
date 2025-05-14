@@ -114,13 +114,6 @@ jobs:
         run: |
           docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
 
-      - name: Delete unpublished images
-        run: |
-          VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
-          source .github/scripts/publish-rhel.sh
-
-          delete_unpublished_images "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}"
-
       - name: Build the Hazelcast Enterprise image
         run: |
           . .github/scripts/get-tags-to-push.sh 
@@ -156,26 +149,39 @@ jobs:
 
       - name: Run preflight scan
         run: |
-          preflight check container ${RHEL_IMAGE} \
-          --submit --pyxis-api-token=${RHEL_API_KEY} \
-          --certification-project-id=${RHEL_PROJECT_ID} \
-          --docker-config ~/.docker/config.json
+          source .github/scripts/logging.functions.sh
+
+          PREFLIGHT_OUTPUT=$(preflight check container "${RHEL_IMAGE}" \
+            --submit --pyxis-api-token=${RHEL_API_KEY} \
+            --certification-component-id=${RHEL_PROJECT_ID} \
+            --docker-config ~/.docker/config.json \
+            2>&1)
+
+          echodebug "${PREFLIGHT_OUTPUT}"
+
+          IMAGE_ID=$(grep --perl-regexp --only-matching "image id is: \K[a-f0-9]+" <<< "${PREFLIGHT_OUTPUT}" || true)
+
+          if [[ -n "${IMAGE_ID}" ]]; then
+            echo "IMAGE_ID=${IMAGE_ID}" >> $GITHUB_ENV
+          else
+            echoerr "Unable to extract image ID from preflight output:"
+            echoerr "${PREFLIGHT_OUTPUT}"
+            exit 1
+          fi
 
       - name: Wait for Scan to Complete
         run: |
-          VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
 
-          wait_for_container_scan "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
+          wait_for_container_scan "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
 
       - name: Publish the Hazelcast Enterprise image
         run: |
-          VERSION=${RELEASE_VERSION}-jdk${{ matrix.jdk }}
           source .github/scripts/publish-rhel.sh
 
-          publish_the_image "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
-          wait_for_container_publish "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY" "$TIMEOUT_IN_MINS"
-          sync_tags "$RHEL_PROJECT_ID" "$VERSION" "$RHEL_API_KEY"
+          publish_the_image "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}"
+          wait_for_container_publish "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
+          sync_tags "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}"
 
       - name: Check RedHat service status
         if: failure()
