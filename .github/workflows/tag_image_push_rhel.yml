@@ -55,3 +55,8 @@ jobs:
   build:
     uses: hazelcast/hazelcast-docker/.github/workflows/_reusable_tag_image_push_rhel.yml@reusable-build-pr
     secrets: inherit
+    with:
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
+      IS_LTS_OVERRIDE: ${{ inputs.IS_LTS_OVERRIDE }}
+      DRY_RUN:  ${{ inputs.DRY_RUN }}
