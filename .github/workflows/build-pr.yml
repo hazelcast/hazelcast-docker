@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Prepare environment
     outputs:
-      HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.HZ_VERSION_OSS }}
-      HZ_VERSION_EE: ${{ steps.get_ee_vars.outputs.HZ_VERSION_EE }}
-      LAST_RELEASED_HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      HZ_VERSION_OSS: ${{ steps.get_hz_versions.outputs.HZ_VERSION_OSS }}
+      HZ_VERSION_EE: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
+      LAST_RELEASED_HZ_VERSION_OSS: ${{ steps.get_hz_versions.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       HAZELCAST_EE_ZIP_URL: ${{ steps.get_ee_vars.outputs.HAZELCAST_EE_ZIP_URL }}
     steps:
       - name: Checkout Code
@@ -35,23 +35,15 @@ jobs:
         run: |
           .github/scripts/test_scripts.sh
 
-      - name: Setup OSS variables
-        id: get_oss_vars
-        run: |
-          HZ_VERSION_OSS=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' hazelcast-oss/Dockerfile)
-          echo "HZ_VERSION_OSS=$HZ_VERSION_OSS" >> $GITHUB_OUTPUT
-
-          source hazelcast-oss/maven.functions.sh
-          LAST_RELEASED_HZ_VERSION_OSS="$(get_latest_version com.hazelcast hazelcast-distribution https://repo1.maven.org/maven2)";
-          echo "LAST_RELEASED_HZ_VERSION_OSS=$LAST_RELEASED_HZ_VERSION_OSS" >> $GITHUB_OUTPUT
+      - name: Get HZ versions
+        id: get_hz_versions
+        uses: hazelcast/docker-actions/get-hz-versions@add-get-hz-versions
 
       - name: Setup EE variables
         id: get_ee_vars
         run: |
-          HZ_VERSION_EE=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' hazelcast-enterprise/Dockerfile)
           . .github/scripts/ee-build.functions.sh
-          echo "HZ_VERSION_EE=$HZ_VERSION_EE" >> $GITHUB_OUTPUT
-          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION_EE})" >> $GITHUB_OUTPUT
+          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "" "${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}")" >> $GITHUB_OUTPUT
 
   build-pr:
     runs-on: ubuntu-latest
