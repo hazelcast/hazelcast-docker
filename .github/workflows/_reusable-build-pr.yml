@@ -33,6 +33,8 @@ jobs:
           fi
 
       - name: Test scripts
+        # TODO change to refs/heads/master just before the merge
+        if: github.base_ref == 'refs/heads/reusable-build-pr'
         run: |
           .github/scripts/test_scripts.sh
 
