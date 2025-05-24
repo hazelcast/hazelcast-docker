@@ -1,0 +1,34 @@
+name: Setup Hazelcast Versions
+description: Sets up OSS and EE Hazelcast version variables.
+
+outputs:
+  HZ_VERSION_OSS:
+    description: Hazelcast OSS version
+    value: ${{ steps.get_oss_vars.outputs.HZ_VERSION_OSS }}
+  LAST_RELEASED_HZ_VERSION_OSS:
+    description: Last released Hazelcast OSS version
+    value: ${{ steps.get_oss_vars.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+  HZ_VERSION_EE:
+    description: Hazelcast EE version
+    value: ${{ steps.get_ee_vars.outputs.HZ_VERSION_EE }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup OSS variables
+      id: get_oss_vars
+      shell: bash
+      run: |
+        HZ_VERSION_OSS=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' hazelcast-oss/Dockerfile)
+        echo "HZ_VERSION_OSS=$HZ_VERSION_OSS" >> $GITHUB_OUTPUT
+
+        source hazelcast-oss/maven.functions.sh
+        LAST_RELEASED_HZ_VERSION_OSS="$(get_latest_version com.hazelcast hazelcast-distribution https://repo1.maven.org/maven2)"
+        echo "LAST_RELEASED_HZ_VERSION_OSS=$LAST_RELEASED_HZ_VERSION_OSS" >> $GITHUB_OUTPUT
+
+    - name: Setup EE variables
+      id: get_ee_vars
+      shell: bash
+      run: |
+        HZ_VERSION_EE=$(awk -F '=' '/^ARG HZ_VERSION=/ {print $2}' hazelcast-enterprise/Dockerfile)
+        echo "HZ_VERSION_EE=$HZ_VERSION_EE" >> $GITHUB_OUTPUT
