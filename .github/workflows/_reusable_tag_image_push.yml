@@ -67,7 +67,7 @@ jobs:
 
       - name: Get supported JDKs
         id: jdks
-        uses: ./.github/actions/get-supported-jdks
+        uses: hazelcast/hazelcast-docker/.github/actions/get-supported-jdks@reusable-build-pr
         with:
           HZ_VERSION: '${{ inputs.HZ_VERSION }}'
 
@@ -136,49 +136,62 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Get OSS dist ZIP URL
-        if: needs.prepare.outputs.should_build_oss == 'yes'
-        run: |
-          . .github/scripts/oss-build.functions.sh
-          echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
+        id: get_oss_dist_url
+        uses: hazelcast/hazelcast-docker/.github/actions/get-hz-oss-dist-url@reusable-build-pr
+        with:
+          HZ_VERSION: ${{ env.HZ_VERSION }}
+          VARIANT: ${{ matrix.variant }}
 
       - name: Build Test OSS image
         if: needs.prepare.outputs.should_build_oss == 'yes'
         run: |
           docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
+            --build-arg HAZELCAST_ZIP_URL=${{ steps.get_oss_dist_url.outputs.HAZELCAST_OSS_ZIP_URL }} \
             --tag hazelcast-oss:test \
             hazelcast-oss
 
       - name: Run smoke test against OSS image
         if: needs.prepare.outputs.should_build_oss == 'yes'
         timeout-minutes: 2
-        run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test "${{ env.test_container_name_oss }}" oss "${{ env.HZ_VERSION }}" "${{ matrix.jdk }}"
+        uses: hazelcast/hazelcast-docker/.github/actions/simple-smoke-test@reusable-build-pr
+        with:
+          IMAGE: hazelcast-oss:test
+          CONTAINER_NAME: ${{ env.test_container_name_oss }}
+          DISTRIBUTION_TYPE: oss
+          EXPECTED_VERSION: ${{ env.HZ_VERSION }}
+          EXPECTED_JAVA_MAJOR_VERSION: ${{ matrix.jdk }}
 
       - name: Get EE dist ZIP URL
         if: needs.prepare.outputs.should_build_ee == 'yes'
-        run: |
-          . .github/scripts/ee-build.functions.sh
-          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
+        id: get_ee_dist_url
+        uses: hazelcast/hazelcast-docker/.github/actions/get-hz-ee-dist-url@reusable-build-pr
+        with:
+          HZ_VERSION: ${{ env.HZ_VERSION }}
+          VARIANT: ${{ matrix.variant }}
 
       - name: Build Test EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
         run: |
-          . .github/scripts/ee-build.functions.sh
           docker buildx build --load \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
+            --build-arg HAZELCAST_ZIP_URL=${{ steps.get_ee_dist_url.outputs.HAZELCAST_EE_ZIP_URL }} \
             --tag hazelcast-ee:test \
             hazelcast-enterprise
 
       - name: Run smoke test against EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
         timeout-minutes: 2
-        run: |
-          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test "${{ env.test_container_name_ee }}" ee "${{ env.HZ_VERSION }}" "${{ matrix.jdk }}"
+        uses: hazelcast/hazelcast-docker/.github/actions/simple-smoke-test@reusable-build-pr
+        env:
+          HZ_LICENSEKEY: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
+        with:
+          IMAGE: hazelcast-ee:test
+          CONTAINER_NAME: ${{ env.test_container_name_ee }}
+          DISTRIBUTION_TYPE: ee
+          EXPECTED_VERSION: ${{ env.HZ_VERSION }}
+          EXPECTED_JAVA_MAJOR_VERSION: ${{ matrix.jdk }}
 
       - name: Get docker logs
         if: ${{ always() }}
@@ -225,7 +238,7 @@ jobs:
 
           docker buildx build ${output} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_OSS_ZIP_URL} \
+            --build-arg HAZELCAST_ZIP_URL=${{ steps.get_oss_dist_url.outputs.HAZELCAST_OSS_ZIP_URL }} \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} "${DOCKER_DIR}"
 
@@ -269,7 +282,7 @@ jobs:
           docker buildx build ${output} \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_EE_ZIP_URL} \
+            --build-arg HAZELCAST_ZIP_URL=${{ steps.get_ee_dist_url.outputs.HAZELCAST_EE_ZIP_URL }} \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} "${DOCKER_DIR}"
 
