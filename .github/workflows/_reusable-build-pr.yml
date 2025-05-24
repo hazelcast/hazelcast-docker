@@ -92,11 +92,21 @@ jobs:
           --tag hazelcast-oss:test \
           "${DOCKER_PATH}"
 
+      - name: Get default JDK for hazelcast-oss
+        id: get_default_oss_jdk
+        uses: hazelcast/hazelcast-docker/.github/actions/docker-info@reusable-build-pr
+        with:
+          DOCKER_PATH: hazelcast-oss
+
       - name: Run smoke test against OSS image
         timeout-minutes: 2
-        run: |          
-          . .github/scripts/docker.functions.sh
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test "${{ env.test_container_name_oss }}" oss "${{ needs.prepare.outputs.HZ_VERSION_OSS }}" "$(get_default_jdk hazelcast-oss)"
+        uses: hazelcast/hazelcast-docker/.github/actions/simple-smoke-test@reusable-build-pr
+        with:
+          IMAGE: hazelcast-oss:test
+          CONTAINER_NAME: ${{ env.test_container_name_oss }}
+          DISTRIBUTION_TYPE: oss
+          EXPECTED_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
+          EXPECTED_JAVA_MAJOR_VERSION: ${{ steps.get_default_oss_jdk.outputs.DEFAULT_JDK }}
 
       - name: Build Test EE image
         run: |
@@ -109,12 +119,23 @@ jobs:
           --tag hazelcast-ee:test \
           "${DOCKER_PATH}"
 
+      - name: Get default JDK for hazelcast-enterprise
+        id: get_default_ee_jdk
+        uses: hazelcast/hazelcast-docker/.github/actions/docker-info@reusable-build-pr
+        with:
+          DOCKER_PATH: hazelcast-enterprise
+
       - name: Run smoke test against EE image
         timeout-minutes: 2
-        run: |
-          . .github/scripts/docker.functions.sh
-          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test "${{ env.test_container_name_ee }}" ee "${{ needs.prepare.outputs.HZ_VERSION_EE }}" "$(get_default_jdk hazelcast-enterprise)"
+        uses: hazelcast/hazelcast-docker/.github/actions/simple-smoke-test@reusable-build-pr
+        env:
+          HZ_LICENSEKEY: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
+        with:
+          IMAGE: hazelcast-ee:test
+          CONTAINER_NAME: ${{ env.test_container_name_ee }}
+          DISTRIBUTION_TYPE: ee
+          EXPECTED_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_EE }}
+          EXPECTED_JAVA_MAJOR_VERSION: ${{ steps.get_default_ee_jdk.outputs.DEFAULT_JDK }}
 
       - name: Get docker logs
         if: ${{ always() }}
@@ -166,8 +187,13 @@ jobs:
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
-        run: |
-          .github/scripts/simple-smoke-test.sh hazelcast-oss:test "${{ env.test_container_name_oss }}" oss "${{ needs.prepare.outputs.HZ_VERSION_OSS }}" "${{ matrix.jdk }}"
+        uses: hazelcast/hazelcast-docker/.github/actions/simple-smoke-test@reusable-build-pr
+        with:
+          IMAGE: hazelcast-oss:test
+          CONTAINER_NAME: ${{ env.test_container_name_oss }}
+          DISTRIBUTION_TYPE: oss
+          EXPECTED_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_OSS }}
+          EXPECTED_JAVA_MAJOR_VERSION: ${{ matrix.jdk }}
 
       - name: Build Test EE image
         run: |
@@ -183,9 +209,15 @@ jobs:
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
-        run: |
-          export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
-          .github/scripts/simple-smoke-test.sh hazelcast-ee:test "${{ env.test_container_name_ee }}" ee "${{ needs.prepare.outputs.HZ_VERSION_EE }}" "${{ matrix.jdk }}"
+        uses: hazelcast/hazelcast-docker/.github/actions/simple-smoke-test@reusable-build-pr
+        env:
+          HZ_LICENSEKEY: ${{ secrets.HZ_ENTERPRISE_LICENSE }}
+        with:
+          IMAGE: hazelcast-ee:test
+          CONTAINER_NAME: ${{ env.test_container_name_ee }}
+          DISTRIBUTION_TYPE: ee
+          EXPECTED_VERSION: ${{ needs.prepare.outputs.HZ_VERSION_EE }}
+          EXPECTED_JAVA_MAJOR_VERSION: ${{ matrix.jdk }}
 
       - name: Get docker logs
         if: ${{ always() }}

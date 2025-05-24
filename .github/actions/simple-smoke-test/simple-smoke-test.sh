@@ -2,8 +2,11 @@
 
 set -o errexit ${RUNNER_DEBUG:+-x}
 
-# shellcheck source=../.github/scripts/abstract-simple-smoke-test.sh
-. .github/scripts/abstract-simple-smoke-test.sh
+SCRIPT_DIR=$(readlink -f "$0")
+SCRIPT_DIR="$(dirname "${SCRIPT_DIR}")"
+
+# shellcheck source=abstract-simple-smoke-test.sh
+. $SCRIPT_DIR/abstract-simple-smoke-test.sh
 
 function remove_container_if_exists() {
     local containers

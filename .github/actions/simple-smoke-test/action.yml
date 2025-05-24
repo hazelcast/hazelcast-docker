@@ -1,0 +1,27 @@
+name: Simple Smoke Test
+description: Simple Smoke Test
+
+inputs:
+  IMAGE:
+    description: Image to test
+    required: true
+  CONTAINER_NAME:
+    description: Name of the container to run the test in
+    required: true
+  DISTRIBUTION_TYPE:
+    description: Type of the distribution (oss or ee)
+    required: true
+  EXPECTED_VERSION:
+    description: Expected version of Hazelcast in the container
+    required: true
+  EXPECTED_JAVA_MAJOR_VERSION:
+    description: Expected Java major version in the container
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run simple smoke test
+      shell: bash
+      run: |
+        ${{ github.action_path }}/simple-smoke-test.sh "${{ inputs.IMAGE}}" "${{ inputs.CONTAINER_NAME }}" "${{ inputs.DISTRIBUTION_TYPE }}" "${{ inputs.EXPECTED_VERSION }}" "${{ inputs.EXPECTED_JAVA_MAJOR_VERSION }}"
