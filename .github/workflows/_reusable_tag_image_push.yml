@@ -41,8 +41,8 @@ jobs:
     env:
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
     outputs:
-      should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
-      should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
+      should_build_oss: ${{ steps.which_editions.outputs.SHOULD_BUILD_OSS }}
+      should_build_ee: ${{ steps.which_editions.outputs.SHOULD_BUILD_EE }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
@@ -61,15 +61,10 @@ jobs:
 
       - name: Check which editions should be built
         id: which_editions
-        run: |
-          . .github/scripts/build.functions.sh
-          
-          release_type=${{ env.RELEASE_TYPE }}
-          triggered_by=${{ inputs.EVENT_NAME }}
-          should_build_oss=$(should_build_oss "$release_type")
-          should_build_ee=$(should_build_ee "$release_type")
-          echo "should_build_ee=${should_build_ee}" >> $GITHUB_OUTPUT
-          echo "should_build_oss=${should_build_oss}" >> $GITHUB_OUTPUT
+        uses: hazelcast/hazelcast-docker/.github/actions/build-info@reusable-build-pr
+        with:
+          RELEASE_TYPE: '${{ env.RELEASE_TYPE }}'
+
       - name: Get supported JDKs
         id: jdks
         uses: ./.github/actions/get-supported-jdks

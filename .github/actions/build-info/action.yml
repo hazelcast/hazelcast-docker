@@ -1,0 +1,26 @@
+name: Get build Info
+description: Get build Info
+
+inputs:
+  RELEASE_TYPE:
+    description: Type of the release (e.g., "ALL", "OSS", "EE")
+    required: true
+
+outputs:
+  SHOULD_BUILD_OSS:
+    description: Indicates if OSS should be built
+    value: ${{ steps.build_info.outputs.SHOULD_BUILD_OSS }}
+  SHOULD_BUILD_EE:
+    description: Indicates if EE should be built
+    value: ${{ steps.build_info.outputs.SHOULD_BUILD_EE }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup OSS variables
+      id: build_info
+      shell: bash
+      run: |
+        . ${{ github.action_path }}/build.functions.sh
+        echo "SHOULD_BUILD_OSS=$(should_build_oss "${{ inputs.RELEASE_TYPE }}")" >> $GITHUB_OUTPUT
+        echo "SHOULD_BUILD_EE=$(should_build_ee "${{ inputs.RELEASE_TYPE }}")" >> $GITHUB_OUTPUT
