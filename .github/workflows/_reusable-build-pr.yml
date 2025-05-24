@@ -14,10 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Prepare environment
     outputs:
-      HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.HZ_VERSION_OSS }}
-      HZ_VERSION_EE: ${{ steps.get_ee_vars.outputs.HZ_VERSION_EE }}
-      LAST_RELEASED_HZ_VERSION_OSS: ${{ steps.get_oss_vars.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
-      HAZELCAST_EE_ZIP_URL: ${{ steps.get_ee_vars.outputs.HAZELCAST_EE_ZIP_URL }}
+      HZ_VERSION_OSS: ${{  steps.get_hz_versions.outputs.HZ_VERSION_OSS }}
+      HZ_VERSION_EE: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
+      LAST_RELEASED_HZ_VERSION_OSS: ${{ steps.get_hz_versions.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      HAZELCAST_EE_ZIP_URL: ${{ steps.get_ee_dist_url.outputs.HAZELCAST_EE_ZIP_URL }}
+      HAZELCAST_OSS_ZIP_URL: ${{ steps.get_oss_dist_url.outputs.HAZELCAST_OSS_ZIP_URL }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
@@ -40,26 +41,27 @@ jobs:
 
       - name: Get HZ versions
         id: get_hz_versions
-        uses: ./.github/actions/get-hz-versions
+        uses: hazelcast/hazelcast-docker/.github/actions/get-hz-versions@reusable-build-pr
 
-      - name: Setup OSS variables
-        id: get_oss_vars
-        run: |
-          echo "HZ_VERSION_OSS=${{ steps.get_hz_versions.outputs.HZ_VERSION_OSS }}" >> $GITHUB_OUTPUT
-          echo "LAST_RELEASED_HZ_VERSION_OSS=${{ steps.get_hz_versions.outputs.LAST_RELEASED_HZ_VERSION_OSS }}" >> $GITHUB_OUTPUT
+      - name: Get EE dist url
+        id: get_ee_dist_url
+        uses: hazelcast/hazelcast-docker/.github/actions/get-hz-ee-dist-url@reusable-build-pr
+        with:
+          HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
 
-      - name: Setup EE variables
-        id: get_ee_vars
-        run: |
-          . .github/scripts/ee-build.functions.sh
-          echo "HZ_VERSION_EE=${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}" >> $GITHUB_OUTPUT
-          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "" ${HZ_VERSION_EE})" >> $GITHUB_OUTPUT
+      - name: Get OSS dist url
+        id: get_oss_dist_url
+        uses: hazelcast/hazelcast-docker/.github/actions/get-hz-oss-dist-url@reusable-build-pr
+        with:
+          HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
+          HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+          HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
 
       - name: Get supported JDKs
         id: jdks
-        uses: ./.github/actions/get-supported-jdks
+        uses: hazelcast/hazelcast-docker/.github/actions/get-supported-jdks@reusable-build-pr
         with:
-          HZ_VERSION: '${{ steps.get_ee_vars.outputs.HZ_VERSION_EE }}'
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}'
 
   build-pr:
     runs-on: ubuntu-latest
@@ -81,10 +83,7 @@ jobs:
           HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_OSS }}"
           
           # duplicated block as GH doesn't support passing sensitive data between jobs
-          . .github/scripts/oss-build.functions.sh
-          export HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
-          export HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
-          HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "" "${HZ_VERSION}")
+          HAZELCAST_OSS_ZIP_URL=${{ needs.prepare.outputs.HAZELCAST_OSS_ZIP_URL }}
           
           curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output $DOCKER_PATH/hazelcast-distribution.zip; 
           
@@ -155,11 +154,7 @@ jobs:
           DOCKER_PATH=hazelcast-oss
           HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_OSS }}"
           
-          # duplicated block as GH doesn't support passing sensitive data between jobs
-          . .github/scripts/oss-build.functions.sh
-          export HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
-          export HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
-          HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "" "${HZ_VERSION}")
+          HAZELCAST_OSS_ZIP_URL=${{ needs.prepare.outputs.HAZELCAST_OSS_ZIP_URL }}
           
           curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output $DOCKER_PATH/hazelcast-distribution.zip;
 

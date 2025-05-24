@@ -1,0 +1,35 @@
+name: Get HZ OSS dist URL
+
+inputs:
+  HZ_VERSION:
+    description: Hazelcast version
+    required: true
+  VARIANT:
+    description: Variant of the build ( "" or "slim"), defaults to ""
+    default: ""
+  HZ_SNAPSHOT_INTERNAL_USERNAME:
+    description: Internal username for OSS snapshot builds
+    required: false
+  HZ_SNAPSHOT_INTERNAL_PASSWORD:
+    description: Internal password for OSS snapshot builds
+    required: false
+
+outputs:
+  HAZELCAST_OSS_ZIP_URL:
+    description: Hazelcast OSS zip dist url
+    value: ${{ steps.get_url.outputs.HAZELCAST_OSS_ZIP_URL }}
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get dist ZIP URL
+      id: get_url
+      shell: bash
+      env:
+        HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ inputs.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+        HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ inputs.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+      run: |
+        . ${{ github.action_path }}/oss-build.functions.sh
+        echo "HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ inputs.VARIANT }}" "${{ inputs.HZ_VERSION }}")" >> $GITHUB_OUTPUT
+
