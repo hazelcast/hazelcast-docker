@@ -1,0 +1,26 @@
+name: Get platforms info
+description: Get platforms info
+
+inputs:
+  JDK_VERSION:
+    description: JDK version
+    required: true
+
+outputs:
+  UBI_SUPPORTED_PLATFORMS:
+    description: Supported platforms for UBI images
+    value: ${{ steps.get_platforms.outputs.UBI_SUPPORTED_PLATFORMS }}
+  ALPINE_SUPPORTED_PLATFORMS:
+    description: Supported platforms for Alpine images
+    value: ${{ steps.get_platforms.outputs.ALPINE_SUPPORTED_PLATFORMS }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup OSS variables
+      id: get_platforms
+      shell: bash
+      run: |
+        . ${{ github.action_path }}/docker.functions.sh
+        echo "ALPINE_SUPPORTED_PLATFORMS=$(get_alpine_supported_platforms ${{ inputs.JDK_VERSION }})" >> $GITHUB_OUTPUT
+        echo "UBI_SUPPORTED_PLATFORMS=$(get_ubi_supported_platforms ${{ inputs.JDK_VERSION }})" >> $GITHUB_OUTPUT
