@@ -206,19 +206,37 @@ jobs:
           name: docker-logs${{ env.SUFFIX }}-${{ github.job }}-jdk${{ matrix.jdk }}
           path: docker-*.log
 
+      - name: Get default JDK for hazelcast-oss
+        id: get_default_oss_jdk
+        uses: hazelcast/hazelcast-docker/.github/actions/docker-info@reusable-build-pr
+        with:
+          DOCKER_PATH: hazelcast-oss
+
+      - name: Get tags to push
+        id: get_oss_tags_to_push
+        uses: hazelcast/hazelcast-docker/.github/actions/get-tags-to-push@reusable-build-pr
+        with:
+          HZ_VERSION: ${{ env.RELEASE_VERSION }}
+          SUFFIX: ${{ env.SUFFIX }}
+          CURRENT_JDK: ${{ matrix.jdk }}
+          DEFAULT_JDK: ${{ steps.get_default_oss_jdk.outputs.DEFAULT_JDK }}
+          # OSS has no LTS releases
+          IS_LATEST_LTS: false
+
+      - name: Get supported platforms
+        id: get_platforms
+        uses: hazelcast/hazelcast-docker/.github/actions/platforms-info@reusable-build-pr
+        with:
+          JDK_VERSION: ${{ matrix.jdk }}
+
       - name: Build and Push OSS image
         if: needs.prepare.outputs.should_build_oss == 'yes'
         run: |
-          . .github/scripts/get-tags-to-push.sh 
-          . .github/scripts/docker.functions.sh
           
           DOCKER_DIR=hazelcast-oss
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
-          # OSS has no LTS releases
-          IS_LATEST_LTS=false
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH="${{ steps.get_oss_tags_to_push.outputs.TAGS_TO_PUSH }}"
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -228,7 +246,7 @@ jobs:
           
           output=
 
-          PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
+          PLATFORMS="${{ steps.get_platforms.outputs.ALPINE_SUPPORTED_PLATFORMS }}"
 
           if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
             echo "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
@@ -244,24 +262,34 @@ jobs:
 
       - name: Check if latest EE LTS release
         id: is_latest_lts
-        uses: ./.github/actions/check-if-latest-lts-release
+        uses: hazelcast/hazelcast-docker/.github/actions/check-if-latest-lts-release@reusable-build-pr
         with:
           release_version: ${{ env.RELEASE_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
+      - name: Get default JDK for hazelcast-enterprise
+        id: get_default_ee_jdk
+        uses: hazelcast/hazelcast-docker/.github/actions/docker-info@reusable-build-pr
+        with:
+          DOCKER_PATH: hazelcast-enterprise
+
+      - name: Get tags to push
+        id: get_ee_tags_to_push
+        uses: hazelcast/hazelcast-docker/.github/actions/get-tags-to-push@reusable-build-pr
+        with:
+          HZ_VERSION: ${{ env.RELEASE_VERSION }}
+          SUFFIX: ${{ env.SUFFIX }}
+          CURRENT_JDK: ${{ matrix.jdk }}
+          DEFAULT_JDK: ${{ steps.get_default_ee_jdk.outputs.DEFAULT_JDK }}
+          IS_LATEST_LTS: ${{ steps.is_latest_lts.outputs.is_latest_lts }}
+
       - name: Build/Push EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
         run: |
-          . .github/scripts/get-tags-to-push.sh 
-          . .github/scripts/docker.functions.sh
-          . .github/scripts/ee-build.functions.sh
-          
           DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
-          IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH="${{ steps.get_ee_tags_to_push.outputs.TAGS_TO_PUSH }}"
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -271,7 +299,7 @@ jobs:
 
           output=
 
-          PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
+          PLATFORMS="${{ steps.get_platforms.outputs.UBI_SUPPORTED_PLATFORMS }}"
 
           if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
             echo "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
