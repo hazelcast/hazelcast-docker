@@ -34,7 +34,7 @@ jobs:
 
       - name: Get supported JDKs
         id: jdks
-        uses: ./.github/actions/get-supported-jdks
+        uses: hazelcast/hazelcast-docker/.github/actions/get-supported-jdks@reusable-build-pr
         with:
           HZ_VERSION: '${{ inputs.HZ_VERSION || github.ref_name }}'
 
@@ -117,23 +117,40 @@ jobs:
 
       - name: Check if latest EE LTS release
         id: is_latest_lts
-        uses: ./.github/actions/check-if-latest-lts-release
+        uses: hazelcast/hazelcast-docker/.github/actions/check-if-latest-lts-release@reusable-build-pr
         with:
           release_version: ${{ env.RELEASE_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
+      - name: Get default JDK for hazelcast-enterprise
+        id: get_default_ee_jdk
+        uses: hazelcast/hazelcast-docker/.github/actions/docker-info@reusable-build-pr
+        with:
+          DOCKER_PATH: hazelcast-enterprise
+
+      - name: Get EE dist ZIP URL
+        id: get_ee_dist_url
+        uses: hazelcast/hazelcast-docker/.github/actions/get-hz-ee-dist-url@reusable-build-pr
+        with:
+          HZ_VERSION: ${{ env.HZ_VERSION }}
+          VARIANT: ""
+
+      - name: Get EE tags to push
+        id: get_ee_tags_to_push
+        uses: hazelcast/hazelcast-docker/.github/actions/get-tags-to-push@reusable-build-pr
+        with:
+          HZ_VERSION: ${{ env.RELEASE_VERSION }}
+          SUFFIX: ""
+          CURRENT_JDK: ${{ matrix.jdk }}
+          DEFAULT_JDK: ${{ steps.get_default_ee_jdk.outputs.DEFAULT_JDK }}
+          IS_LATEST_LTS: ${{ steps.is_latest_lts.outputs.is_latest_lts }}
+
       - name: Build the Hazelcast Enterprise image
         run: |
-          . .github/scripts/get-tags-to-push.sh 
-          . .github/scripts/docker.functions.sh
-          . .github/scripts/ee-build.functions.sh
-
           DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${SCAN_REPOSITORY}
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
-          IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH="${{ steps.get_ee_tags_to_push.outputs.TAGS_TO_PUSH }}"
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -154,7 +171,7 @@ jobs:
           docker buildx build ${output} \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" "${{ env.HZ_VERSION }}") \
+            --build-arg HAZELCAST_ZIP_URL=${{ steps.get_ee_dist_url.outputs.HAZELCAST_EE_ZIP_URL }} \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} "${DOCKER_DIR}"
 
@@ -168,7 +185,15 @@ jobs:
       - name: Run preflight scan
         if: inputs.DRY_RUN != 'true'
         run: |
-          source .github/scripts/logging.functions.sh
+          function echoerr() {
+            # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-an-error-message
+            # Support multi-line strings by replacing line separator with GitHub Actions compatible one
+            echo "::error::ERROR - ${*//$'\n'/%0A}" 1>&2;
+          }
+          function echodebug() {
+            # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-a-debug-message
+            echo "::debug::$*" 1>&2;
+          }
 
           PREFLIGHT_OUTPUT=$(preflight check container "${RHEL_IMAGE}" \
             --submit --pyxis-api-token=${RHEL_API_KEY} \
@@ -188,21 +213,14 @@ jobs:
             exit 1
           fi
 
-      - name: Wait for Scan to Complete
-        if: inputs.DRY_RUN != 'true'
-        run: |
-          source .github/scripts/publish-rhel.sh
-
-          wait_for_container_scan "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
-
       - name: Publish the Hazelcast Enterprise image
         if: inputs.DRY_RUN != 'true'
-        run: |
-          source .github/scripts/publish-rhel.sh
-
-          publish_the_image "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}"
-          wait_for_container_publish "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
-          sync_tags "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}"
+        uses: hazelcast/hazelcast-docker/.github/actions/publish-rhel-image@reusable-build-pr
+        with:
+          RHEL_PROJECT_ID: ${{ env.RHEL_PROJECT_ID }}
+          IMAGE_ID: ${{ env.IMAGE_ID }}
+          RHEL_API_KEY: ${{ env.RHEL_API_KEY }}
+          TIMEOUT_IN_MINS: ${{ env.TIMEOUT_IN_MINS }}
 
       - name: Check RedHat service status
         if: failure()

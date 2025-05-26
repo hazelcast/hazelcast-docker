@@ -1,0 +1,35 @@
+name: Get platforms info
+description: Get platforms info
+
+inputs:
+    RHEL_PROJECT_ID:
+        description: RHEL Project ID
+        required: true
+    IMAGE_ID:
+        description: Image ID
+        required: true
+    RHEL_API_KEY:
+        description: RHEL API Key
+        required: true
+    TIMEOUT_IN_MINS:
+        description: Timeout in minutes for the scan and publish operations
+        required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Wait for Scan to Complete
+      shell: bash
+      run: |
+        source ${{ github.action_path }}/publish-rhel.sh
+        
+        wait_for_container_scan "${{ inputs.RHEL_PROJECT_ID }}" "${{ inputs.IMAGE_ID }}" "${{ inputs.RHEL_API_KEY }}" "${{ inputs.TIMEOUT_IN_MINS }}"
+
+    - name: Publish the Hazelcast Enterprise image
+      shell: bash
+      run: |
+        source ${{ github.action_path }}/publish-rhel.sh
+        
+        publish_the_image "${{ inputs.RHEL_PROJECT_ID }}" "${{ inputs.IMAGE_ID }}" "${{ inputs.RHEL_API_KEY }}"
+        wait_for_container_publish "${{ inputs.RHEL_PROJECT_ID }}" "${{ inputs.IMAGE_ID }}" "${{ inputs.RHEL_API_KEY }}" "${{ inputs.TIMEOUT_IN_MINS }}"
+        sync_tags "${{ inputs.RHEL_PROJECT_ID }}" "${{ inputs.IMAGE_ID }}" "${{ inputs.RHEL_API_KEY }}"
