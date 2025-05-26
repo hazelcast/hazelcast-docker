@@ -212,7 +212,7 @@ jobs:
         with:
           DOCKER_PATH: hazelcast-oss
 
-      - name: Get tags to push
+      - name: Get OSS tags to push
         id: get_oss_tags_to_push
         uses: hazelcast/hazelcast-docker/.github/actions/get-tags-to-push@reusable-build-pr
         with:
@@ -273,7 +273,7 @@ jobs:
         with:
           DOCKER_PATH: hazelcast-enterprise
 
-      - name: Get tags to push
+      - name: Get EE tags to push
         id: get_ee_tags_to_push
         uses: hazelcast/hazelcast-docker/.github/actions/get-tags-to-push@reusable-build-pr
         with:
