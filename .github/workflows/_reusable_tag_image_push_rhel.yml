@@ -224,10 +224,10 @@ jobs:
 
       - name: Check RedHat service status
         if: failure()
-        uses: ./.github/actions/check-redhat-service-status
+        uses: hazelcast/hazelcast-docker/.github/actions/check-redhat-service-status@reusable-build-pr
 
       - name: Slack notification
-        uses: ./.github/actions/slack-notification
+        uses: hazelcast/hazelcast-docker/.github/actions/slack-notification@reusable-build-pr
         if: failure()
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
