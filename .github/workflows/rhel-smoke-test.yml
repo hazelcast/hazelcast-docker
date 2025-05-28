@@ -150,9 +150,3 @@ jobs:
         run: |
           helm uninstall "${PROJECT_NAME}" --timeout 30s
           oc delete project "${PROJECT_NAME}"
-
-      - name: Slack notification
-        uses: ./.github/actions/slack-notification
-        if: failure()
-        with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
