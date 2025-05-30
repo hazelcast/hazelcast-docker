@@ -1,5 +1,6 @@
 name: Redhat status test
 # Entry point to debug the `check-redhat-service-status` action
+# Doesn't have to be reusable as it's triggered only from master branch
 
 on:
   workflow_dispatch:

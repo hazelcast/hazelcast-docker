@@ -1,4 +1,5 @@
 name: Check base images
+# Doesn't have to be reusable as it's triggered only from master branch
 
 on:
   workflow_dispatch:
