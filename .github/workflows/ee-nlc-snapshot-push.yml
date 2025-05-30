@@ -9,118 +9,12 @@ on:
       HZ_EE_REVISION:
         description: 'Commit id of Hazelcast Enterprise snapshot jar'
         required: true
-env:
-  test_container_name_ee: hazelcast-ee-test
 
 jobs:
-  jdks:
-    uses: ./.github/workflows/get-supported-jdks.yaml
+  ee-nlc-snapshot-push:
+    uses: hazelcast/hazelcast-docker/.github/workflows/_reusable-ee-nlc-snapshot-push.yml@reusable-build-pr
+    with:
+      HZ_VERSION: ${{ github.event.inputs.HZ_VERSION }}
+      HZ_EE_REVISION: ${{ github.event.inputs.HZ_EE_REVISION }}
+    secrets: inherit
 
-  push:
-    runs-on: ubuntu-latest
-    needs: jdks
-    strategy:
-      fail-fast: false
-      matrix:
-        jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
-    env:
-      HZ_VERSION : ${{ inputs.HZ_VERSION }}
-      NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
-      S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: 'us-east-1'
-
-      - name: Get presigned NLC URL from S3
-        run: |
-          ZIP_NAME=hazelcast-enterprise-${HZ_VERSION}-nlc.zip
-          S3_NLC_ZIP_URL=${S3_NLC_URL}/snapshot/${ZIP_NAME}
-
-          HAZELCAST_ZIP_URL="$(aws s3 presign ${S3_NLC_ZIP_URL} --expires-in 600)"
-          echo "HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL}" >> $GITHUB_ENV
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.NLC_REPOSITORY }}
-          username: ${{ secrets.NLC_REPO_USERNAME }}
-          password: ${{ secrets.NLC_REPO_TOKEN }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.6.0
-
-      - name:  Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          version: v0.5.1
-
-      - name: Build EE image
-        run: |
-          docker buildx build --load \
-            --build-arg HZ_VERSION=${HZ_VERSION} \
-            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --label hazelcast.ee.revision=${{ inputs.HZ_EE_REVISION }} \
-            --tag hazelcast-nlc:test hazelcast-enterprise
-
-      - name: Run smoke test against EE image
-        timeout-minutes: 2
-        run: |
-          export HZ_INSTANCETRACKING_FILENAME=instance-tracking.txt
-          .github/scripts/simple-smoke-test.sh hazelcast-nlc:test "${{ env.test_container_name_ee }}" ee ${HZ_VERSION} "${{ matrix.jdk }}"
-
-      - name: Get docker logs
-        if: ${{ always() }}
-        run: |
-          DOCKER_LOG_FILE_EE=docker-${{ env.test_container_name_ee }}-jdk${{ matrix.jdk }}.log
-          echo "DOCKER_LOG_FILE_EE=${DOCKER_LOG_FILE_EE}" >> $GITHUB_ENV
-          docker logs "${{ env.test_container_name_ee }}" > "${DOCKER_LOG_FILE_EE}"
-
-      - name: Store docker logs as artifact
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-logs-${{ github.job }}-jdk${{ matrix.jdk }}
-          path: |
-            ${{ env.DOCKER_LOG_FILE_EE }}
-
-      - name: Build/Push EE image
-        run: |
-          . .github/scripts/get-tags-to-push.sh 
-          . .github/scripts/docker.functions.sh
-          
-          DOCKER_DIR=hazelcast-enterprise
-          IMAGE_NAME=${NLC_IMAGE_NAME}
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
-          
-          TAGS_TO_PUSH=$(augment_with_suffixed_tags "$HZ_VERSION" "" "${{ matrix.jdk }}" "$DEFAULT_JDK")
-          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
-          TAGS_ARG=""
-          for tag in ${TAGS_TO_PUSH[@]}
-          do
-            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
-          done
-
-          PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
-          docker buildx build --push \
-            --build-arg HZ_VERSION=${HZ_VERSION} \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
-            --label hazelcast.ee.revision=${{ inputs.HZ_EE_REVISION }} \
-            ${TAGS_ARG} \
-            --platform=${PLATFORMS} $DOCKER_DIR
-      - name: Check RedHat service status
-        if: failure()
-        uses: ./.github/actions/check-redhat-service-status
-      - name: Slack notification
-        uses: ./.github/actions/slack-notification
-        if: failure()
-        with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
