@@ -1,0 +1,36 @@
+name: Get tags to push
+
+inputs:
+  HZ_VERSION:
+    description: Hazelcast version
+    required: true
+  SUFFIX:
+    description: Suffix for the tags (e.g., "-slim"), defaults to ""
+    default: ""
+  CURRENT_JDK:
+    description: Current JDK version (e.g., "21")
+    required: true
+  DEFAULT_JDK:
+    description: Default JDK version (e.g., "17")
+    required: true
+  IS_LATEST_LTS:
+    description: Whether the current JDK is the latest LTS version (true/false)
+    required: true
+
+outputs:
+  TAGS_TO_PUSH:
+    description: Tags to push to the registry
+    value: ${{ steps.get_tags.outputs.TAGS_TO_PUSH }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get tags to push
+      id: get_tags
+      shell: bash
+      run: |
+        . ${{ github.action_path }}/get-tags-to-push.sh
+        TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "${{ inputs.SUFFIX }}" "${{ inputs.CURRENT_JDK }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
+        echo "TAGS_TO_PUSH=${TAGS_TO_PUSH}" >> $GITHUB_OUTPUT
+
+

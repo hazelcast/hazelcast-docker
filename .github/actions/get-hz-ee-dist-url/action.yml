@@ -1,0 +1,26 @@
+name: Get HZ EE dist URL
+
+inputs:
+  HZ_VERSION:
+    description: Hazelcast version
+    required: true
+  VARIANT:
+    description: Variant of the build ( "" or "slim"), defaults to ""
+    default: ""
+
+outputs:
+  HAZELCAST_EE_ZIP_URL:
+    description: Hazelcast EE zip dist url
+    value: ${{ steps.get_url.outputs.HAZELCAST_EE_ZIP_URL }}
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get dist ZIP URL
+      id: get_url
+      shell: bash
+      run: |
+        . ${{ github.action_path }}/ee-build.functions.sh
+        echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "${{ inputs.VARIANT }}" "${{ inputs.HZ_VERSION }}")" >> $GITHUB_OUTPUT
+

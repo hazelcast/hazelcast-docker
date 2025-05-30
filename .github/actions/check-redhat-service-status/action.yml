@@ -5,8 +5,8 @@ runs:
     - name: Check RedHat status
       shell: bash
       run: |
-        # shellcheck source=../.github/scripts/logging.functions.sh
-        . .github/scripts/logging.functions.sh
+        # shellcheck source=logging.functions.sh
+        . ${{ github.action_path }}/logging.functions.sh
 
         # https://status.redhat.com/api
         STATUS=$(curl --silent https://status.redhat.com/api/v2/status.json)

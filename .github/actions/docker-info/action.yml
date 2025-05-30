@@ -1,0 +1,22 @@
+name: Get Docker Info
+description: Get Docker Info
+
+inputs:
+  DOCKER_PATH:
+    description: Directory where Dockerfile is located
+    required: true
+
+outputs:
+  DEFAULT_JDK:
+    description: Default JDK from the Dockerfile
+    value: ${{ steps.get_default_jdk.outputs.DEFAULT_JDK }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup OSS variables
+      id: get_default_jdk
+      shell: bash
+      run: |
+        . ${{ github.action_path }}/docker.functions.sh
+        echo "DEFAULT_JDK=$(get_default_jdk ${{ inputs.DOCKER_PATH }})" >> $GITHUB_OUTPUT

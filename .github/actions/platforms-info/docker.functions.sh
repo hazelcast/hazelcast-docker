@@ -1,8 +1,3 @@
-function get_default_jdk() {
-  local DIR=$1
-  awk -F= '/^ARG JDK_VERSION=/{print $2}' "$DIR/Dockerfile" | tr -d '"'
-}
-
 function get_alpine_supported_platforms() {
   local JDK=$1
   local PLATFORMS="linux/arm64,linux/amd64,linux/s390x"
@@ -16,10 +11,4 @@ function get_alpine_supported_platforms() {
 function get_ubi_supported_platforms() {
   local JDK=$1
   echo "linux/arm64,linux/amd64,linux/s390x,linux/ppc64le"
-}
-
-function get_dockerfile_arg_value() {
-  local dockerfile=$1
-  local arg_name=$2
-  awk -F= "/^ARG $arg_name=/{print \$2}" $dockerfile  | sed 's/"//g'
 }
