@@ -20,7 +20,7 @@ function remove_container_if_exists() {
 
 function start_container() {
     echo "Starting container '${container_name}' from image '${image}'"
-    docker run -it --name "${container_name}" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "${image}"
+    docker run -it --name "${container_name}" -e HZ_NETWORK_RESTAPI_ENABLED=true -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "${image}"
 }
 
 function get_hz_logs() {
