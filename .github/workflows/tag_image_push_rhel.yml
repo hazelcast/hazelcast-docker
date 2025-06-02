@@ -205,21 +205,10 @@ jobs:
             exit 1
           fi
 
-      - name: Wait for Scan to Complete
-        if: inputs.DRY_RUN != 'true'
-        run: |
-          source .github/scripts/publish-rhel.sh
-
-          wait_for_container_scan "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
-
       - name: Publish the Hazelcast Enterprise image
         if: inputs.DRY_RUN != 'true'
         run: |
-          source .github/scripts/publish-rhel.sh
-
-          publish_the_image "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}"
-          wait_for_container_publish "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
-          sync_tags "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}"
+          .github/scripts/publish-rhel.sh "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
 
       - name: Check RedHat service status
         if: failure()
