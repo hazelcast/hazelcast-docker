@@ -129,6 +129,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: Slack notification
         uses: ./.github/actions/slack-notification
-        if: failure()
+        if: failure() && github.event_name != 'workflow_dispatch'
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
