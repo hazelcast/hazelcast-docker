@@ -8,9 +8,6 @@ set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 get_image()
 {
     local PUBLISHED=$1
-    local RHEL_PROJECT_ID=$2
-    local IMAGE_ID=$3
-    local RHEL_API_KEY=$4
 
     case "${PUBLISHED}" in
         "published")
@@ -39,16 +36,11 @@ get_image()
 }
 
 wait_for_container_scan()
-{
-    local RHEL_PROJECT_ID=$1
-    local IMAGE_ID=$2
-    local RHEL_API_KEY=$3
-    local TIMEOUT_IN_MINS=$4
-    
+{    
     local IMAGE
     local IS_PUBLISHED
 
-    IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
+    IMAGE=$(get_image published)
     IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
 
     if [[ ${IS_PUBLISHED} == "1" ]]; then
@@ -63,7 +55,7 @@ wait_for_container_scan()
         local SCAN_STATUS
         local IMAGE_CERTIFIED
 
-        IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
+        IMAGE=$(get_image not_published)
         SCAN_STATUS=$(echo "${IMAGE}" | jq -r '.data[0].container_grades.status')
         IMAGE_CERTIFIED=$(echo "${IMAGE}" | jq -r '.data[0].certified')
 
@@ -93,16 +85,12 @@ wait_for_container_scan()
 
 publish_the_image()
 {
-    local RHEL_PROJECT_ID=$1
-    local IMAGE_ID=$2
-    local RHEL_API_KEY=$3
-
     echo "Starting publishing the image for ${IMAGE_ID}"
 
     local IMAGE
     local IMAGE_EXISTS
 
-    IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
+    IMAGE=$(get_image not_published)
     IMAGE_EXISTS=$(echo "${IMAGE}" | jq -r '.total')
 
     if [[ ${IMAGE_EXISTS} == "1" ]]; then
@@ -138,18 +126,56 @@ publish_the_image()
     echo "Created a publish request, please check if the image is published."
 }
 
+wait_for_container_publish()
+{
+    local NOF_RETRIES=$(( TIMEOUT_IN_MINS * 2 ))
+    # Wait until the image is published
+    for i in $(seq 1 "${NOF_RETRIES}"); do
+        local IMAGE
+        local IS_PUBLISHED
+
+        IMAGE=$(get_image published)
+        IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
+
+        if [[ ${IS_PUBLISHED} == "1" ]]; then
+            echo "Image is published, exiting."
+            return 0
+        else
+            echo "Image is still not published, waiting..."
+        fi
+
+        sleep 30
+
+        if [[ ${i} == "${NOF_RETRIES}" ]]; then
+            echoerr "Timeout! Publish could not be finished"
+            echoerr "Image Status:"
+            echoerr "${IMAGE}"
+
+            # Add additional logging context if possible
+            echoerr "Test Results:"
+            # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetTestResultsById.html
+            get_image not_published | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
+                local TEST_RESULTS
+                TEST_RESULTS=$(curl --silent \
+                    --request GET \
+                    --header "X-API-KEY: ${RHEL_API_KEY}" \
+                    "https://catalog.redhat.com/api/containers/${TEST_RESULTS_ENDPOINT}")
+                echoerr "${TEST_RESULTS}"
+            done
+
+            return 42
+        fi
+    done
+}
+
 sync_tags()
 {
-    local RHEL_PROJECT_ID=$1
-    local IMAGE_ID=$2
-    local RHEL_API_KEY=$3
-
     echo "Starting sync tags for ${IMAGE_ID}"
 
     local IMAGE
     local IMAGE_EXISTS
 
-    IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
+    IMAGE=$(get_image published)
     IMAGE_EXISTS=$(echo "${IMAGE}" | jq -r '.total')
 
     if [[ ${IMAGE_EXISTS} == "0" ]]; then
@@ -173,49 +199,12 @@ sync_tags()
     echo "Created a sync-tags request, please check if the tags image are in sync."
 }
 
-wait_for_container_publish()
-{
-    local RHEL_PROJECT_ID=$1
-    local IMAGE_ID=$2
-    local RHEL_API_KEY=$3
-    local TIMEOUT_IN_MINS=$4
+RHEL_PROJECT_ID=$1
+IMAGE_ID=$2
+RHEL_API_KEY=$3
+TIMEOUT_IN_MINS=$4
 
-    local NOF_RETRIES=$(( TIMEOUT_IN_MINS * 2 ))
-    # Wait until the image is published
-    for i in $(seq 1 "${NOF_RETRIES}"); do
-        local IMAGE
-        local IS_PUBLISHED
-
-        IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
-        IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
-
-        if [[ ${IS_PUBLISHED} == "1" ]]; then
-            echo "Image is published, exiting."
-            return 0
-        else
-            echo "Image is still not published, waiting..."
-        fi
-
-        sleep 30
-
-        if [[ ${i} == "${NOF_RETRIES}" ]]; then
-            echoerr "Timeout! Publish could not be finished"
-            echoerr "Image Status:"
-            echoerr "${IMAGE}"
-
-            # Add additional logging context if possible
-            echoerr "Test Results:"
-            # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetTestResultsById.html
-            get_image not_published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
-                local TEST_RESULTS
-                TEST_RESULTS=$(curl --silent \
-                    --request GET \
-                    --header "X-API-KEY: ${RHEL_API_KEY}" \
-                    "https://catalog.redhat.com/api/containers/${TEST_RESULTS_ENDPOINT}")
-                echoerr "${TEST_RESULTS}"
-            done
-
-            return 42
-        fi
-    done
-}
+wait_for_container_scan
+publish_the_image
+wait_for_container_publish
+sync_tags
