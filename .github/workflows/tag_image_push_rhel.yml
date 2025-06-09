@@ -216,6 +216,6 @@ jobs:
 
       - name: Slack notification
         uses: ./.github/actions/slack-notification
-        if: failure()
+        if: failure() && github.triggering_actor == 'devOpsHazelcast'
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
