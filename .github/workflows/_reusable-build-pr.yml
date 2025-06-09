@@ -8,6 +8,11 @@ env:
   test_container_name_ee: hazelcast-ee-test
   docker_log_file_oss: docker-hazelcast-oss-test.log
   docker_log_file_ee: docker-hazelcast-ee-test.log
+  actions_ref: reusable-workflows-single-checkout
+
+defaults:
+  run:
+    working-directory: repo
 
 jobs:
   prepare:
@@ -24,6 +29,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          path: repo
+
+      - name: Checkout Actions Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ env.actions_ref }}
+          path: actions
+          sparse-checkout: .github
 
       - name: Forbid .github/release_type file
         run: |
@@ -40,7 +54,8 @@ jobs:
 
       - name: Get HZ versions
         id: get_hz_versions
-        uses: hazelcast/hazelcast-docker/.github/actions/get-hz-versions@reusable-build-pr
+        uses: ../actions/.github/actions/get-hz-versions
+
 
       - name: Get EE dist url
         id: get_ee_dist_url
