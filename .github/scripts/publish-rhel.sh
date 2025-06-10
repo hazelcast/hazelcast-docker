@@ -12,24 +12,29 @@ get_image()
     local IMAGE_ID=$3
     local RHEL_API_KEY=$4
 
-    if [[ $PUBLISHED == "published" ]]; then
+    case "${PUBLISHED}" in
+        "published")
         local PUBLISHED_FILTER="repositories.published==true"
-    elif [[ $PUBLISHED == "not_published" ]]; then
+        ;;
+        "not_published")
         local PUBLISHED_FILTER="repositories.published!=true"
-    else
-        echo "Need first parameter as 'published' or 'not_published'." ; return 1
-    fi
+        ;;
+        *)
+        echoerr "Need first parameter as 'published' or 'not_published', not '${PUBLISHED}'." ; return 1
+        ;;
+    esac
 
     local FILTER="filter=deleted==false;${PUBLISHED_FILTER};_id==${IMAGE_ID}"
     local INCLUDE="include=total,data.repositories,data.certified,data.container_grades,data._id,data.creation_date"
 
-    local RESPONSE=$( \
+    local RESPONSE
+    RESPONSE=$( \
         curl --silent \
              --request GET \
              --header "X-API-KEY: ${RHEL_API_KEY}" \
              "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}&${INCLUDE}")
 
-    echo "${RESPONSE}" | jq ".data[] | select(.repositories[].tags[]?.name==\"${VERSION}\")" | jq -s '.[0] | select( . != null)' | jq -s '{data:., total: length}'
+    echo "${RESPONSE}"
 }
 
 wait_for_container_scan()
@@ -38,6 +43,9 @@ wait_for_container_scan()
     local IMAGE_ID=$2
     local RHEL_API_KEY=$3
     local TIMEOUT_IN_MINS=$4
+    
+    local IMAGE
+    local IS_PUBLISHED
 
     IMAGE=$(get_image published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
     IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
@@ -47,12 +55,12 @@ wait_for_container_scan()
         return 0
     fi
 
-    local NOF_RETRIES=$(( $TIMEOUT_IN_MINS / 2 ))
+    local NOF_RETRIES=$(( TIMEOUT_IN_MINS / 2 ))
     # Wait until the image is scanned
-    for i in `seq 1 ${NOF_RETRIES}`; do
-        local IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${VERSION}" "${RHEL_API_KEY}")
-        local SCAN_STATUS=$(echo "$IMAGE" | jq -r '.data[0].container_grades.status')
-        local IMAGE_CERTIFIED=$(echo "$IMAGE" | jq -r '.data[0].certified')
+    for i in $(seq 1 "${NOF_RETRIES}"); do
+        local IMAGE
+        local SCAN_STATUS
+        local IMAGE_CERTIFIED
 
         IMAGE=$(get_image not_published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}")
         SCAN_STATUS=$(echo "${IMAGE}" | jq -r '.data[0].container_grades.status')
@@ -60,20 +68,23 @@ wait_for_container_scan()
 
         if [[ ${SCAN_STATUS} == "pending" ]]; then
             echo "Scanning pending, waiting..."
-        elif [[ $SCAN_STATUS == "in progress" ]]; then
+        elif [[ ${SCAN_STATUS} == "in progress" ]]; then
             echo "Scanning in progress, waiting..."
-        elif [[ $SCAN_STATUS == "null" ]];  then
+        elif [[ ${SCAN_STATUS} == "null" ]];  then
             echo "Image is still not present in the registry!"
-        elif [[ $SCAN_STATUS == "completed" && "$IMAGE_CERTIFIED" == "true" ]]; then
+        elif [[ ${SCAN_STATUS} == "completed" && "${IMAGE_CERTIFIED}" == "true" ]]; then
             echo "Scan passed!" ; return 0
         else
-            echo "Scan failed!" ; return 1
+            echoerr "Scan failed with '${SCAN_STATUS}!"
+            echoerr "${IMAGE}"
+            return 1
         fi
 
         sleep 120
 
-        if [[ $i == $NOF_RETRIES ]]; then
-            echo "Timeout! Scan could not be finished"
+        if [[ ${i} == "${NOF_RETRIES}" ]]; then
+            echoerr "Timeout! Scan could not be finished"
+            echoerr "${IMAGE}"
             return 42
         fi
     done
