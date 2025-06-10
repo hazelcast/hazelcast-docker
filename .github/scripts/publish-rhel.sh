@@ -12,24 +12,29 @@ get_image()
     local IMAGE_ID=$3
     local RHEL_API_KEY=$4
 
-    if [[ $PUBLISHED == "published" ]]; then
+    case "${PUBLISHED}" in
+        "published")
         local PUBLISHED_FILTER="repositories.published==true"
-    elif [[ $PUBLISHED == "not_published" ]]; then
+        ;;
+        "not_published")
         local PUBLISHED_FILTER="repositories.published!=true"
-    else
-        echo "Need first parameter as 'published' or 'not_published'." ; return 1
-    fi
+        ;;
+        *)
+        echoerr "Need first parameter as 'published' or 'not_published', not '${PUBLISHED}'." ; return 1
+        ;;
+    esac
 
     local FILTER="filter=deleted==false;${PUBLISHED_FILTER};_id==${IMAGE_ID}"
     local INCLUDE="include=total,data.repositories,data.certified,data.container_grades,data._id,data.creation_date"
 
-    local RESPONSE=$( \
+    local RESPONSE
+    RESPONSE=$( \
         curl --silent \
              --request GET \
              --header "X-API-KEY: ${RHEL_API_KEY}" \
              "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}&${INCLUDE}")
 
-    echo "${RESPONSE}" | jq ".data[] | select(.repositories[].tags[]?.name==\"${VERSION}\")" | jq -s '.[0] | select( . != null)' | jq -s '{data:., total: length}'
+    echo "${RESPONSE}"
 }
 
 wait_for_container_scan()
