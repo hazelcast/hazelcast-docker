@@ -5,5 +5,6 @@ on:
 
 jobs:
   build-pr:
-    uses: hazelcast/hazelcast-docker/.github/workflows/_reusable-build-pr.yml@reusable-build-pr
+    uses: hazelcast/hazelcast-docker/.github/workflows/_reusable-build-pr.yml@reusable-workflows-single-checkout
+
     secrets: inherit
