@@ -117,13 +117,6 @@ jobs:
         run: |
           docker login ${SCAN_REGISTRY} -u ${SCAN_REGISTRY_USER} -p ${SCAN_REGISTRY_PASSWORD}
 
-      - name: Check if latest EE LTS release
-        id: is_latest_lts
-        uses: ./.github/actions/check-if-latest-lts-release
-        with:
-          release_version: ${{ env.RELEASE_VERSION }}
-          is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
-
       - name: Build the Hazelcast Enterprise image
         run: |
           . .github/scripts/get-tags-to-push.sh 
