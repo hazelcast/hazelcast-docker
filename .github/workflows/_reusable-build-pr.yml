@@ -54,8 +54,7 @@ jobs:
 
       - name: Get HZ versions
         id: get_hz_versions
-        uses: ../actions/.github/actions/get-hz-versions
-
+        uses: hazelcast/hazelcast-docker/.github/actions/get-hz-versions@reusable-build-pr
 
       - name: Get EE dist url
         id: get_ee_dist_url
