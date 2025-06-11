@@ -17,10 +17,8 @@ function get_hz_dist_zip() {
 
   if [[ "${hz_version}" == *"SNAPSHOT"* ]]
   then  
-      repository=snapshot
+      echo "https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${hz_version}${suffix}.zip"
   else
-      repository=release
+      echo "https://${JFROG_USERNAME}:${JFROG_PASSWORD}@repository.hazelcast.com/libs-release-local-ext-support-5-3/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${hz_version}${suffix}.zip"
   fi
-
-  echo "https://repository.hazelcast.com/${repository}/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${hz_version}${suffix}.zip"
 }

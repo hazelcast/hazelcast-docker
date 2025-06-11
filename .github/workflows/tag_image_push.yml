@@ -148,6 +148,8 @@ jobs:
       - name: Get EE dist ZIP URL
         run: |
           . .github/scripts/ee-build.functions.sh
+          export JFROG_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+          export JFROG_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
           echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
 
       - name: Build Test EE image
@@ -226,7 +228,7 @@ jobs:
           do
             TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
           done
-          
+
           PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \

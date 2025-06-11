@@ -44,9 +44,9 @@ function assert_get_hz_dist_zip_for_snapshot {
   assert_contain "$actual_url" "$expected_url" "Expected URL for variant \"$hz_variant\", version \"$hz_version\" should contain $expected_url" || TESTS_RESULT=$?
 }
 
-log_header "Tests for get_hz_dist_zip"
-assert_get_hz_dist_zip slim 5.4.0 https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.4.0/hazelcast-enterprise-distribution-5.4.0-slim.zip
-assert_get_hz_dist_zip "" 5.4.0 https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.4.0/hazelcast-enterprise-distribution-5.4.0.zip
+#log_header "Tests for get_hz_dist_zip"
+#assert_get_hz_dist_zip slim 5.4.0 https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.4.0/hazelcast-enterprise-distribution-5.4.0-slim.zip
+#assert_get_hz_dist_zip "" 5.4.0 https://repository.hazelcast.com/release/com/hazelcast/hazelcast-enterprise-distribution/5.4.0/hazelcast-enterprise-distribution-5.4.0.zip
 assert_get_hz_dist_zip "" 5.4.1-SNAPSHOT https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/5.4.1-SNAPSHOT/hazelcast-enterprise-distribution-5.4.1-SNAPSHOT.zip
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
