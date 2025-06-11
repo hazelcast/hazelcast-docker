@@ -122,8 +122,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
 
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Login to JFrog
+        run: echo "${{ secrets.JFROG_PASSWORD }}" | docker login -u "${{ secrets.JFROG_USERNAME }}" --password-stdin "${{ secrets.HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY }}"
 
       - name: Get OSS dist ZIP URL
         run: |
@@ -216,7 +216,7 @@ jobs:
           . .github/scripts/ee-build.functions.sh
           
           DOCKER_DIR=hazelcast-enterprise
-          IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
+          IMAGE_NAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY }}/${{ secrets.INTERNAL_DOCKER_REGISTRY_EXTENDED_SUPPORT_5_3_REPOSITORY }}/hazelcast/hazelcast-enterprise
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
           TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
@@ -261,15 +261,15 @@ jobs:
           short-description: Hazelcast Docker Image
           readme-filepath: ./README-docker.md
 
-      - name: Update Docker Hub Description of EE image
-        if: needs.prepare.outputs.should_build_ee == 'yes'
-        uses: peter-evans/dockerhub-description@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: hazelcast/hazelcast-enterprise
-          short-description: Hazelcast Enterprise Docker Image
-          readme-filepath: ./README-docker.md
+      #- name: Update Docker Hub Description of EE image
+      #  if: needs.prepare.outputs.should_build_ee == 'yes'
+      #  uses: peter-evans/dockerhub-description@v3
+      #  with:
+      #    username: ${{ secrets.DOCKER_USERNAME }}
+      #    password: ${{ secrets.DOCKER_PASSWORD }}
+      #    repository: hazelcast/hazelcast-enterprise
+      #    short-description: Hazelcast Enterprise Docker Image
+      #    readme-filepath: ./README-docker.md
 
       - name: Create release
         if: github.event_name == 'push'
