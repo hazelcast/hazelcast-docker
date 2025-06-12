@@ -99,8 +99,6 @@ jobs:
         run: |
           echo "Rebuilding ${{ matrix.version }} EE image"
           gh workflow run tag_image_push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }} -f EDITIONS=EE
-          # DI-503 - RHEL disabled
-          # gh workflow run tag_image_push_rhel.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }}
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Slack notification

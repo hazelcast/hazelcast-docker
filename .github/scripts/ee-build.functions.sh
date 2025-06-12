@@ -17,8 +17,15 @@ function get_hz_dist_zip() {
 
   if [[ "${hz_version}" == *"SNAPSHOT"* ]]
   then  
-      echo "https://repository.hazelcast.com/snapshot/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${hz_version}${suffix}.zip"
+      repository=snapshot
   else
-      echo "https://${JFROG_USERNAME}:${JFROG_PASSWORD}@repository.hazelcast.com/libs-release-local-ext-support-5-3/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${hz_version}${suffix}.zip"
+      repository=release
   fi
+
+  # Add credentials if available
+  if [[ -n "${JFROG_USERNAME-}" && -n "${JFROG_PASSWORD-}" ]]; then
+    auth=${JFROG_USERNAME}:${JFROG_PASSWORD}
+  fi
+
+  echo "https://${auth:+${auth}@}repository.hazelcast.com/${repository}/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${hz_version}${suffix}.zip"
 }
