@@ -7,6 +7,8 @@ SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 # Source the latest version of assert.sh unit testing library and include in current shell
 source /dev/stdin <<< "$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)"
 
+. "$SCRIPT_DIR"/build.functions.sh
+
 TESTS_RESULT=0
 
 function assert_should_build_oss {
