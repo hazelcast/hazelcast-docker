@@ -26,6 +26,7 @@ SCRIPT_DIR=$(find_script_dir)
 
 # Source the latest version of assert.sh unit testing library and include in current shell
 source /dev/stdin <<< "$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)"
+
 TESTS_RESULT=0
 
 # Functions overlap, so likely only testing one implementation - but as are duplicated, *shouldn't* be an issue
