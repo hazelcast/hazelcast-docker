@@ -3,10 +3,7 @@
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 # Source the latest version of assert.sh unit testing library and include in current shell
-assert_script_content=$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)
-# shellcheck source=/dev/null
-. <(echo "${assert_script_content}")
-. "$SCRIPT_DIR"/version.functions.sh
+source /dev/stdin <<< "$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)"
 
 TESTS_RESULT=0
 
