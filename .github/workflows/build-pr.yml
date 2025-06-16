@@ -37,7 +37,7 @@ jobs:
 
       - name: Get HZ versions
         id: get_hz_versions
-        uses: hazelcast/docker-actions/get-hz-versions@add-get-hz-versions
+        uses: hazelcast/docker-actions/get-hz-versions@master
 
       - name: Setup EE variables
         id: get_ee_vars
