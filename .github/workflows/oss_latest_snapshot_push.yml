@@ -28,7 +28,7 @@ jobs:
           - variant: slim
           - variant: ''
     env:
-      DOCKER_REGISTRY: ${{ secrets.HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY }}
+      DOCKER_REGISTRY: ${{ secrets.JFROG_REGISTRY }}
       DOCKER_USERNAME: ${{ secrets.JFROG_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.JFROG_PASSWORD }}
 
