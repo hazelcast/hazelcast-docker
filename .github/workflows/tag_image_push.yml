@@ -123,7 +123,7 @@ jobs:
           aws-region: 'us-east-1'
 
       - name: Login to JFrog
-        run: echo "${{ secrets.JFROG_PASSWORD }}" | docker login -u "${{ secrets.JFROG_USERNAME }}" --password-stdin "${{ secrets.HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY }}"
+        run: echo "${{ secrets.JFROG_PASSWORD }}" | docker login -u "${{ secrets.JFROG_USERNAME }}" --password-stdin "${{ secrets.JFROG_REGISTRY }}"
 
       - name: Get OSS dist ZIP URL
         run: |
@@ -218,7 +218,7 @@ jobs:
           . .github/scripts/ee-build.functions.sh
           
           DOCKER_DIR=hazelcast-enterprise
-          IMAGE_NAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_DOCKER_REGISTRY }}/${{ secrets.INTERNAL_DOCKER_REGISTRY_EXTENDED_SUPPORT_5_3_REPOSITORY }}/hazelcast/hazelcast-enterprise
+          IMAGE_NAME=${{ secrets.JFROG_REGISTRY }}/${{ secrets.EXTENDED_SUPPORT_PLUS_5_3_REPOSITORY }}/hazelcast/hazelcast-enterprise
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
           TAGS_TO_PUSH=$(get_tags_to_push ${{ env.RELEASE_VERSION }} "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
