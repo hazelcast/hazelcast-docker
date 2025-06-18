@@ -28,7 +28,7 @@ jobs:
           - variant: slim
           - variant: ''
     env:
-      DOCKER_REGISTRY: ${{ secrets.JFROG_URL }}
+      DOCKER_REGISTRY: ${{ secrets.JFROG_REGISTRY }}
 
       # required by OSS get_hz_dist_zip function
       HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
