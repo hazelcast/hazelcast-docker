@@ -22,5 +22,10 @@ function get_hz_dist_zip() {
       repository=release
   fi
 
-  echo "https://repository.hazelcast.com/${repository}/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${hz_version}${suffix}.zip"
+  # Add credentials if available
+  if [[ -n "${JFROG_USERNAME-}" && -n "${JFROG_PASSWORD-}" ]]; then
+    auth=${JFROG_USERNAME}:${JFROG_PASSWORD}
+  fi
+
+  echo "https://${auth:+${auth}@}repository.hazelcast.com/${repository}/com/hazelcast/hazelcast-enterprise-distribution/${hz_version}/hazelcast-enterprise-distribution-${hz_version}${suffix}.zip"
 }
