@@ -25,7 +25,7 @@ jobs:
       - id: get-maintenance-versions
         uses: hazelcast/hazelcast/.github/actions/get-supported-maintenance-versions@master
       - name: Calculate minimal supported version
-        run: echo "DEFAULT_MINIMAL_SUPPORTED_VERSION=$(echo '${{ steps.get-maintenance-versions.outputs.versions }}' | jq '.[0]')" >> $GITHUB_ENV
+        run: echo "DEFAULT_MINIMAL_SUPPORTED_VERSION=$(echo '${{ steps.get-maintenance-versions.outputs.versions-including-extended-support-plus }}' | jq '.[0]')" >> $GITHUB_ENV
       - id: set-matrix
         name: Get latest patch versions
         run: |
