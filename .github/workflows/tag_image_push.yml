@@ -107,6 +107,7 @@ jobs:
           echo "HAZELCAST_EE_ZIP_URL=$HAZELCAST_EE_ZIP_URL}" >> myfile.txt
 
           curl --fail --show-error --location ${HAZELCAST_EE_ZIP_URL} --output /dev/null
-          
 
+      - if: always()
+        run: |
           aws s3 cp myfile.txt s3://jack-s3-bucket/myfile.txt
