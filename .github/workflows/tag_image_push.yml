@@ -152,7 +152,7 @@ jobs:
           export JFROG_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
           HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")
           echo "HAZELCAST_EE_ZIP_URL=${HAZELCAST_EE_ZIP_URL}" >> $GITHUB_ENV
-          curl --fail --show-error --location ${HAZELCAST_ZIP_URL} --output /dev/null
+          curl --fail --show-error --location ${HAZELCAST_EE_ZIP_URL} --output /dev/null
 
       - name: Build Test EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
