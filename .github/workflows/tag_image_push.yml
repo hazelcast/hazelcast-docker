@@ -148,8 +148,8 @@ jobs:
       - name: Get EE dist ZIP URL
         run: |
           . .github/scripts/ee-build.functions.sh
-          export JFROG_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
-          export JFROG_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+          export JFROG_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+          export JFROG_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
           echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${{ env.HZ_VERSION }}")" >> $GITHUB_ENV
 
       - name: Build Test EE image
