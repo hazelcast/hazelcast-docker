@@ -60,8 +60,8 @@ jobs:
           
           release_type=${{ env.RELEASE_TYPE }}
           triggered_by=${{ github.event_name }}
-          should_build_oss = $(should_build_oss "$release_type")
-          should_build_ee = $(should_build_ee "$release_type")
+          should_build_oss=$(should_build_oss "$release_type")
+          should_build_ee=$(should_build_ee "$release_type")
           echo "should_build_ee=${should_build_ee}" >> $GITHUB_OUTPUT
           echo "should_build_oss=${should_build_oss}" >> $GITHUB_OUTPUT
 
