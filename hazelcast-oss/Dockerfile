@@ -47,8 +47,8 @@ RUN echo "Upgrading APK packages" \
     && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
-    && echo "Granting read permission to ${HZ_HOME}" \
-    && chmod -R +r ${HZ_HOME} \
+    && echo "Granting read&write permission to ${HZ_HOME}" \
+    && chmod -R +rw ${HZ_HOME} \
     && echo "Cleaning APK packages and redundant files/folders" \
     && apk del libxml2-utils zip unzip \
     && rm -rf /var/cache/apk/* ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp \
