@@ -58,8 +58,8 @@ RUN echo "Installing new packages" \
     && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
-    && echo "Granting read permission to ${HZ_HOME}" \
-    && chmod -R +r ${HZ_HOME} \
+    && echo "Granting read&write&execute permissions to ${HZ_HOME}" \
+    && chmod -R a+rwX ${HZ_HOME} \
     && echo "Removing cached package data and unnecessary tools" \
     && microdnf -y remove zip unzip \
     && microdnf -y clean all \
@@ -71,9 +71,7 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/c
 
 RUN echo "Adding non-root user" \
     && groupadd --system hazelcast \
-    && useradd --no-log-init --system --gid hazelcast --create-home ${USER_NAME} \
-    && echo "Changing owner of ${HZ_HOME} as ${USER_NAME}" \
-    && chown -R a+rwX ${USER_NAME}:${USER_NAME} ${HZ_HOME}
+    && useradd --no-log-init --system --gid hazelcast --create-home ${USER_NAME}
 
 WORKDIR ${HZ_HOME}
 
