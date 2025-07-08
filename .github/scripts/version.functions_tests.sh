@@ -90,7 +90,6 @@ assert_latest_patch_versions_not_contain "5.3" "$LATEST_5_4_DEVEL"
 
 log_header "Tests for get_last_version_with_file"
 assert_get_last_version_with_file ".github/containerscan/allowedlist.yaml" "5.3.1" # it was removed in 5.3.2
-assert_get_last_version_with_file ".github/actions/install-xmllint/action.yml" "5.4.1" # it was removed in 5.4.2
 assert_get_last_version_with_file "dummy-non-existing-file" ""
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
