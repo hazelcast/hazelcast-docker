@@ -72,8 +72,7 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/c
 RUN echo "Adding non-root user" \
     && groupadd --system hazelcast \
     && useradd --no-log-init --system --gid hazelcast --create-home ${USER_NAME} \
-
-RUN echo "Changing owner of ${HZ_HOME} as ${USER_NAME}" \
+    && echo "Changing owner of ${HZ_HOME} as ${USER_NAME}" \
     && chown -R a+rwX ${USER_NAME}:${USER_NAME} ${HZ_HOME}
 
 WORKDIR ${HZ_HOME}

@@ -59,8 +59,8 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/c
 
 WORKDIR ${HZ_HOME}
 
-RUN addgroup -S hazelcast && adduser -S hazelcast -G hazelcast
-RUN echo "Changing owner of ${HZ_HOME} as hazelcast" \
+RUN addgroup -S hazelcast && adduser -S hazelcast -G hazelcast \
+    && echo "Changing owner of ${HZ_HOME} as hazelcast" \
     && chown -R a+rwX hazelcast:hazelcast ${HZ_HOME}
 USER hazelcast
 
