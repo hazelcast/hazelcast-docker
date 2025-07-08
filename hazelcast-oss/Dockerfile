@@ -47,8 +47,8 @@ RUN echo "Upgrading APK packages" \
     && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
-    && echo "Granting read&write permission to ${HZ_HOME}" \
-    && chmod -R +rw ${HZ_HOME} \
+    && echo "Granting read permission to ${HZ_HOME}" \
+    && chmod -R +r ${HZ_HOME} \
     && echo "Cleaning APK packages and redundant files/folders" \
     && apk del libxml2-utils zip unzip \
     && rm -rf /var/cache/apk/* ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp \
@@ -60,6 +60,8 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/c
 WORKDIR ${HZ_HOME}
 
 RUN addgroup -S hazelcast && adduser -S hazelcast -G hazelcast
+RUN echo "Changing owner of ${HZ_HOME} as hazelcast" \
+    && chown -R a+rwX hazelcast:hazelcast ${HZ_HOME}
 USER hazelcast
 
 # Start Hazelcast server
