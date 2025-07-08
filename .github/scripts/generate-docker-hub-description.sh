@@ -7,7 +7,11 @@ get_formatted_latest_docker_tags() {
   local PAGE=1
   local TAGS=""
   while true; do
-    local RESPONSE=$(curl -s "https://hub.docker.com/v2/repositories/$REPO_NAME/tags/?page=${PAGE}&page_size=100")
+    local RESPONSE=$( \
+      curl --fail \
+        --silent \
+        --show-error \
+        "https://hub.docker.com/v2/repositories/$REPO_NAME/tags/?page=${PAGE}&page_size=100")
     local CURRENT_TAGS=$(echo "${RESPONSE}" | jq -r '.results | group_by(.full_size) | .[] | {image: .[0].name, tags: [.[].name]}')
     local TAGS="${TAGS}${CURRENT_TAGS}"
     local  HAS_NEXT=$(echo "${RESPONSE}" | jq -r '.next')
