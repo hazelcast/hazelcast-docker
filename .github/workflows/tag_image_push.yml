@@ -318,7 +318,7 @@ jobs:
           allowUpdates: true
 
       - name: Slack notification
-        uses: ./.github/actions/slack-notification
+        uses: hazelcast/docker-actions/slack-notification@master
         if: failure() && github.triggering_actor == 'devOpsHazelcast'
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
