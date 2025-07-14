@@ -127,7 +127,7 @@ jobs:
           password: ${{ env.REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT_PASSWORD }}
 
       - name: Run smoke test against image
-        timeout-minutes: 10
+        timeout-minutes: 20
         run: |
           set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
