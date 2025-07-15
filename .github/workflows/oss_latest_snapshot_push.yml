@@ -14,7 +14,15 @@ env:
 
 jobs:
   jdks:
-    uses: ./.github/workflows/get-supported-jdks.yaml
+    runs-on: ubuntu-latest
+    outputs:
+      jdks: ${{ steps.jdks.outputs.jdks }}
+    steps:
+      - name: Get supported JDKs
+        id: jdks
+        uses: hazelcast/docker-actions/get-supported-jdks@master
+        with:
+          HZ_VERSION: '${{ inputs.HZ_VERSION }}'
 
   push:
     runs-on: ubuntu-latest
@@ -132,7 +140,7 @@ jobs:
             $TAGS_ARG \
             --platform=${PLATFORMS} $DOCKER_DIR
       - name: Slack notification
-        uses: ./.github/actions/slack-notification
+        uses: hazelcast/docker-actions/slack-notification@master
         if: failure() && github.triggering_actor == 'devOpsHazelcast'
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
