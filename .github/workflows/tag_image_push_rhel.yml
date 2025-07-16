@@ -97,7 +97,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    # Workaround _suspected_ race conditions on the RedHat server-side publish
+    # RedHat does not support concurrent publishing, run sequentially
     concurrency: rhel
     strategy:
       fail-fast: false
