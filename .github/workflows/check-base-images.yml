@@ -49,6 +49,8 @@ jobs:
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
     strategy:
       fail-fast: false
+      # Workaround _suspected_ race conditions on the RedHat server-side publish
+      max-parallel: 1
       matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
     steps:
       - name: Checkout Code
@@ -57,8 +59,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: v${{ matrix.version }}
-          path: v${{ matrix.version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          path: tag
       - name: Login to NLC Docker Repository
         uses: docker/login-action@v3
         with:
@@ -71,7 +72,7 @@ jobs:
           . .github/scripts/packages-updated.sh
           . .github/scripts/log.functions.sh
           echo "Checking OSS ${{ matrix.version }} image"
-          if base_image_updated hazelcast/hazelcast:${{ matrix.version }} v${{ matrix.version }}/hazelcast-oss/Dockerfile; then
+          if base_image_updated hazelcast/hazelcast:${{ matrix.version }} tag/hazelcast-oss/Dockerfile; then
             echo "OSS_NEEDS_REBUILD=yes" >> $GITHUB_ENV
             log_info "Image OSS ${{ matrix.version }} needs rebuild"
           else
@@ -85,7 +86,7 @@ jobs:
             log_info "System packages for OSS ${{ matrix.version }} image are up-to-date"
           fi
           echo "Checking EE ${{ matrix.version }} image"
-          if base_image_updated hazelcast/hazelcast-enterprise:${{ matrix.version }} v${{ matrix.version }}/hazelcast-enterprise/Dockerfile; then 
+          if base_image_updated hazelcast/hazelcast-enterprise:${{ matrix.version }} tag/hazelcast-enterprise/Dockerfile; then 
             echo "EE_NEEDS_REBUILD=yes" >> $GITHUB_ENV
             log_info "Image EE ${{ matrix.version }} needs rebuild"
           else
@@ -99,7 +100,7 @@ jobs:
             log_info "System packages for EE ${{ matrix.version }} image are up-to-date"
           fi
           echo "Checking EE NLC ${{ matrix.version }} image"
-          if base_image_updated ${NLC_IMAGE_NAME}:${{ matrix.version }} v${{ matrix.version }}/hazelcast-enterprise/Dockerfile; then 
+          if base_image_updated ${NLC_IMAGE_NAME}:${{ matrix.version }} tag/hazelcast-enterprise/Dockerfile; then 
             echo "EE_NLC_NEEDS_REBUILD=yes" >> $GITHUB_ENV
             log_info "Image EE NLC ${{ matrix.version }} needs rebuild"
           else
@@ -112,21 +113,22 @@ jobs:
           else
             log_info "System packages for EE NLC ${{ matrix.version }} image are up-to-date"
           fi
-      - name: Rebuild ${{ matrix.version }} EE image
+      - name: Rebuild ${{ matrix.version }} EE RHEL image
         if: env.EE_NEEDS_REBUILD == 'yes'
-        run: |
-          echo "Rebuilding ${{ matrix.version }} EE image"
-          gh workflow run tag_image_push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }} -f RELEASE_TYPE=EE
-          gh workflow run tag_image_push_rhel.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }}
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./tag/.github/workflows/tag_image_push.yml
+        with:
+          HZ_VERSION: ${{ matrix.version }}
+          RELEASE_TYPE: EE
+      - name: Rebuild ${{ matrix.version }} EE RHEL image
+        if: env.EE_NEEDS_REBUILD == 'yes'
+        uses: ./tag/.github/workflows/tag_image_push_rhel.yml
+        with:
+          HZ_VERSION: ${{ matrix.version }}
       - name: Rebuild ${{ matrix.version }} EE NLC image
         if: env.EE_NLC_NEEDS_REBUILD == 'yes'
-        run: |
-          echo "Rebuilding ${{ matrix.version }} EE NLC image"
-          gh workflow run ee-nlc-tag-push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }}
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./tag/.github/workflows/ee-nlc-tag-push.yml
+        with:
+          HZ_VERSION: ${{ matrix.version }}
       - name: Slack notification
         uses: hazelcast/docker-actions/slack-notification@master
         if: failure() && github.event_name != 'workflow_dispatch'
