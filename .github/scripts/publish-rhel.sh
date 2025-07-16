@@ -29,8 +29,9 @@ get_image()
 
     local RESPONSE
     RESPONSE=$( \
-        curl --silent \
-             --request GET \
+        curl --fail \
+             --silent \
+             --show-error \
              --header "X-API-KEY: ${RHEL_API_KEY}" \
              "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}&${INCLUDE}")
 
@@ -123,7 +124,9 @@ publish_the_image()
 
     echo "Publishing the image ${IMAGE_ID}..."
     RESPONSE=$( \
-        curl --silent \
+        curl --fail \
+             --silent \
+             --show-error \
             --retry 5 --retry-all-errors \
             --request POST \
             --header "X-API-KEY: ${RHEL_API_KEY}" \
@@ -156,7 +159,9 @@ sync_tags()
 
     echo "Syncing tags of the image ${IMAGE_ID}..."
     RESPONSE=$( \
-        curl --silent \
+        curl --fail \
+             --silent \
+             --show-error \
             --retry 5 --retry-all-errors \
             --request POST \
             --header "X-API-KEY: ${RHEL_API_KEY}" \
@@ -202,7 +207,9 @@ wait_for_container_publish()
             # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetTestResultsById.html
             get_image not_published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
                 local TEST_RESULTS
-                TEST_RESULTS=$(curl --silent \
+                TEST_RESULTS=$(curl --fail \
+                    --silent \
+                    --show-error \
                     --request GET \
                     --header "X-API-KEY: ${RHEL_API_KEY}" \
                     "https://catalog.redhat.com/api/containers/${TEST_RESULTS_ENDPOINT}")
