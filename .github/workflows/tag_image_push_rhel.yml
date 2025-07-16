@@ -96,8 +96,12 @@ jobs:
       RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
 
     runs-on: ubuntu-latest
+
+    # Workaround _suspected_ race conditions on the RedHat server-side publish
+    concurrency: rhel
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     steps:
