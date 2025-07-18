@@ -2,7 +2,7 @@
 
 set -eEuo pipefail ${RUNNER_DEBUG:+-x}
 
-get_formatted_latest_docker_tags() {
+function get_formatted_latest_docker_tags() {
   local REPO_NAME=$1
   local PAGE=1
   local TAGS=""
@@ -29,7 +29,7 @@ get_formatted_latest_docker_tags() {
   echo "${LATEST_TAGS}"| jq -sr '.[] | " - " + (.tags | sort_by(.) | join(", "))' | sort -V
 }
 
-fill_readme_with_tags() {
+function fill_readme_with_tags() {
    local filename=$1
    local repo_name=$2
    local matching_line="$3"

@@ -6,7 +6,7 @@ set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 . .github/scripts/logging.functions.sh
 
 #CHECK IF THE LAST MEMBER POD IS READY
-wait_for_last_member_initialization() {
+function wait_for_last_member_initialization() {
     local SIZE=$1
     local LAST_MEMBER=$(( $SIZE - 1 ))
     for i in `seq 1 10`; do
@@ -28,7 +28,7 @@ wait_for_last_member_initialization() {
 }
 
 #CHECK IF CLUSTER SIZE IS CORRECT
-verify_cluster_size() {
+function verify_cluster_size() {
     local SIZE=$1
     local LAST_MEMBER=$(( $SIZE - 1 ))
     for i in `seq 1 5`; do
@@ -51,7 +51,7 @@ verify_cluster_size() {
 
 
 #CHECK IF ALL MEMBERS CAN COMMUNICATE WITH MANAGEMENT CENTER
-verify_management_center() {
+function verify_management_center() {
     local SIZE=$1
     echo "Verifying Management Center"
     for i in `seq 1 5`; do
