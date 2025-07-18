@@ -74,22 +74,21 @@ jobs:
             local label=$1
             local image=$2
             local dockerfile=$3
-            local env_var=$4
 
             echo "Checking ${label} image"
             if base_image_updated_from_dockerfile "${image}" "${dockerfile}"; then 
-              echo "${env_var}=yes" >> $GITHUB_ENV
+              echo "${label}_NEEDS_REBUILD=yes" >> $GITHUB_ENV
               echonotice "Image ${label} needs rebuild"
             elif packages_updated_ee "${image}"; then
-              echo "${env_var}=yes" >> $GITHUB_ENV
+              echo "${label}_NEEDS_REBUILD=yes" >> $GITHUB_ENV
               echonotice "System package upgrades for ${label} image available"
             else
               echodebug "Image ${label} is up-to-date"
             fi
           }
 
-          check_image "EE" "hazelcast/hazelcast-enterprise:${{ matrix.version }}-slim" "v${{ matrix.version }}/hazelcast-enterprise/Dockerfile" "EE_NEEDS_REBUILD"
-          check_image "EE NLC" "${{ secrets.NLC_IMAGE_NAME }}:${{ matrix.version }}" "v${{ matrix.version }}/hazelcast-enterprise/Dockerfile" "EE_NLC_NEEDS_REBUILD"
+          check_image "EE" "hazelcast/hazelcast-enterprise:${{ matrix.version }}-slim" "v${{ matrix.version }}/hazelcast-enterprise/Dockerfile"
+          check_image "EE_NLC" "${{ secrets.NLC_IMAGE_NAME }}:${{ matrix.version }}" "v${{ matrix.version }}/hazelcast-enterprise/Dockerfile"
       - name: Rebuild ${{ matrix.version }} EE image
         if: env.EE_NEEDS_REBUILD == 'yes'
         run: |
