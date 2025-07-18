@@ -52,12 +52,12 @@ function assert_packages_updatable_ee {
 
 log_header "Tests for packages_updatable_oss"
 assert_packages_updatable_oss hazelcast/hazelcast:5.0.1-slim 0
-# Assuming the latest upstream image is fully updated
-assert_packages_updatable_oss alpine:latest 1
+# Cannot guarantee the latest upstream image is fully updated
+# assert_packages_updatable_oss alpine:latest 1
 
 log_header "Tests for packages_updatable_ee"
 assert_packages_updatable_ee hazelcast/hazelcast-enterprise:5.0.1-slim 0
-# Assuming the latest upstream image is fully updated
-assert_packages_updatable_ee redhat/ubi9-minimal:latest 1
+# Cannot guarantee the latest upstream image is fully updated
+# assert_packages_updatable_ee redhat/ubi9-minimal:latest 1
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
