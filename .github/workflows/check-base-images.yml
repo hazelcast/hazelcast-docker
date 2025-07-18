@@ -76,10 +76,10 @@ jobs:
             local dockerfile=$3
 
             echo "Checking ${label} image"
-            if base_image_updated_from_dockerfile "${image}" "${dockerfile}"; then 
+            if base_image_outdated_from_dockerfile "${image}" "${dockerfile}"; then 
               echo "${label}_NEEDS_REBUILD=yes" >> $GITHUB_ENV
               echonotice "Image ${label} needs rebuild"
-            elif packages_updated_ee "${image}"; then
+            elif packages_updatable_ee "${image}"; then
               echo "${label}_NEEDS_REBUILD=yes" >> $GITHUB_ENV
               echonotice "System package upgrades for ${label} image available"
             else

@@ -32,32 +32,32 @@ source /dev/stdin <<< "$(curl --silent https://raw.githubusercontent.com/hazelca
 TESTS_RESULT=0
 
 
-function assert_packages_updated_oss {
+function assert_packages_updatable_oss {
   local image=$1
   local expected_exit_code=$2
-  packages_updated_oss "${image}" && true
+  packages_updatable_oss "${image}" && true
   local actual_exit_code=$?
   local msg="Expected exit code for image \"${image}\""
   assert_eq "${expected_exit_code}" "${actual_exit_code}" "${msg}" && log_success "${msg}" || TESTS_RESULT=$?
 }
 
-function assert_packages_updated_ee {
+function assert_packages_updatable_ee {
   local image=$1
   local expected_exit_code=$2
-  packages_updated_ee "${image}" && true
+  packages_updatable_ee "${image}" && true
   local actual_exit_code=$?
   local msg="Expected exit code for image \"${image}\""
   assert_eq "${expected_exit_code}" "${actual_exit_code}" "${msg}" && log_success "${msg}" || TESTS_RESULT=$?
 }
 
-log_header "Tests for packages_updated_oss"
-assert_packages_updated_oss hazelcast/hazelcast:5.0.1-slim 0
+log_header "Tests for packages_updatable_oss"
+assert_packages_updatable_oss hazelcast/hazelcast:5.0.1-slim 0
 # Assuming the latest upstream image is fully updated
-assert_packages_updated_oss alpine:latest 1
+assert_packages_updatable_oss alpine:latest 1
 
-log_header "Tests for packages_updated_ee"
-assert_packages_updated_ee hazelcast/hazelcast-enterprise:5.0.1-slim 0
+log_header "Tests for packages_updatable_ee"
+assert_packages_updatable_ee hazelcast/hazelcast-enterprise:5.0.1-slim 0
 # Assuming the latest upstream image is fully updated
-assert_packages_updated_ee redhat/ubi9-minimal:latest 1
+assert_packages_updatable_ee redhat/ubi9-minimal:latest 1
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
