@@ -13,13 +13,13 @@ function base_image_updated() {
   local CURRENT_IMAGE=$1
   local BASE_IMAGE=$2
   local BASE_IMAGE_SHA
-  BASE_IMAGE_SHA=$(get_sha "${BASE_IMAGE}")
+  BASE_IMAGE_SHA=$(get_base_image_sha "${BASE_IMAGE}")
   local CURRENT_IMAGE_SHA
-  CURRENT_IMAGE_SHA=$(get_sha "${CURRENT_IMAGE}")
+  CURRENT_IMAGE_SHA=$(get_base_image_sha "${CURRENT_IMAGE}")
   [[ "${CURRENT_IMAGE_SHA}" != "${BASE_IMAGE_SHA}" ]]
 }
 
-function get_sha() {
+function get_base_image_sha() {
   local IMAGE=$1
   docker pull "${IMAGE}" --quiet
   docker image inspect --format '{{index .RootFS.Layers 0}}' "${IMAGE}"
