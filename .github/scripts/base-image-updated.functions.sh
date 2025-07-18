@@ -1,14 +1,18 @@
+# Returns the base image of the specified Dockerfile
 function get_base_image_name() {
   local DOCKERFILE=$1
+  # Read the (implicitly first) `FROM` line
   grep '^FROM ' ${DOCKERFILE} | cut -d' ' -f2
 }
 
+# Determine if the specified image is up-to-date
 function base_image_updated_from_dockerfile() {
   local CURRENT_IMAGE=$1
   local DOCKERFILE=$2
   base_image_updated "${CURRENT_IMAGE}" $(get_base_image_name "${DOCKERFILE}")
 }
 
+# Determine if the specified image is up-to-date
 function base_image_updated() {
   local CURRENT_IMAGE=$1
   local BASE_IMAGE=$2
