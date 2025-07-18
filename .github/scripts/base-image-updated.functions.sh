@@ -1,30 +1,30 @@
 # Returns the base image of the specified Dockerfile
 function get_base_image_name() {
-  local DOCKERFILE=$1
+  local dockerfile=$1
   # Read the (implicitly first) `FROM` line
-  grep '^FROM ' ${DOCKERFILE} | cut -d' ' -f2
+  grep '^FROM ' ${dockerfile} | cut -d' ' -f2
 }
 
 # Determine if the specified image is up-to-date
 function base_image_updated_from_dockerfile() {
-  local CURRENT_IMAGE=$1
-  local DOCKERFILE=$2
-  base_image_updated "${CURRENT_IMAGE}" $(get_base_image_name "${DOCKERFILE}")
+  local current_image=$1
+  local dockerfile=$2
+  base_image_updated "${current_image}" $(get_base_image_name "${dockerfile}")
 }
 
 # Determine if the specified image is up-to-date
 function base_image_updated() {
-  local CURRENT_IMAGE=$1
-  local BASE_IMAGE=$2
-  local BASE_IMAGE_SHA
-  BASE_IMAGE_SHA=$(get_base_image_sha "${BASE_IMAGE}")
-  local CURRENT_IMAGE_SHA
-  CURRENT_IMAGE_SHA=$(get_base_image_sha "${CURRENT_IMAGE}")
-  [[ "${CURRENT_IMAGE_SHA}" != "${BASE_IMAGE_SHA}" ]]
+  local current_image=$1
+  local base_image=$2
+  local base_image_sha
+  base_image_sha=$(get_base_image_sha "${base_image}")
+  local current_image_sha
+  current_image_sha=$(get_base_image_sha "${current_image}")
+  [[ "${current_image_sha}" != "${base_image_sha}" ]]
 }
 
 function get_base_image_sha() {
-  local IMAGE=$1
-  docker pull "${IMAGE}" --quiet
-  docker image inspect --format '{{index .RootFS.Layers 0}}' "${IMAGE}"
+  local image=$1
+  docker pull "${image}" --quiet
+  docker image inspect --format '{{index .RootFS.Layers 0}}' "${image}"
 }
