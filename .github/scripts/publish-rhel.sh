@@ -25,7 +25,6 @@ get_image()
     esac
 
     local FILTER="filter=deleted==false;${PUBLISHED_FILTER};_id==${IMAGE_ID}"
-    local INCLUDE="include=total,data.repositories,data.certified,data.container_grades,data._id,data.creation_date"
 
     local RESPONSE
     RESPONSE=$( \
@@ -33,7 +32,7 @@ get_image()
              --silent \
              --show-error \
              --header "X-API-KEY: ${RHEL_API_KEY}" \
-             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}&${INCLUDE}")
+             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}")
 
     echo "${RESPONSE}"
 }
@@ -200,13 +199,15 @@ wait_for_container_publish()
         sleep 30
 
         if [[ ${i} == "${NOF_RETRIES}" ]]; then
+            IMAGE=$(get_image not_published)
+
             echoerr "Timeout! Publish could not be finished"
             echoerr "${IMAGE}"
 
             # Add additional logging context if possible
             echoerr "Test Results:"
             # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetTestResultsById.html
-            get_image not_published "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
+            echo "${IMAGE}" | jq -r '.data[]._links.test_results.href' | while read -r TEST_RESULTS_ENDPOINT; do
                 local TEST_RESULTS
                 TEST_RESULTS=$(curl --fail \
                     --silent \
