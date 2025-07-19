@@ -58,7 +58,6 @@ jobs:
         with:
           ref: v${{ matrix.version }}
           path: v${{ matrix.version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Login to NLC Docker Repository
         uses: docker/login-action@v3
         with:
@@ -67,51 +66,29 @@ jobs:
           password: ${{ secrets.NLC_REPO_TOKEN }}
       - name: Check if ${{ matrix.version }} base images updated
         run: |
-          . .github/scripts/base-image-updated.sh
-          . .github/scripts/packages-updated.sh
-          . .github/scripts/log.functions.sh
-          echo "Checking OSS ${{ matrix.version }} image"
-          if base_image_updated hazelcast/hazelcast:${{ matrix.version }} v${{ matrix.version }}/hazelcast-oss/Dockerfile; then
-            echo "OSS_NEEDS_REBUILD=yes" >> $GITHUB_ENV
-            log_info "Image OSS ${{ matrix.version }} needs rebuild"
-          else
-            log_info "Image OSS ${{ matrix.version }} is up-to-date"
-          fi
-          echo "Checking system package upgrades for OSS ${{ matrix.version }} image"
-          if packages_updated_oss hazelcast/hazelcast:${{ matrix.version }}; then
-            echo "OSS_NEEDS_REBUILD=yes" >> $GITHUB_ENV
-            log_info "System package upgrades for OSS ${{ matrix.version }} image available"
-          else
-            log_info "System packages for OSS ${{ matrix.version }} image are up-to-date"
-          fi
-          echo "Checking EE ${{ matrix.version }} image"
-          if base_image_updated hazelcast/hazelcast-enterprise:${{ matrix.version }} v${{ matrix.version }}/hazelcast-enterprise/Dockerfile; then 
-            echo "EE_NEEDS_REBUILD=yes" >> $GITHUB_ENV
-            log_info "Image EE ${{ matrix.version }} needs rebuild"
-          else
-            log_info "Image EE ${{ matrix.version }} is up-to-date"
-          fi
-          echo "Checking system package upgrades for EE ${{ matrix.version }} image"
-          if packages_updated_ee hazelcast/hazelcast-enterprise:${{ matrix.version }}; then
-            echo "EE_NEEDS_REBUILD=yes" >> $GITHUB_ENV
-            log_info "System package upgrades for EE ${{ matrix.version }} image available"
-          else
-            log_info "System packages for EE ${{ matrix.version }} image are up-to-date"
-          fi
-          echo "Checking EE NLC ${{ matrix.version }} image"
-          if base_image_updated ${NLC_IMAGE_NAME}:${{ matrix.version }} v${{ matrix.version }}/hazelcast-enterprise/Dockerfile; then 
-            echo "EE_NLC_NEEDS_REBUILD=yes" >> $GITHUB_ENV
-            log_info "Image EE NLC ${{ matrix.version }} needs rebuild"
-          else
-            log_info "Image EE NLC ${{ matrix.version }} is up-to-date"
-          fi
-          echo "Checking system package upgrades for EE NLC ${{ matrix.version }} image"
-          if packages_updated_ee ${NLC_IMAGE_NAME}:${{ matrix.version }}; then
-            echo "EE_NLC_NEEDS_REBUILD=yes" >> $GITHUB_ENV
-            log_info "System package upgrades for EE NLC ${{ matrix.version }} image available"
-          else
-            log_info "System packages for EE NLC ${{ matrix.version }} image are up-to-date"
-          fi
+          . .github/scripts/base-image-updated.functions.sh
+          . .github/scripts/packages-updated.functions.sh
+          . .github/scripts/logging.functions.sh
+
+          check_image() {
+            local label=$1
+            local image=$2
+            local dockerfile=$3
+
+            echo "Checking ${label} image"
+            if base_image_outdated_from_dockerfile "${image}" "${dockerfile}"; then 
+              echo "${label}_NEEDS_REBUILD=yes" >> $GITHUB_ENV
+              echonotice "Image ${label} needs rebuild"
+            elif packages_updatable_ee "${image}"; then
+              echo "${label}_NEEDS_REBUILD=yes" >> $GITHUB_ENV
+              echonotice "System package upgrades for ${label} image available"
+            else
+              echodebug "Image ${label} is up-to-date"
+            fi
+          }
+
+          check_image "EE" "hazelcast/hazelcast-enterprise:${{ matrix.version }}-slim" "v${{ matrix.version }}/hazelcast-enterprise/Dockerfile"
+          check_image "EE_NLC" "${{ secrets.NLC_IMAGE_NAME }}:${{ matrix.version }}" "v${{ matrix.version }}/hazelcast-enterprise/Dockerfile"
       - name: Rebuild ${{ matrix.version }} EE image
         if: env.EE_NEEDS_REBUILD == 'yes'
         run: |
