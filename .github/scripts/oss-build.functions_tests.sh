@@ -31,7 +31,6 @@ source /dev/stdin <<< "$(curl --silent https://raw.githubusercontent.com/hazelca
 
 TESTS_RESULT=0
 
-
 function assert_get_hz_dist_zip {
   local hz_variant=$1
   local hz_version=$2
