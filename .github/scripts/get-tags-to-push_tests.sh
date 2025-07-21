@@ -2,7 +2,6 @@
 
 set -eu ${RUNNER_DEBUG:+-x}
 
-
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 # Source the latest version of assert.sh unit testing library and include in current shell
