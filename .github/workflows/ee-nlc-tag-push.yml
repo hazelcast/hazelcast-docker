@@ -24,9 +24,6 @@ jobs:
       HZ_VERSION: ${{ steps.set_hz_version.outputs.HZ_VERSION }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
       - name: Set HZ version
         id: set_hz_version
         run: |
