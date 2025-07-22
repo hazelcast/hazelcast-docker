@@ -14,7 +14,7 @@ on:
         description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
         required: true
       RELEASE_VERSION:
-        description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
+        description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
         required: false
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
@@ -40,7 +40,7 @@ on:
         required: true
       RELEASE_VERSION:
         type: string
-        description: 'Version of the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
+        description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
         required: false
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
@@ -55,36 +55,24 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      HZ_VERSION: ${{ steps.set_hz_version.outputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ steps.set_release_version.outputs.RELEASE_VERSION }}
+      HZ_VERSION: ${{ steps.derive-versions.outputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ steps.derive-versions.outputs.RELEASE_VERSION }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set HZ version
-        id: set_hz_version
-        run: |
-          if [ -n "${{ inputs.HZ_VERSION }}" ]; then
-            echo "HZ_VERSION=${{ inputs.HZ_VERSION }}" >> $GITHUB_OUTPUT
-          else
-            echo "HZ_VERSION=${GITHUB_REF:11}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Set Release version
-        id: set_release_version
-        run: |
-          if [ -n "${{ inputs.RELEASE_VERSION }}" ]; then
-              echo "RELEASE_VERSION=${{ inputs.RELEASE_VERSION }}" >> $GITHUB_OUTPUT
-          else
-              echo "RELEASE_VERSION=${{ steps.set_hz_version.outputs.HZ_VERSION }}" >> $GITHUB_OUTPUT
-          fi
+      - id: derive-versions
+        uses: ./.github/actions/derive-versions
+        with:
+          hz_version: ${{ inputs.HZ_VERSION }}
+          release_version: ${{ inputs.RELEASE_VERSION }}
 
       - name: Get supported JDKs
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ steps.set_hz_version.outputs.HZ_VERSION }}'
+          HZ_VERSION: '${{ steps.derive-versions.outputs.HZ_VERSION }}'
 
   build:
     needs: prepare
