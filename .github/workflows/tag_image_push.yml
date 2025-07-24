@@ -10,12 +10,6 @@ on:
       - '!*DEVEL*'
   workflow_dispatch:
     inputs:
-      HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
-        required: true
-      RELEASE_VERSION:
-        description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
-        required: false
       RELEASE_TYPE:
         description: 'What should be built'
         required: true
@@ -43,14 +37,6 @@ on:
           - 'true'
   workflow_call:
     inputs:
-      HZ_VERSION:
-        type: string
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
-        required: true
-      RELEASE_VERSION:
-        type: string
-        description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
-        required: false
       RELEASE_TYPE:
         description: 'What should be built'
         required: true
@@ -79,7 +65,6 @@ jobs:
       should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
       HZ_VERSION: ${{ steps.derive-versions.outputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ steps.derive-versions.outputs.RELEASE_VERSION }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
@@ -108,11 +93,9 @@ jobs:
           echo "should_build_ee=${should_build_ee}" >> $GITHUB_OUTPUT
           echo "should_build_oss=${should_build_oss}" >> $GITHUB_OUTPUT
 
-      - id: derive-versions
-        uses: ./.github/actions/derive-versions
-        with:
-          hz_version: ${{ inputs.HZ_VERSION }}
-          release_version: ${{ inputs.RELEASE_VERSION }}
+      - name: Get HZ versions
+        id: get_hz_versions
+        uses: hazelcast/docker-actions/get-hz-versions@master
 
       - name: Get supported JDKs
         id: jdks
@@ -132,7 +115,7 @@ jobs:
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
     steps:
 
       - name: Set environment variables
@@ -244,7 +227,7 @@ jobs:
           
           # OSS has no LTS releases
           IS_LATEST_LTS=false
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.HZ_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -272,7 +255,7 @@ jobs:
         id: is_latest_lts
         uses: ./.github/actions/check-if-latest-lts-release
         with:
-          release_version: ${{ env.RELEASE_VERSION }}
+          release_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build/Push EE image
@@ -287,7 +270,7 @@ jobs:
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
           
           IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.HZ_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}

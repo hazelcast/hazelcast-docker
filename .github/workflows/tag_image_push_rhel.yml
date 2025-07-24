@@ -10,12 +10,6 @@ on:
       - '!*DEVEL*'
   workflow_dispatch:
     inputs:
-      HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
-        required: true
-      RELEASE_VERSION:
-        description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
-        required: false
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
         required: false
@@ -34,14 +28,6 @@ on:
           - 'true'
   workflow_call:
     inputs:
-      HZ_VERSION:
-        type: string
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
-        required: true
-      RELEASE_VERSION:
-        type: string
-        description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
-        required: false
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
         required: false
@@ -55,18 +41,15 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      HZ_VERSION: ${{ steps.derive-versions.outputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ steps.derive-versions.outputs.RELEASE_VERSION }}
+      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - id: derive-versions
-        uses: ./.github/actions/derive-versions
-        with:
-          hz_version: ${{ inputs.HZ_VERSION }}
-          release_version: ${{ inputs.RELEASE_VERSION }}
+      - name: Get HZ versions
+        id: get_hz_versions
+        uses: hazelcast/docker-actions/get-hz-versions@master
 
       - name: Get supported JDKs
         id: jdks
@@ -81,7 +64,6 @@ jobs:
       TIMEOUT_IN_MINS: 240
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
 
     runs-on: ubuntu-latest
     strategy:
@@ -132,7 +114,7 @@ jobs:
         run: |
           SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}
           echo "SCAN_REPOSITORY=${SCAN_REPOSITORY}" >> $GITHUB_ENV
-          echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${RELEASE_VERSION}-jdk${{ matrix.jdk }}" >> $GITHUB_ENV
+          echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${HZ_VERSION}-jdk${{ matrix.jdk }}" >> $GITHUB_ENV
 
       - name: Log in to Red Hat Scan Registry
         uses: docker/login-action@v3
@@ -145,7 +127,7 @@ jobs:
         id: is_latest_lts
         uses: ./.github/actions/check-if-latest-lts-release
         with:
-          release_version: ${{ env.RELEASE_VERSION }}
+          release_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build the Hazelcast Enterprise image
@@ -159,7 +141,7 @@ jobs:
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
           IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.HZ_VERSION }}" "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
