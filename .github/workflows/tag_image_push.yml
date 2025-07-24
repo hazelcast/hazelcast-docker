@@ -96,17 +96,10 @@ jobs:
               exit 1
           fi
 
-      - name: Check which editions should be built
-        id: which_editions
-        run: |
-          . .github/scripts/build.functions.sh
-          
-          release_type=${{ env.RELEASE_TYPE }}
-          triggered_by=${{ github.event_name }}
-          should_build_oss=$(should_build_oss "$release_type")
-          should_build_ee=$(should_build_ee "$release_type")
-          echo "should_build_ee=${should_build_ee}" >> $GITHUB_OUTPUT
-          echo "should_build_oss=${should_build_oss}" >> $GITHUB_OUTPUT
+      - id: which_editions
+        uses: hazelcast/docker-actions/which-editions@master
+        with:
+          release-type: ${{ env.RELEASE_TYPE }}
 
       - id: derive-versions
         uses: ./.github/actions/derive-versions
