@@ -21,26 +21,22 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      HZ_VERSION: ${{ steps.set_hz_version.outputs.HZ_VERSION }}
+      HZ_VERSION: ${{ steps.derive-versions.outputs.HZ_VERSION }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set HZ version
-        id: set_hz_version
-        run: |
-          if [ -n "${{ inputs.HZ_VERSION }}" ]; then
-            echo "HZ_VERSION=${{ inputs.HZ_VERSION }}" >> $GITHUB_OUTPUT
-          else
-            echo "HZ_VERSION=${GITHUB_REF:11}" >> $GITHUB_OUTPUT
-          fi
+      - id: derive-versions
+        uses: ./.github/actions/derive-versions
+        with:
+          hz_version: ${{ inputs.HZ_VERSION }}
 
       - name: Get supported JDKs
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ steps.set_hz_version.outputs.HZ_VERSION }}'
+          HZ_VERSION: '${{ steps.derive-versions.outputs.HZ_VERSION }}'
 
   push:
     runs-on: ubuntu-latest
