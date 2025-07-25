@@ -84,8 +84,12 @@ jobs:
       RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
 
     runs-on: ubuntu-latest
+
+    # RedHat does not support concurrent publishing, run sequentially
+    concurrency: rhel
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     steps:
