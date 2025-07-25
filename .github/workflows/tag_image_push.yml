@@ -76,8 +76,8 @@ jobs:
     env:
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
     outputs:
-      should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
-      should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
+      should_build_oss: ${{ steps.resolve-editions.outputs.should_build_oss }}
+      should_build_ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
       HZ_VERSION: ${{ steps.derive-versions.outputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ steps.derive-versions.outputs.RELEASE_VERSION }}
       jdks: ${{ steps.jdks.outputs.jdks }}
@@ -96,8 +96,8 @@ jobs:
               exit 1
           fi
 
-      - id: which_editions
-        uses: hazelcast/docker-actions/which-editions@master
+      - id: resolve-editions
+        uses: hazelcast/docker-actions/resolve-editions@master
         with:
           release-type: ${{ env.RELEASE_TYPE }}
 
