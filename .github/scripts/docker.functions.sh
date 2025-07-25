@@ -17,9 +17,3 @@ function get_ubi_supported_platforms() {
   local JDK=$1
   echo "linux/arm64,linux/amd64,linux/s390x,linux/ppc64le"
 }
-
-function get_dockerfile_arg_value() {
-  local dockerfile=$1
-  local arg_name=$2
-  awk -F= "/^ARG $arg_name=/{print \$2}" $dockerfile  | sed 's/"//g'
-}
