@@ -24,17 +24,19 @@ jobs:
         with:
           HZ_VERSION: '${{ inputs.HZ_VERSION }}'
 
+  distribution-variants:
+    uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@centralise-variants
+
   push:
     runs-on: ubuntu-latest
-    needs: jdks
+    needs:
+      - jdks
+      - distribution-variants
     strategy:
       fail-fast: false
       matrix:
         jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
-        variant: [ 'slim','' ]
-        include:
-          - variant: slim
-          - variant: ''
+        variant: ${{ fromJSON(needs.distribution-variants.outputs.variants) }}
     env:
       DOCKER_REGISTRY: ${{ secrets.JFROG_REGISTRY }}
 
@@ -44,16 +46,6 @@ jobs:
 
       HZ_VERSION: ${{ inputs.HZ_VERSION }}
     steps:
-      - name: Compute Suffix
-        run: |
-          if [ -n "${{ matrix.variant }}" ]; then
-            SUFFIX=-${{ matrix.variant }}
-          else
-            SUFFIX=
-          fi
-          echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
-          
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -75,7 +67,7 @@ jobs:
       - name: Get OSS dist ZIP
         run: |
           . .github/scripts/oss-build.functions.sh
-          HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}")
+          HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant.classifier }}" "${HZ_VERSION}")
         
           curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output hazelcast-oss/hazelcast-distribution.zip;
 
@@ -94,7 +86,7 @@ jobs:
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          DOCKER_LOG_FILE_OSS=docker-${{ env.test_container_name_oss }}${{ env.SUFFIX }}-jdk${{ matrix.jdk }}.log
+          DOCKER_LOG_FILE_OSS=docker-${{ env.test_container_name_oss }}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}.log
           echo "DOCKER_LOG_FILE_OSS=${DOCKER_LOG_FILE_OSS}" >> $GITHUB_ENV
           docker logs "${{ env.test_container_name_oss }}" > "${DOCKER_LOG_FILE_OSS}"
 
@@ -102,7 +94,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs${{ env.SUFFIX }}-${{ github.job }}-jdk${{ matrix.jdk }}
+          name: docker-logs${{ matrix.variant.suffix }}-${{ github.job }}-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_OSS }}
 
@@ -125,7 +117,7 @@ jobs:
           IMAGE_NAME=$DOCKER_REGISTRY/docker/hazelcast/hazelcast
           DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
 
-          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
+          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
