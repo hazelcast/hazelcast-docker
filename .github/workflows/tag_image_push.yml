@@ -121,7 +121,7 @@ jobs:
           HZ_VERSION: '${{ steps.derive-versions.outputs.HZ_VERSION }}'
 
   distribution-variants:
-    uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@centralise-variants
+    uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@master
 
   push:
     runs-on: ubuntu-latest

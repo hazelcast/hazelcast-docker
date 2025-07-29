@@ -65,7 +65,7 @@ jobs:
           echo "jdk-image-variants-matrix=${matrix}" >> $GITHUB_OUTPUT
 
   distribution-variants:
-    uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@centralise-variants
+    uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@master
 
   test:
     runs-on: ubuntu-latest
