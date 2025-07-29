@@ -3,8 +3,8 @@ name: Build OSS snapshot image
 on:
   workflow_dispatch:
     inputs:
-      HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for'
+      REF:
+        description: 'The hazelcast-docker branch to build the image from'
         required: true
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
@@ -16,13 +16,23 @@ jobs:
   jdks:
     runs-on: ubuntu-latest
     outputs:
+      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_OSS }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.REF }}
+
+      - name: Get HZ versions
+        id: get_hz_versions
+        uses: hazelcast/docker-actions/get-hz-versions@master
+
       - name: Get supported JDKs
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ inputs.HZ_VERSION }}'
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_OSS }}'
 
   push:
     runs-on: ubuntu-latest
@@ -52,10 +62,13 @@ jobs:
             SUFFIX=
           fi
           echo "SUFFIX=${SUFFIX}" >> $GITHUB_ENV
-          
 
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.REF }}
+          path: ref
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.6.0

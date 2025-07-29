@@ -91,19 +91,20 @@ jobs:
           check_image "EE_NLC" "${{ secrets.NLC_IMAGE_NAME }}:${{ matrix.version }}" "v${{ matrix.version }}/hazelcast-enterprise/Dockerfile"
       - name: Rebuild ${{ matrix.version }} EE image
         if: env.EE_NEEDS_REBUILD == 'yes'
-        run: |
-          echo "Rebuilding ${{ matrix.version }} EE image"
-          gh workflow run tag_image_push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }} -f RELEASE_TYPE=EE
-          gh workflow run tag_image_push_rhel.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }}
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./.github/workflows/tag_image_push.yml
+        with:
+          REF: v${{ matrix.version }}
+          RELEASE_TYPE: EE
+      - name: Rebuild ${{ matrix.version }} EE RHEL image
+        if: env.EE_NEEDS_REBUILD == 'yes'
+        uses: ./.github/workflows/tag_image_push_rhel.yml
+        with:
+          REF: v${{ matrix.version }}
       - name: Rebuild ${{ matrix.version }} EE NLC image
         if: env.EE_NLC_NEEDS_REBUILD == 'yes'
-        run: |
-          echo "Rebuilding ${{ matrix.version }} EE NLC image"
-          gh workflow run ee-nlc-tag-push.yml --ref v${{ matrix.version }} -f HZ_VERSION=${{ matrix.version }}
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./.github/workflows/ee-nlc-tag-push.yml
+        with:
+          REF: v${{ matrix.version }}
       - name: Slack notification
         uses: hazelcast/docker-actions/slack-notification@master
         if: failure() && github.event_name != 'workflow_dispatch'

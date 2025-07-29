@@ -3,8 +3,8 @@ name: Build EE NLC snapshot image
 on:
   workflow_dispatch:
     inputs:
-      HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for'
+      REF:
+        description: 'The hazelcast-docker branch to build the image from'
         required: true
       HZ_EE_REVISION:
         description: 'Commit id of Hazelcast Enterprise snapshot jar'
@@ -16,13 +16,24 @@ jobs:
   jdks:
     runs-on: ubuntu-latest
     outputs:
+      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.REF }}
+
+      - name: Get HZ versions
+        id: get_hz_versions
+        uses: hazelcast/docker-actions/get-hz-versions@master
+
       - name: Get supported JDKs
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ inputs.HZ_VERSION }}'
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}'
+
   push:
     runs-on: ubuntu-latest
     needs: jdks
@@ -31,12 +42,16 @@ jobs:
       matrix:
         jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
     env:
-      HZ_VERSION : ${{ inputs.HZ_VERSION }}
+      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.REF }}
+          path: ref
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

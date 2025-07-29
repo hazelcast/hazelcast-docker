@@ -68,7 +68,7 @@ jobs:
 
       - name: Build OSS image
         run: |
-          DOCKER_PATH=hazelcast-oss
+          docker_path=hazelcast-oss
           HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_OSS }}"
           
           # duplicated block as GH doesn't support passing sensitive data between jobs
@@ -92,7 +92,7 @@ jobs:
 
       - name: Build Test EE image
         run: |
-          DOCKER_PATH=hazelcast-enterprise
+          docker_path=hazelcast-enterprise
           HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_EE }}"
           curl --fail --silent --show-error --location "${{ needs.prepare.outputs.HAZELCAST_EE_ZIP_URL }}" --output $DOCKER_PATH/hazelcast-enterprise-distribution.zip;
           
@@ -143,7 +143,7 @@ jobs:
 
       - name: Build OSS image
         run: |
-          DOCKER_PATH=hazelcast-oss
+          docker_path=hazelcast-oss
           HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_OSS }}"
           
           # duplicated block as GH doesn't support passing sensitive data between jobs
@@ -167,7 +167,7 @@ jobs:
 
       - name: Build Test EE image
         run: |
-          DOCKER_PATH=hazelcast-enterprise
+          docker_path=hazelcast-enterprise
           HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_EE }}"
           curl --fail --silent --show-error --location "${{ needs.prepare.outputs.HAZELCAST_EE_ZIP_URL }}" --output $DOCKER_PATH/hazelcast-enterprise-distribution.zip;
 

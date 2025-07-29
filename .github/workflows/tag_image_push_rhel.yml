@@ -1,21 +1,11 @@
 name: Build EE RHEL image
 
 on:
-  push:
-    branches:
-      - "!*"
-    tags:
-      - "v5.*"
-      - "v6.*"
-      - '!*DEVEL*'
   workflow_dispatch:
     inputs:
-      HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
+      REF:
+        description: 'The hazelcast-docker branch to build the image from'
         required: true
-      RELEASE_VERSION:
-        description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
-        required: false
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
         required: false
@@ -34,14 +24,10 @@ on:
           - 'true'
   workflow_call:
     inputs:
-      HZ_VERSION:
+      REF:
         type: string
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
+        description: 'The hazelcast-docker branch to build the image from'
         required: true
-      RELEASE_VERSION:
-        type: string
-        description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
-        required: false
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
         required: false
@@ -55,24 +41,23 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      HZ_VERSION: ${{ steps.derive-versions.outputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ steps.derive-versions.outputs.RELEASE_VERSION }}
+      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - id: derive-versions
-        uses: ./.github/actions/derive-versions
         with:
-          hz_version: ${{ inputs.HZ_VERSION }}
-          release_version: ${{ inputs.RELEASE_VERSION }}
+          ref: ${{ inputs.REF }}
+
+      - name: Get HZ versions
+        id: get_hz_versions
+        uses: hazelcast/docker-actions/get-hz-versions@master
 
       - name: Get supported JDKs
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ steps.derive-versions.outputs.HZ_VERSION }}'
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}'
 
   build:
     needs: prepare
@@ -89,10 +74,14 @@ jobs:
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.REF }}
+          path: ref
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.6.0
