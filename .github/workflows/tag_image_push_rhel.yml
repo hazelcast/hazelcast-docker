@@ -67,6 +67,7 @@ jobs:
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
+      DOCKER_DIR: hazelcast-enterprise
 
     runs-on: ubuntu-latest
     strategy:
@@ -143,9 +144,8 @@ jobs:
           . .github/scripts/docker.functions.sh
           . .github/scripts/ee-build.functions.sh
 
-          DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${SCAN_REPOSITORY}
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR})"
 
           IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
           TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")

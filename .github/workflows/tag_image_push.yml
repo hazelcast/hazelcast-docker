@@ -110,6 +110,9 @@ jobs:
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
+      DOCKER_DIR_OS: hazelcast-oss
+      DOCKER_DIR_EE: hazelcast-enterprise
     steps:
 
       - name: Set environment variables
@@ -168,7 +171,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_OSS_ZIP_URL \
             --tag hazelcast-oss:test \
-            hazelcast-oss
+            ${DOCKER_DIR_OS}
 
       - name: Run smoke test against OSS image
         if: needs.prepare.outputs.should_build_oss == 'yes'
@@ -191,7 +194,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
             --tag hazelcast-ee:test \
-            hazelcast-enterprise
+            ${DOCKER_DIR_EE}
 
       - name: Run smoke test against EE image
         if: needs.prepare.outputs.should_build_ee == 'yes'
@@ -219,9 +222,8 @@ jobs:
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
           
-          DOCKER_DIR=hazelcast-oss
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR_OS})"
           
           # OSS has no LTS releases
           IS_LATEST_LTS=false
@@ -247,7 +249,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_OSS_ZIP_URL} \
             ${TAGS_ARG} \
-            --platform=${PLATFORMS} "${DOCKER_DIR}"
+            --platform=${PLATFORMS} "${DOCKER_DIR_OS}"
 
       - name: Check if latest EE LTS release
         id: is_latest_lts
@@ -263,9 +265,8 @@ jobs:
           . .github/scripts/docker.functions.sh
           . .github/scripts/ee-build.functions.sh
           
-          DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR_EE})"
           
           IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
           TAGS_TO_PUSH=$(get_tags_to_push "${{ env.HZ_VERSION }}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
@@ -291,7 +292,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_EE_ZIP_URL} \
             ${TAGS_ARG} \
-            --platform=${PLATFORMS} "${DOCKER_DIR}"
+            --platform=${PLATFORMS} "${DOCKER_DIR_EE}"
 
       - name: Create release
         if: github.event_name == 'push'
