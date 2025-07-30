@@ -43,7 +43,7 @@ jobs:
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      DOCKER_DIR: hazelcast-enterprise
+      DOCKER_DIR: ref/hazelcast-enterprise
     steps:
       - uses: actions/checkout@v4
 

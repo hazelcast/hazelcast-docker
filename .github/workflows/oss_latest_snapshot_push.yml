@@ -52,8 +52,8 @@ jobs:
       HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
       HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
 
-      HZ_VERSION: ${{ inputs.HZ_VERSION }}
-      DOCKER_DIR: hazelcast-oss
+      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      DOCKER_DIR: ref/hazelcast-oss
     steps:
       - name: Compute Suffix
         run: |

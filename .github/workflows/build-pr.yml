@@ -201,7 +201,7 @@ jobs:
     needs: [ prepare ]
     uses: ./.github/workflows/tag_image_push.yml
     with:
-      HZ_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      REF: v${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       RELEASE_TYPE: ALL
       DRY_RUN: true
     secrets: inherit
@@ -211,6 +211,6 @@ jobs:
     needs: [ prepare ]
     uses: ./.github/workflows/tag_image_push_rhel.yml
     with:
-      HZ_VERSION: ${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      REF: v${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
       DRY_RUN: true
     secrets: inherit

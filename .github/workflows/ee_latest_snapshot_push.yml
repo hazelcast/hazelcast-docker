@@ -46,8 +46,8 @@ jobs:
           - variant: ''
     env:
       DOCKER_ORG: hazelcast
-      HZ_VERSION : ${{ inputs.HZ_VERSION }}
-      DOCKER_DIR: hazelcast-enterprise
+      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      DOCKER_DIR: ref/hazelcast-enterprise
     steps:
       - name: Compute Suffix
         run: |
