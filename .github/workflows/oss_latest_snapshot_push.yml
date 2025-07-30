@@ -43,6 +43,7 @@ jobs:
       HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
 
       HZ_VERSION: ${{ inputs.HZ_VERSION }}
+      DOCKER_DIR: hazelcast-oss
     steps:
       - name: Compute Suffix
         run: |
@@ -77,14 +78,14 @@ jobs:
           . .github/scripts/oss-build.functions.sh
           HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant }}" "${HZ_VERSION}")
         
-          curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output hazelcast-oss/hazelcast-distribution.zip;
+          curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output ${DOCKER_DIR}/hazelcast-distribution.zip;
 
       - name: Build Test OSS image
         run: |
           docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --tag hazelcast-oss:test \
-            hazelcast-oss
+            ${DOCKER_DIR}
 
       - name: Run smoke test against OSS image
         timeout-minutes: 2
@@ -121,9 +122,8 @@ jobs:
           
           VERSIONS=("$HZ_VERSION")
           
-          DOCKER_DIR=hazelcast-oss
           IMAGE_NAME=$DOCKER_REGISTRY/docker/hazelcast/hazelcast
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR})"
 
           TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
@@ -138,7 +138,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.revision=${{ inputs.HZ_REVISION }} \
             $TAGS_ARG \
-            --platform=${PLATFORMS} $DOCKER_DIR
+            --platform=${PLATFORMS} ${DOCKER_DIR}
       - name: Slack notification
         uses: hazelcast/docker-actions/slack-notification@master
         if: failure() && github.triggering_actor == 'devOpsHazelcast'
