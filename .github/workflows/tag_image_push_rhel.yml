@@ -169,7 +169,7 @@ jobs:
 
           output=
 
-          PLATFORMS="linux/amd64"
+          PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
 
           if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
             echo "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
