@@ -76,8 +76,8 @@ jobs:
     env:
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
     outputs:
-      should_build_oss: ${{ steps.which_editions.outputs.should_build_oss }}
-      should_build_ee: ${{ steps.which_editions.outputs.should_build_ee }}
+      should_build_oss: ${{ steps.resolve-editions.outputs.should_build_oss }}
+      should_build_ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
       HZ_VERSION: ${{ steps.derive-versions.outputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ steps.derive-versions.outputs.RELEASE_VERSION }}
       jdks: ${{ steps.jdks.outputs.jdks }}
@@ -96,17 +96,10 @@ jobs:
               exit 1
           fi
 
-      - name: Check which editions should be built
-        id: which_editions
-        run: |
-          . .github/scripts/build.functions.sh
-          
-          release_type=${{ env.RELEASE_TYPE }}
-          triggered_by=${{ github.event_name }}
-          should_build_oss=$(should_build_oss "$release_type")
-          should_build_ee=$(should_build_ee "$release_type")
-          echo "should_build_ee=${should_build_ee}" >> $GITHUB_OUTPUT
-          echo "should_build_oss=${should_build_oss}" >> $GITHUB_OUTPUT
+      - id: resolve-editions
+        uses: hazelcast/docker-actions/resolve-editions@master
+        with:
+          release-type: ${{ env.RELEASE_TYPE }}
 
       - id: derive-versions
         uses: ./.github/actions/derive-versions
