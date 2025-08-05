@@ -37,6 +37,7 @@ jobs:
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION : ${{ inputs.HZ_VERSION }}
+      DOCKER_DIR: hazelcast-enterprise
     steps:
       - name: Compute Suffix
         run: |
@@ -77,7 +78,7 @@ jobs:
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
             --tag hazelcast-ee:test \
-            hazelcast-enterprise
+            ${DOCKER_DIR}
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
@@ -116,9 +117,8 @@ jobs:
               VERSIONS+=(latest-snapshot)
           fi
           
-          DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${{ env.DOCKER_ORG }}/hazelcast-enterprise
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR})"
 
           TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ env.SUFFIX }}" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
@@ -135,7 +135,7 @@ jobs:
             --label hazelcast.ee.revision=${{ inputs.HZ_EE_REVISION }} \
             --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_EE_ZIP_URL \
             ${TAGS_ARG} \
-            --platform=${PLATFORMS} $DOCKER_DIR
+            --platform=${PLATFORMS} ${DOCKER_DIR}
       - name: Slack notification
         uses: hazelcast/docker-actions/slack-notification@master
         if: failure() && github.triggering_actor == 'devOpsHazelcast'
