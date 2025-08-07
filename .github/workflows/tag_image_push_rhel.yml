@@ -94,14 +94,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.6.0
-
-      - name:  Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          version: v0.5.1
+ 
+      - name: Setup Docker
+        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
 
       - uses: madhead/semver-utils@latest
         id: version
