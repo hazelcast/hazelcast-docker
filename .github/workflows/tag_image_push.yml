@@ -137,7 +137,7 @@ jobs:
           path: ref
 
       - name: Setup Docker
-        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
+        uses: ./.github/actions/setup-docker
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

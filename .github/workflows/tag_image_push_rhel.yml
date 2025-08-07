@@ -85,7 +85,7 @@ jobs:
           path: ref
 
       - name: Setup Docker
-        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
+        uses: ./.github/actions/setup-docker
 
       - uses: madhead/semver-utils@latest
         id: version

@@ -78,7 +78,7 @@ jobs:
           password: ${{ secrets.NLC_REPO_TOKEN }}
 
       - name: Setup Docker
-        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
+        uses: ./.github/actions/setup-docker
 
       - name: Build EE image
         run: |
