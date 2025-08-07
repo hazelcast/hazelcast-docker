@@ -34,6 +34,7 @@ jobs:
       HZ_VERSION : ${{ inputs.HZ_VERSION }}
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
+      DOCKER_DIR: hazelcast-enterprise
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -60,13 +61,8 @@ jobs:
           username: ${{ secrets.NLC_REPO_USERNAME }}
           password: ${{ secrets.NLC_REPO_TOKEN }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.6.0
-
-      - name:  Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          version: v0.5.1
+      - name: Setup Docker
+        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
 
       - name: Build EE image
         run: |
@@ -75,7 +71,7 @@ jobs:
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.ee.revision=${{ inputs.HZ_EE_REVISION }} \
-            --tag hazelcast-nlc:test hazelcast-enterprise
+            --tag hazelcast-nlc:test ${DOCKER_DIR}
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
@@ -103,9 +99,8 @@ jobs:
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
           
-          DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${NLC_IMAGE_NAME}
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR})"
           
           TAGS_TO_PUSH=$(augment_with_suffixed_tags "$HZ_VERSION" "" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
@@ -122,7 +117,7 @@ jobs:
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --label hazelcast.ee.revision=${{ inputs.HZ_EE_REVISION }} \
             ${TAGS_ARG} \
-            --platform=${PLATFORMS} $DOCKER_DIR
+            --platform=${PLATFORMS} ${DOCKER_DIR}
       - name: Check RedHat service status
         if: failure()
         uses: ./.github/actions/check-redhat-service-status
