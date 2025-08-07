@@ -49,6 +49,7 @@ jobs:
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      DOCKER_DIR: hazelcast-enterprise
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -87,7 +88,7 @@ jobs:
             --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
-            --tag hazelcast-nlc:test hazelcast-enterprise
+            --tag hazelcast-nlc:test ${DOCKER_DIR}
 
       - name: Run smoke test against EE image
         timeout-minutes: 2
@@ -115,9 +116,8 @@ jobs:
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
           
-          DOCKER_DIR=hazelcast-enterprise
           IMAGE_NAME=${NLC_IMAGE_NAME}
-          DEFAULT_JDK="$(get_default_jdk $DOCKER_DIR)"
+          DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR})"
           
           TAGS_TO_PUSH=$(augment_with_suffixed_tags "$HZ_VERSION" "" "${{ matrix.jdk }}" "$DEFAULT_JDK")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
@@ -133,7 +133,7 @@ jobs:
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             ${TAGS_ARG} \
-            --platform=${PLATFORMS} $DOCKER_DIR
+            --platform=${PLATFORMS} ${DOCKER_DIR}
       - name: Check RedHat service status
         if: failure()
         uses: ./.github/actions/check-redhat-service-status
