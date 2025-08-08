@@ -96,7 +96,7 @@ jobs:
           fetch-depth: 0
  
       - name: Setup Docker
-        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@upgrade-buildx
+        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
 
       - uses: madhead/semver-utils@latest
         id: version
