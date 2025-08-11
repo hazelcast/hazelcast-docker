@@ -14,4 +14,4 @@ jobs:
     steps:
       - id: get-matrix
         run: |
-          echo "variants=$(jq --null-input --compact-output '["slim", ""] | map({ classifier: ., suffix: (if . == "" then "" else "-\(.)" end) })')" >> ${GITHUB_OUTPUT}
+          echo "variants=[{'classifier':'slim','suffix':'-slim'},{'classifier':'','suffix':''}]" >> ${GITHUB_OUTPUT}
