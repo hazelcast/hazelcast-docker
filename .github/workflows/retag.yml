@@ -8,6 +8,7 @@ on:
     inputs:
       BRANCH_NAME:
         description: The branch to recreate the tag from
+        required: true
 
 jobs:
   retag:

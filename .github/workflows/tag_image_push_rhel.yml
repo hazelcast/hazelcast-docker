@@ -19,14 +19,15 @@ on:
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
         required: false
-        type: choice
         default: ''
+        type: choice
         options:
           - ''
           - 'false'
           - 'true'
       DRY_RUN:
         description: 'Skip pushing the images to remote registry'
+        required: false
         default: 'false'
         type: choice
         options:
@@ -35,20 +36,21 @@ on:
   workflow_call:
     inputs:
       HZ_VERSION:
-        type: string
         description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
         required: true
-      RELEASE_VERSION:
         type: string
+      RELEASE_VERSION:
         description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
         required: false
+        type: string
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
         required: false
-        type: string
         default: ''
+        type: string
       DRY_RUN:
         description: 'Skip pushing the images to remote registry'
+        required: false
         default: 'false'
         type: string
 jobs:

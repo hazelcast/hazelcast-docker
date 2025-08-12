@@ -4,25 +4,25 @@ on:
   workflow_dispatch:
     inputs:
       IMAGE_VERSION:
-        required: true
         description: The version/label of the image e.g. `5.4.1`, `latest` etc
+        required: true
       EXPECTED_HZ_VERSION:
         description: The expected Hazelcast version (fully-qualified), e.g. `5.4.1`
         required: true
       DISTRIBUTION_TYPE:
-        required: true
         description: The distribution(s) to test
+        required: true
         type: choice
         options:
           - oss
           - ee
           - all
       EXPECTED_DEFAULT_JAVA_VERSION:
-        required: true
         description: The expected Java major version (e.g. `21`, `8`) used by default in the image
-      OTHER_JDKS:
         required: true
+      OTHER_JDKS:
         description: The other Java variant images to test (e.g. `5-jdk21`) - supplied as a comma-separated list of major Java versions (e.g. `8, 11, 17`)
+        required: true
 
 env:
   CONTAINER_NAME: my-container
