@@ -60,7 +60,7 @@ jobs:
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - id: derive-versions
         uses: ./.github/actions/derive-versions
@@ -91,7 +91,7 @@ jobs:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
  

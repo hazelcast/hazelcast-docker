@@ -35,7 +35,7 @@ jobs:
       jdk-image-variants-matrix: ${{ steps.set-matrix.outputs.jdk-image-variants-matrix }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Parse input into matrix
         id: set-matrix
         run: |
@@ -81,7 +81,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - uses: madhead/semver-utils@latest
         id: image-version

@@ -83,7 +83,7 @@ jobs:
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Read release type from the file
         if: github.event_name == 'push'
@@ -139,7 +139,7 @@ jobs:
           echo "DOCKER_LOG_FILE_EE=docker-${{ env.test_container_name_ee }}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
 
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
