@@ -19,7 +19,6 @@ on:
         description: 'Skip pushing the images to remote registry'
         required: false
         default: 'false'
-        required: false
         type: choice
         options:
           - 'false'
