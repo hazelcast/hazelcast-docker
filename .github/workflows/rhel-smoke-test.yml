@@ -33,7 +33,7 @@ jobs:
           version: ${{ steps.derive-versions.outputs.HZ_VERSION }}
 
       - name: Setup Docker
-        uses: ./.github/actions/setup-docker
+        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
