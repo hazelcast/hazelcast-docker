@@ -68,7 +68,7 @@ jobs:
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.REF }}
 
@@ -123,7 +123,7 @@ jobs:
           echo "DOCKER_LOG_FILE_OSS=docker-${{ env.test_container_name_oss }}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
           echo "DOCKER_LOG_FILE_EE=docker-${{ env.test_container_name_ee }}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 

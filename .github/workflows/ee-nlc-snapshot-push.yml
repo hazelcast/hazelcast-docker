@@ -45,9 +45,9 @@ jobs:
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
       DOCKER_DIR: ref/hazelcast-enterprise
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.REF }}
           path: ref

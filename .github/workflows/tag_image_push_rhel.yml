@@ -45,7 +45,7 @@ jobs:
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.REF }}
 
@@ -75,7 +75,7 @@ jobs:
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
