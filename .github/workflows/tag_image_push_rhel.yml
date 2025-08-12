@@ -9,14 +9,15 @@ on:
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
         required: false
-        type: choice
         default: ''
+        type: choice
         options:
           - ''
           - 'false'
           - 'true'
       DRY_RUN:
         description: 'Skip pushing the images to remote registry'
+        required: false
         default: 'false'
         required: false
         type: choice
@@ -26,16 +27,17 @@ on:
   workflow_call:
     inputs:
       REF:
-        type: string
         description: 'The hazelcast-docker branch to build the image from'
         required: true
+        type: string
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
         required: false
-        type: string
         default: ''
+        type: string
       DRY_RUN:
         description: 'Skip pushing the images to remote registry'
+        required: false
         default: 'false'
         type: string
 jobs:
