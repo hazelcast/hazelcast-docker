@@ -25,7 +25,7 @@ jobs:
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - id: derive-versions
         uses: ./.github/actions/derive-versions
@@ -52,7 +52,7 @@ jobs:
       DOCKER_DIR: hazelcast-enterprise
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set NLC zip URL
         run: |

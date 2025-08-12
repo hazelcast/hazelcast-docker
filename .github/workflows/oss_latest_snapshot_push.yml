@@ -48,7 +48,7 @@ jobs:
       DOCKER_DIR: hazelcast-oss
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Docker
         uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master

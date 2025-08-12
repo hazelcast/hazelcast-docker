@@ -19,7 +19,7 @@ jobs:
       MINIMAL_SUPPORTED_VERSION: ${{ inputs.MINIMAL_SUPPORTED_VERSION }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - id: get-maintenance-versions
@@ -52,9 +52,9 @@ jobs:
       matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Checkout version ${{ matrix.version }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: v${{ matrix.version }}
           path: v${{ matrix.version }}
