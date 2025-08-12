@@ -18,6 +18,7 @@ on:
       DRY_RUN:
         description: 'Skip pushing the images to remote registry'
         default: 'false'
+        required: false
         type: choice
         options:
           - 'false'

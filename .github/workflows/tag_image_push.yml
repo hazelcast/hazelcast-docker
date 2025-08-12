@@ -8,7 +8,7 @@ on:
         required: true
       RELEASE_TYPE:
         description: 'What should be built'
-        required: true
+        required: false
         default: 'EE'
         type: choice
         options:
@@ -39,7 +39,7 @@ on:
         required: true
       RELEASE_TYPE:
         description: 'What should be built'
-        required: true
+        required: false
         default: 'EE'
         type: string
       IS_LTS_OVERRIDE:
@@ -60,7 +60,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     env:
-      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
     outputs:
       should_build_oss: ${{ steps.resolve-editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
@@ -73,14 +73,10 @@ jobs:
           ref: ${{ inputs.REF }}
 
       - name: Read release type from the file
-        if: github.event_name == 'push'
         run: |
           RELEASE_TYPE_FILE=.github/release_type
           if [ -f $RELEASE_TYPE_FILE ]; then
               echo "RELEASE_TYPE=$(cat $RELEASE_TYPE_FILE)" >> $GITHUB_ENV
-          else
-              echo "File '$RELEASE_TYPE_FILE' does not exist."
-              exit 1
           fi
 
       - id: resolve-editions
@@ -286,7 +282,7 @@ jobs:
             --platform=${PLATFORMS} "${DOCKER_DIR_EE}"
 
       - name: Create release
-        if: github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

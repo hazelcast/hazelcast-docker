@@ -94,7 +94,6 @@ jobs:
         uses: ./.github/workflows/tag_image_push.yml
         with:
           REF: v${{ matrix.version }}
-          RELEASE_TYPE: EE
       - name: Rebuild ${{ matrix.version }} EE RHEL image
         if: env.EE_NEEDS_REBUILD == 'yes'
         uses: ./.github/workflows/tag_image_push_rhel.yml
