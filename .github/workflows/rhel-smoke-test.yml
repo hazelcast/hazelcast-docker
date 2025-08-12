@@ -14,23 +14,28 @@ jobs:
   test:
     env:
       SCAN_REGISTRY: "quay.io"
+      HZ_VERSION: ${{ inputs.HZ_VERSION }}
+      RELEASE_VERSION: ${{ inputs.RELEASE_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}
 
     runs-on: ubuntu-latest
     steps:
+      - name: Set HZ version as environment variable
+        if: env.HZ_VERSION == ''
+        run: |
+          echo "HZ_VERSION=${GITHUB_REF:11}" >> $GITHUB_ENV
+      - name: Set Release version as environment variable
+        if: env.RELEASE_VERSION == ''
+        run: |
+          echo "RELEASE_VERSION=${{ env.HZ_VERSION }}" >> $GITHUB_ENV
+
       - name: Checkout Code
         uses: actions/checkout@v5
-
-      - id: derive-versions
-        uses: ./.github/actions/derive-versions
-        with:
-          hz_version: ${{ inputs.HZ_VERSION }}
-          release_version: ${{ inputs.RELEASE_VERSION }}
 
       - uses: madhead/semver-utils@latest
         id: version
         with:
-          version: ${{ steps.derive-versions.outputs.HZ_VERSION }}
+          version: ${{ env.HZ_VERSION }}
 
       - name: Setup Docker
         uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
@@ -93,7 +98,7 @@ jobs:
 
           helm install "${PROJECT_NAME}" "${CHART}" \
             --set image.repository="registry.connect.redhat.com/hazelcast/hazelcast-enterprise-${{ steps.version.outputs.major }}-rhel8" \
-            --set image.tag="${{ steps.derive-versions.outputs.RELEASE_VERSION }}" \
+            --set image.tag="${RELEASE_VERSION}" \
             --set image.pullPolicy="Always" \
             --set hazelcast.licenseKeySecretName="hz-license-secret" \
             --set securityContext.enabled=false \
