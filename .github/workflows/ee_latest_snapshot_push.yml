@@ -3,7 +3,7 @@ name: Build EE snapshot image
 on:
   workflow_dispatch:
     inputs:
-      REF:
+      SOURCE_REF:
         description: 'The hazelcast-docker branch to build the image from'
         required: true
       HZ_EE_REVISION:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.REF }}
+          ref: ${{ inputs.SOURCE_REF }}
 
       - name: Get HZ versions
         id: get_hz_versions
@@ -48,14 +48,14 @@ jobs:
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      DOCKER_DIR: ref/hazelcast-enterprise
+      DOCKER_DIR: source_ref/hazelcast-enterprise
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.REF }}
-          path: ref
+          ref: ${{ inputs.SOURCE_REF }}
+          path: source_ref
 
       - name: Setup Docker
         uses: ./.github/actions/setup-docker

@@ -3,7 +3,7 @@ name: Build OSS snapshot image
 on:
   workflow_dispatch:
     inputs:
-      REF:
+      SOURCE_REF:
         description: 'The hazelcast-docker branch to build the image from'
         required: true
       HZ_REVISION:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.REF }}
+          ref: ${{ inputs.SOURCE_REF }}
 
       - name: Get HZ versions
         id: get_hz_versions
@@ -54,12 +54,12 @@ jobs:
       HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
 
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      DOCKER_DIR: ref/hazelcast-oss
+      DOCKER_DIR: source_ref/hazelcast-oss
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.REF }}
-          path: ref
+          ref: ${{ inputs.SOURCE_REF }}
+          path: source_ref
 
       - name: Setup Docker
         uses: ./.github/actions/setup-docker

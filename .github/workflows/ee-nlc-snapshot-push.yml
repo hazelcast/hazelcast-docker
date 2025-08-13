@@ -3,7 +3,7 @@ name: Build EE NLC snapshot image
 on:
   workflow_dispatch:
     inputs:
-      REF:
+      SOURCE_REF:
         description: 'The hazelcast-docker branch to build the image from'
         required: true
       HZ_EE_REVISION:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.REF }}
+          ref: ${{ inputs.SOURCE_REF }}
 
       - name: Get HZ versions
         id: get_hz_versions
@@ -43,14 +43,14 @@ jobs:
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
-      DOCKER_DIR: ref/hazelcast-enterprise
+      DOCKER_DIR: source_ref/hazelcast-enterprise
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.REF }}
-          path: ref
+          ref: ${{ inputs.SOURCE_REF }}
+          path: source_ref
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

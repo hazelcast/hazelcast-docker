@@ -3,7 +3,7 @@ name: Build OS and EE image
 on:
   workflow_dispatch:
     inputs:
-      REF:
+      SOURCE_REF:
         description: 'The hazelcast-docker branch to build the image from'
         required: true
       RELEASE_TYPE:
@@ -34,7 +34,7 @@ on:
           - 'true'
   workflow_call:
     inputs:
-      REF:
+      SOURCE_REF:
         description: 'The hazelcast-docker branch to build the image from'
         required: true
         type: string
@@ -72,7 +72,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.REF }}
+          ref: ${{ inputs.SOURCE_REF }}
 
       - name: Read release type from the file
         run: |
@@ -112,8 +112,8 @@ jobs:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
-      DOCKER_DIR_OS: ref/hazelcast-oss
-      DOCKER_DIR_EE: ref/hazelcast-enterprise
+      DOCKER_DIR_OS: source_ref/hazelcast-oss
+      DOCKER_DIR_EE: source_ref/hazelcast-enterprise
     steps:
 
       - name: Set environment variables
@@ -127,8 +127,8 @@ jobs:
 
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.REF }}
-          path: ref
+          ref: ${{ inputs.SOURCE_REF }}
+          path: source_ref
 
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
