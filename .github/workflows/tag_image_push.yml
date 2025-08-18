@@ -112,8 +112,8 @@ jobs:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
-      DOCKER_DIR_OS: source_ref/hazelcast-oss
-      DOCKER_DIR_EE: source_ref/hazelcast-enterprise
+      DOCKER_DIR_OS: source_path/hazelcast-oss
+      DOCKER_DIR_EE: source_path/hazelcast-enterprise
     steps:
 
       - name: Set environment variables

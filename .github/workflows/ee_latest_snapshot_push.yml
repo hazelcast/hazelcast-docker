@@ -48,7 +48,7 @@ jobs:
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      DOCKER_DIR: source_ref/hazelcast-enterprise
+      DOCKER_DIR: source_path/hazelcast-enterprise
     steps:
       - uses: actions/checkout@v5
 

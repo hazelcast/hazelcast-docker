@@ -69,7 +69,7 @@ jobs:
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
-      DOCKER_DIR: source_ref/hazelcast-enterprise
+      DOCKER_DIR: source_path/hazelcast-enterprise
 
     runs-on: ubuntu-latest
     strategy:

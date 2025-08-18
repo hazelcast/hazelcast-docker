@@ -54,7 +54,7 @@ jobs:
       HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
 
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      DOCKER_DIR: source_ref/hazelcast-oss
+      DOCKER_DIR: source_path/hazelcast-oss
     steps:
       - uses: actions/checkout@v5
         with:
