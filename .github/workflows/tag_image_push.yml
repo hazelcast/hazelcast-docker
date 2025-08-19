@@ -288,6 +288,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
+          tag: ${{ inputs.SOURCE_REF }}
 
       - name: Slack notification
         uses: hazelcast/docker-actions/slack-notification@master
