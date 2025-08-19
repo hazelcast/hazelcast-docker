@@ -1,12 +1,6 @@
 name: Build EE RHEL image
 
 on:
-  push:
-    branches:
-      - "!*"
-    tags:
-      - "v4.*"
-      - "v5.*"
   workflow_dispatch:
     inputs:
       HZ_VERSION:
