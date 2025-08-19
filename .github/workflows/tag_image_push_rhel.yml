@@ -70,10 +70,9 @@ jobs:
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       DOCKER_DIR: source_path/hazelcast-enterprise
     runs-on: ubuntu-latest
-    # RedHat does not support concurrent publishing, run sequentially
-    concurrency: rhel
     strategy:
       fail-fast: false
+      # RedHat does not support concurrent publishing, run sequentially
       max-parallel: 1
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
