@@ -1,11 +1,6 @@
 name: Build EE NLC tag image
 
 on:
-  push:
-    branches:
-      - "!*"
-    tags:
-      - "v5.*"
   workflow_dispatch:
     inputs:
       HZ_VERSION:
