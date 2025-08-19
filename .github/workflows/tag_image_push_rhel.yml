@@ -69,10 +69,12 @@ jobs:
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       DOCKER_DIR: source_path/hazelcast-enterprise
-
     runs-on: ubuntu-latest
+    # RedHat does not support concurrent publishing, run sequentially
+    concurrency: rhel
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     steps:

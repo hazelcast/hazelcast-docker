@@ -49,6 +49,8 @@ jobs:
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
     strategy:
       fail-fast: false
+      # RedHat does not support concurrent publishing, run sequentially
+      max-parallel: 1
       matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
     steps:
       - name: Checkout Code
