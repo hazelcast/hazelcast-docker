@@ -1,7 +1,7 @@
 name: Check if latest EE LTS release
 description: Check if latest EE LTS release
 inputs:
-  release_version:
+  hz_version:
     description: Version to be released
     required: true
   is_lts_override:
@@ -39,8 +39,7 @@ runs:
       run: |
         . .github/scripts/version.functions.sh
         CURRENT_LATEST_LTS_VERSION=$(get_last_version_with_file "$IS_LTS_FILE")
-        RELEASE_VERSION="${{ inputs.release_version }}"
-        if version_less_or_equal "$CURRENT_LATEST_LTS_VERSION" "$RELEASE_VERSION"; then
+        if version_less_or_equal "$CURRENT_LATEST_LTS_VERSION" "${{ inputs.hz_version }}"; then
            echo "is_latest_lts=true" >> $GITHUB_OUTPUT
         else 
            echo "is_latest_lts=false" >> $GITHUB_OUTPUT

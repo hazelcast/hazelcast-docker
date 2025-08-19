@@ -1,24 +1,14 @@
 name: Build OS and EE image
 
 on:
-  push:
-    branches:
-      - "!*"
-    tags:
-      - "v5.*"
-      - "v6.*"
-      - '!*DEVEL*'
   workflow_dispatch:
     inputs:
-      HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to build the image from'
         required: true
-      RELEASE_VERSION:
-        description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
-        required: false
       RELEASE_TYPE:
         description: 'What should be built'
-        required: true
+        required: false
         default: 'EE'
         type: choice
         options:
@@ -44,17 +34,13 @@ on:
           - 'true'
   workflow_call:
     inputs:
-      HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1, 4.2.3'
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to build the image from'
         required: true
-        type: string
-      RELEASE_VERSION:
-        description: 'Version to tag the docker image e.g. 5.1.1, 5.1.1-1, defaults to HZ_VERSION'
-        required: false
         type: string
       RELEASE_TYPE:
         description: 'What should be built'
-        required: true
+        required: false
         default: 'EE'
         type: string
       IS_LTS_OVERRIDE:
@@ -76,26 +62,23 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     env:
-      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE || 'EE' }}
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
     outputs:
       should_build_oss: ${{ steps.resolve-editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
-      HZ_VERSION: ${{ steps.derive-versions.outputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ steps.derive-versions.outputs.RELEASE_VERSION }}
+      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.SOURCE_REF }}
 
       - name: Read release type from the file
-        if: github.event_name == 'push'
         run: |
           RELEASE_TYPE_FILE=.github/release_type
           if [ -f $RELEASE_TYPE_FILE ]; then
               echo "RELEASE_TYPE=$(cat $RELEASE_TYPE_FILE)" >> $GITHUB_ENV
-          else
-              echo "File '$RELEASE_TYPE_FILE' does not exist."
-              exit 1
           fi
 
       - id: resolve-editions
@@ -103,17 +86,15 @@ jobs:
         with:
           release-type: ${{ env.RELEASE_TYPE }}
 
-      - id: derive-versions
-        uses: ./.github/actions/derive-versions
-        with:
-          hz_version: ${{ inputs.HZ_VERSION }}
-          release_version: ${{ inputs.RELEASE_VERSION }}
+      - name: Get HZ versions
+        id: get_hz_versions
+        uses: hazelcast/docker-actions/get-hz-versions@master
 
       - name: Get supported JDKs
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ steps.derive-versions.outputs.HZ_VERSION }}'
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}'
 
   distribution-variants:
     uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@master
@@ -130,9 +111,8 @@ jobs:
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
-      DOCKER_DIR_OS: hazelcast-oss
-      DOCKER_DIR_EE: hazelcast-enterprise
+      DOCKER_DIR_OS: source_path/hazelcast-oss
+      DOCKER_DIR_EE: source_path/hazelcast-enterprise
     steps:
 
       - name: Set environment variables
@@ -140,13 +120,17 @@ jobs:
           echo "DOCKER_LOG_FILE_OSS=docker-${{ env.test_container_name_oss }}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
           echo "DOCKER_LOG_FILE_EE=docker-${{ env.test_container_name_ee }}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}.log" >> $GITHUB_ENV
 
-      - name: Checkout Code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.SOURCE_REF }}
+          path: source_path
+
       - name: Setup Docker
-        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
+        uses: ./.github/actions/setup-docker
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -231,7 +215,7 @@ jobs:
           
           # OSS has no LTS releases
           IS_LATEST_LTS=false
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.HZ_VERSION }}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -259,7 +243,7 @@ jobs:
         id: is_latest_lts
         uses: ./.github/actions/check-if-latest-lts-release
         with:
-          release_version: ${{ env.RELEASE_VERSION }}
+          hz_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build/Push EE image
@@ -273,7 +257,7 @@ jobs:
           DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR_EE})"
           
           IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.HZ_VERSION }}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -299,11 +283,12 @@ jobs:
             --platform=${PLATFORMS} "${DOCKER_DIR_EE}"
 
       - name: Create release
-        if: github.event_name == 'push'
+        if: inputs.DRY_RUN != 'true'
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
+          tag: ${{ inputs.SOURCE_REF }}
 
       - name: Slack notification
         uses: hazelcast/docker-actions/slack-notification@master

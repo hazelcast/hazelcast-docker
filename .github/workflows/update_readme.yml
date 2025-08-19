@@ -21,9 +21,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
-        with:
-          # Regardless of how triggered, only use the latest `README`
-          ref: master
 
       - name: Generate Docker Hub Description
         run: |
