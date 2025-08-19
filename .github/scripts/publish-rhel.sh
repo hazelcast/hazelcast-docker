@@ -117,7 +117,6 @@ publish_the_image()
              --silent \
              --show-error \
             --retry 5 --retry-all-errors \
-            --request POST \
             --header "X-API-KEY: ${RHEL_API_KEY}" \
             --header 'Cache-Control: no-cache' \
             --header 'Content-Type: application/json' \
@@ -196,7 +195,6 @@ sync_tags()
              --silent \
              --show-error \
             --retry 5 --retry-all-errors \
-            --request POST \
             --header "X-API-KEY: ${RHEL_API_KEY}" \
             --header 'Cache-Control: no-cache' \
             --header 'Content-Type: application/json' \
