@@ -111,7 +111,6 @@ jobs:
     env:
       DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
       DOCKER_DIR_OS: source_path/hazelcast-oss
       DOCKER_DIR_EE: source_path/hazelcast-enterprise
     steps:
@@ -244,7 +243,7 @@ jobs:
         id: is_latest_lts
         uses: ./.github/actions/check-if-latest-lts-release
         with:
-          release_version: ${{ env.HZ_VERSION }}
+          hz_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build/Push EE image

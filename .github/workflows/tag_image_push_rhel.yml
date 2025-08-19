@@ -68,7 +68,6 @@ jobs:
       TIMEOUT_IN_MINS: 240
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      RELEASE_VERSION: ${{ needs.prepare.outputs.RELEASE_VERSION }}
       DOCKER_DIR: source_path/hazelcast-enterprise
 
     runs-on: ubuntu-latest
@@ -119,7 +118,7 @@ jobs:
         run: |
           SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}
           echo "SCAN_REPOSITORY=${SCAN_REPOSITORY}" >> $GITHUB_ENV
-          echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${RELEASE_VERSION}-jdk${{ matrix.jdk }}" >> $GITHUB_ENV
+          echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${HZ_VERSION}-jdk${{ matrix.jdk }}" >> $GITHUB_ENV
 
       - name: Log in to Red Hat Scan Registry
         uses: docker/login-action@v3
@@ -132,7 +131,7 @@ jobs:
         id: is_latest_lts
         uses: ./.github/actions/check-if-latest-lts-release
         with:
-          release_version: ${{ env.RELEASE_VERSION }}
+          hz_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build the Hazelcast Enterprise image
@@ -145,7 +144,7 @@ jobs:
           DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR})"
 
           IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.RELEASE_VERSION }}" "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.HZ_VERSION }}" "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
