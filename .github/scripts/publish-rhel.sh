@@ -195,13 +195,13 @@ sync_tags()
         curl --fail \
              --silent \
              --show-error \
-            --retry 5 --retry-all-errors \
-            --request POST \
-            --header "X-API-KEY: ${RHEL_API_KEY}" \
-            --header 'Cache-Control: no-cache' \
-            --header 'Content-Type: application/json' \
-            --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"sync-tags\" }" \
-            "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
+             --retry 5 --retry-all-errors \
+             --request POST \
+             --header "X-API-KEY: ${RHEL_API_KEY}" \
+             --header 'Cache-Control: no-cache' \
+             --header 'Content-Type: application/json' \
+             --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"sync-tags\" }" \
+             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
 
     echo "Response: ${RESPONSE}"
     echo "Created a sync-tags request, please check if the tags image are in sync."
