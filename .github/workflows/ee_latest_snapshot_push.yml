@@ -3,8 +3,8 @@ name: Build EE snapshot image
 on:
   workflow_dispatch:
     inputs:
-      HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for'
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to build the image from'
         required: true
       HZ_EE_REVISION:
         description: 'Commit id of Hazelcast Enterprise snapshot jar'
@@ -13,16 +13,25 @@ env:
   test_container_name_ee: hazelcast-ee-test
 
 jobs:
-  jdks:
+  prepare:
     runs-on: ubuntu-latest
     outputs:
+      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.SOURCE_REF }}
+
+      - name: Get HZ versions
+        id: get_hz_versions
+        uses: hazelcast/docker-actions/get-hz-versions@master
+
       - name: Get supported JDKs
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ inputs.HZ_VERSION }}'
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}'
 
   distribution-variants:
     uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@master
@@ -30,22 +39,26 @@ jobs:
   push:
     runs-on: ubuntu-latest
     needs:
-      - jdks
+      - prepare
       - distribution-variants
     strategy:
       matrix:
-        jdk: ${{ fromJSON(needs.jdks.outputs.jdks) }}
+        jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
         variant: ${{ fromJSON(needs.distribution-variants.outputs.variants) }}
     env:
       DOCKER_ORG: hazelcast
-      HZ_VERSION : ${{ inputs.HZ_VERSION }}
-      DOCKER_DIR: hazelcast-enterprise
+      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      DOCKER_DIR: source_path/hazelcast-enterprise
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.SOURCE_REF }}
+          path: source_path
 
       - name: Setup Docker
-        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
+        uses: ./.github/actions/setup-docker
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

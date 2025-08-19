@@ -1,17 +1,10 @@
 name: Build EE NLC tag image
 
 on:
-  push:
-    branches:
-      - "!*"
-    tags:
-      - "v5.*"
-      - "v6.*"
-      - '!*DEVEL*'
   workflow_dispatch:
     inputs:
-      HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.3.2, 5.1.1, 5.0.1'
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to build the image from'
         required: true
 
 env:
@@ -21,22 +14,23 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      HZ_VERSION: ${{ steps.derive-versions.outputs.HZ_VERSION }}
+      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
-
-      - id: derive-versions
-        uses: ./.github/actions/derive-versions
         with:
-          hz_version: ${{ inputs.HZ_VERSION }}
+          ref: ${{ inputs.SOURCE_REF }}
+
+      - name: Get HZ versions
+        id: get_hz_versions
+        uses: hazelcast/docker-actions/get-hz-versions@master
 
       - name: Get supported JDKs
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ steps.derive-versions.outputs.HZ_VERSION }}'
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}'
 
   push:
     runs-on: ubuntu-latest
@@ -49,10 +43,14 @@ jobs:
       NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
       S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      DOCKER_DIR: hazelcast-enterprise
+      DOCKER_DIR: source_path/hazelcast-enterprise
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.SOURCE_REF }}
+          path: source_path
 
       - name: Set NLC zip URL
         run: |
@@ -80,7 +78,7 @@ jobs:
           password: ${{ secrets.NLC_REPO_TOKEN }}
 
       - name: Setup Docker
-        uses: hazelcast/hazelcast-docker/.github/actions/setup-docker@master
+        uses: ./.github/actions/setup-docker
 
       - name: Build EE image
         run: |
