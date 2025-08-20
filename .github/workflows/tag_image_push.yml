@@ -201,7 +201,7 @@ jobs:
         if: ${{ always() && ( needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes') }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs${{ matrix.variant.suffix }}-${{ github.job }}-jdk${{ matrix.jdk }}
+          name: docker-logs-tag-image-push-${{inputs.SOURCE_REF}}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}
           path: docker-*.log
 
       - name: Build and Push OSS image
