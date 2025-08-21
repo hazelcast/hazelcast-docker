@@ -162,7 +162,9 @@ jobs:
             output=--push
           fi
 
+          # provenance disabled as causes RedHat publish failure 
           docker buildx build ${output} \
+            --provenance=false \
             --build-arg HZ_VERSION=${{ env.HZ_VERSION }} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" "${{ env.HZ_VERSION }}") \
