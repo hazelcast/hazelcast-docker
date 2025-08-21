@@ -41,11 +41,11 @@ function assert_get_latest_url_without_extension {
 }
 
 log_header "Tests for get_latest_version"
-assert_get_latest_version com.google.guava listenablefuture https://repo1.maven.org/maven2 9999.0-empty-to-avoid-conflict-with-guava
+assert_get_latest_version com.google.guava listenablefuture https://repo.maven.apache.org/maven2 9999.0-empty-to-avoid-conflict-with-guava
 assert_get_latest_version com.google.guava listenablefuture https://maven-central.storage.googleapis.com/maven2 9999.0-empty-to-avoid-conflict-with-guava
 
 log_header "Tests for get_latest_url_without_extension"
-assert_get_latest_url_without_extension com.google.guava listenablefuture https://repo1.maven.org/maven2 https://repo1.maven.org/maven2/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava
+assert_get_latest_url_without_extension com.google.guava listenablefuture https://repo.maven.apache.org/maven2 https://repo.maven.apache.org/maven2/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava
 assert_get_latest_url_without_extension com.google.guava listenablefuture https://maven-central.storage.googleapis.com/maven2 https://maven-central.storage.googleapis.com/maven2/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"

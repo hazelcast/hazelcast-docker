@@ -35,7 +35,7 @@ RUN echo "Upgrading APK packages" \
     && if [[ ! -f ${HZ_HOME}/hazelcast-distribution.zip ]]; then \
        if [ -z ${HAZELCAST_ZIP_URL} ]; then \
             source ${HZ_HOME}/maven.functions.sh; \
-            HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-distribution https://repo1.maven.org/maven2)".zip; \
+            HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-distribution https://repo.maven.apache.org/maven2)".zip; \
        fi; \
        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
        mkdir --parents ${HZ_HOME}; \

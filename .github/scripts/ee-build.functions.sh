@@ -5,7 +5,7 @@ set -euo pipefail ${RUNNER_DEBUG:+-x}
 # If the version is snapshot, the script downloads the 'maven-metadata.xml' and parses it for the snapshot version. 'maven-metadata.xml' only holds the values for
 # the latest snapshot version. Thus, the [1] in snapshotVersion[1] is arbitrary because all of elements in the list have same value. The list consists of 'jar', 'pom', 'sources' and 'javadoc'.
 #
-# 'maven-metadata.xml' example - https://repo1.maven.org/maven2/com/hazelcast/hazelcast/maven-metadata.xml
+# 'maven-metadata.xml' example - https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast/maven-metadata.xml
 function get_hz_dist_zip() {
   local hz_variant=$1
   local hz_version=$2

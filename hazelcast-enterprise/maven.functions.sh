@@ -29,7 +29,7 @@ function get_latest_version() {
 #   repository_url  e.g. https://repo1.maven.org
 #
 # Prints a URL to the latest released version of a given artifact in the Maven repository, without a file extension, assuming a "typical" naming format
-# E.G. `https://repo1.maven.org/maven2/com/google/guava/guava/33.2.0-jre/guava-33.2.0-jre`
+# E.G. `https://repo.maven.apache.org/maven2/com/google/guava/guava/33.2.0-jre/guava-33.2.0-jre`
 function get_latest_url_without_extension() {
   local group_id=$1
   local artifact_id=$2

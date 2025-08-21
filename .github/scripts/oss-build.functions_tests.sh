@@ -21,7 +21,7 @@ function assert_get_hz_dist_zip {
 }
 
 log_header "Tests for get_hz_dist_zip"
-assert_get_hz_dist_zip slim 5.4.0 https://repo1.maven.org/maven2/com/hazelcast/hazelcast-distribution/5.4.0/hazelcast-distribution-5.4.0-slim.zip
-assert_get_hz_dist_zip "" 5.4.0 https://repo1.maven.org/maven2/com/hazelcast/hazelcast-distribution/5.4.0/hazelcast-distribution-5.4.0.zip
+assert_get_hz_dist_zip slim 5.4.0 https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast-distribution/5.4.0/hazelcast-distribution-5.4.0-slim.zip
+assert_get_hz_dist_zip "" 5.4.0 https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast-distribution/5.4.0/hazelcast-distribution-5.4.0.zip
 
 assert_eq 0 "$TESTS_RESULT" "All tests should pass"
