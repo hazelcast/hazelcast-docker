@@ -80,7 +80,6 @@ jobs:
       - name: Build EE image
         run: |
           docker buildx build --load \
-            --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --label hazelcast.ee.revision=${{ inputs.HZ_EE_REVISION }} \
@@ -125,7 +124,6 @@ jobs:
 
           PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
-            --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --label hazelcast.ee.revision=${{ inputs.HZ_EE_REVISION }} \

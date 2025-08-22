@@ -57,6 +57,8 @@ jobs:
       DOCKER_DIR: source_path/hazelcast-oss
     steps:
       - uses: actions/checkout@v5
+
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path

@@ -47,6 +47,8 @@ jobs:
     needs: get-latest-patch-versions
     strategy:
       fail-fast: false
+      # RedHat does not support concurrent publishing, run sequentially
+      max-parallel: 1
       matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
     steps:
       - name: Checkout Code
