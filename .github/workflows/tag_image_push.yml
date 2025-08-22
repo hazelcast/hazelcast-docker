@@ -32,6 +32,9 @@ on:
         options:
           - 'false'
           - 'true'
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: false
   workflow_call:
     inputs:
       SOURCE_REF:
@@ -52,6 +55,10 @@ on:
         description: 'Skip pushing the images to remote registry'
         required: false
         default: 'false'
+        type: string
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: false
         type: string
 
 jobs:
@@ -121,7 +128,6 @@ jobs:
         variant: ${{ fromJSON(needs.distribution-variants.outputs.variants) }}
         distribution-type: ${{ fromJSON(needs.prepare.outputs.distribution-types) }}
     env:
-      DOCKER_ORG: hazelcast
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       TEST_CONTAINER_NAME: hazelcast-test
       TEST_IMAGE_NAME: hazelcast:test
@@ -145,9 +151,23 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Login to JFrog
+        if: inputs.DRY_RUN != 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.JFROG_REGISTRY }}
+          username: ${{ secrets.JFROG_USERNAME }}
+          password: ${{ secrets.JFROG_PASSWORD }}
+
       - name: Get dist ZIP URL
         run: |
           . ${{ matrix.distribution-type.build-functions-script-path }}
+
+          if [[ "${HZ_VERSION}" == *"SNAPSHOT"* ]]; then
+            HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+            HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+          fi
+
           echo "HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant.classifier }}" "${HZ_VERSION}")" >> ${GITHUB_ENV}
 
       - name: Build Test image
@@ -194,23 +214,39 @@ jobs:
           . .github/scripts/docker.functions.sh
           . ${{ matrix.distribution-type.build-functions-script-path }}
 
-          IMAGE_NAME=${DOCKER_ORG}/${{ matrix.distribution-type.image-name }}
+          if [[ "${{ matrix.distribution-type.label }}" = "oss" && "${HZ_VERSION}" == *"SNAPSHOT"* ]]; then
+            registry=${{ secrets.JFROG_REGISTRY }}/docker/hazelcast
+          else
+            registry=hazelcast
+          fi
+
+          IMAGE_NAME=${registry}/${{ matrix.distribution-type.image-name }}
           DEFAULT_JDK="$(get_default_jdk ${{ matrix.distribution-type.docker-dir }})"
 
-          case "${{ matrix.distribution-type.label }}" in
-              "oss")
-              # OSS has no LTS releases
-              IS_LATEST_LTS=false
-              ;;
-              "ee")
-              IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-              ;;
-              *)
-              echoerr "Unsupported LTS behaviour for ${{ matrix.distribution-type.label }}" ; return 1
-              ;;
-          esac
+          if [[ "${HZ_VERSION}" == *"SNAPSHOT"* ]]; then
+            VERSIONS=("$HZ_VERSION")
+            if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+                VERSIONS+=(latest-snapshot)
+            fi
+            
+            TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${DEFAULT_JDK}")
+          else
+            case "${{ matrix.distribution-type.label }}" in
+                "oss")
+                # OSS has no LTS releases
+                IS_LATEST_LTS=false
+                ;;
+                "ee")
+                IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
+                ;;
+                *)
+                echoerr "Unsupported LTS behaviour for ${{ matrix.distribution-type.label }}" ; return 1
+                ;;
+            esac
 
-          TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${DEFAULT_JDK}" "${IS_LATEST_LTS}")
+            TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${DEFAULT_JDK}" "${IS_LATEST_LTS}")
+          fi
+
           echodebug "TAGS_TO_PUSH=${TAGS_TO_PUSH}"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
@@ -238,15 +274,24 @@ jobs:
             output=--push
           fi
 
+          if [ -n "${{ inputs.HZ_REVISION }}" ]; then
+            LABEL_ARG="--label hazelcast.revision=${{ inputs.HZ_REVISION }}"
+          else
+            LABEL_ARG=""
+          fi
+
           docker buildx build ${output} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             ${TAGS_ARG} \
+            ${LABEL_ARG} \
             --platform=${PLATFORMS} "${{ matrix.distribution-type.docker-dir }}"
 
   create-release:
-    needs: push
-    if: inputs.DRY_RUN != 'true'
+    needs:
+      - prepare
+      - push
+    if: inputs.DRY_RUN != 'true' && !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT')
     runs-on: ubuntu-latest
     steps:
       - name: Create release
@@ -258,8 +303,10 @@ jobs:
           tag: ${{ inputs.SOURCE_REF }}
 
   readme:
-    needs: push
-    if: inputs.DRY_RUN != 'true'
+    needs:
+      - prepare
+      - push
+    if: inputs.DRY_RUN != 'true' && !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT')
     uses: ./.github/workflows/update_readme.yml
     secrets: inherit
 
