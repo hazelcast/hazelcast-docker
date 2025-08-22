@@ -64,10 +64,10 @@ jobs:
 
             echo "Checking ${label} image"
             if base_image_outdated_from_dockerfile "${image}" "${dockerfile}"; then
-              echo "${label}_NEEDS_REBUILD" >> ${{ matrix.version }}
+              echo "${{ matrix.version }}" >> rebuild-${label}-${{ matrix.version }}
               echonotice "Image ${label} needs rebuild"
             elif packages_updatable_ee "${image}"; then
-              echo "${label}_NEEDS_REBUILD" >> ${{ matrix.version }}
+              echo "${{ matrix.version }}" >> rebuild-${label}-${{ matrix.version }}
               echonotice "System package upgrades for ${label} image available"
             else
               echodebug "Image ${label} is up-to-date"
@@ -80,7 +80,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.version }}
-          path: ${{ matrix.version }}
+          path: rebuild-*
           if-no-files-found: ignore
 
   convert-rebuilds-to-matrix:
@@ -88,35 +88,19 @@ jobs:
     name: Prepare matrix of rebuilds to execute
     needs: calculate-rebuilds
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      rebuild-ee-matrix: ${{ steps.set-matrix.outputs.rebuild_ee_matrix }}
     steps:
       - uses: actions/download-artifact@v4
       - id: set-matrix
         run: |
           # Invert matrix
-          # From version-specific files (e.g. 5.4.1) that list the types that need rebuilding (OSS_NEEDS_REBUILD, EE_NEEDS_REBUILD)
-          # To array of types of builds and their versions (e.g. {"EE_NEEDS_REBUILD":["5.5.7","5.4.2"]})
-          # Even if there are no entries, we still need to ensure it's properly formatted for the matrix to process
-          matrix=$(find . -type f \
-            | while read -r file; do
-                  version=$(basename "${file}")
-                  while IFS= read -r flag; do
-                    echo "{\"flag\":\"${flag}\",\"version\":\"${version}\"}"
-                  done < "${file}"
-              done \
-            | jq --compact-output --slurp '
-                group_by(.flag)
-                | map({ (.[0].flag): [.[].version] })
-                | add
-                | .EE_NEEDS_REBUILD //= []
-              ')
-
-          echo "matrix=${matrix}" >> ${GITHUB_OUTPUT}
+          rebuild_ee_matrix=$((cat **/rebuild-EE-* 2>/dev/null || true) | jq --raw-input --slurp --compact-output 'split("\n")[:-1]')
+          echo "rebuild_ee_matrix=${rebuild_ee_matrix}" >> ${GITHUB_OUTPUT}
 
   rebuild-ee:
     name: Rebuild EE images
     needs: convert-rebuilds-to-matrix
-    if: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.matrix).EE_NEEDS_REBUILD[0] != null }}
+    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
     strategy:
       matrix:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.matrix).EE_NEEDS_REBUILD }}
@@ -128,12 +112,12 @@ jobs:
   rebuild-rhel:
     name: Rebuild EE RHEL images
     needs: convert-rebuilds-to-matrix
-    if: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.matrix).EE_NEEDS_REBUILD[0] != null }}
+    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
     strategy:
       # RedHat does not support concurrent publishing, run sequentially
       max-parallel: 1
       matrix:
-        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.matrix).EE_NEEDS_REBUILD }}
+        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
     uses: ./.github/workflows/tag_image_push_rhel.yml
     with:
       SOURCE_REF: v${{ matrix.version }}
@@ -142,10 +126,10 @@ jobs:
   rebuild-nlc:
     name: Rebuild EE NLC images
     needs: convert-rebuilds-to-matrix
-    if: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.matrix).EE_NEEDS_REBUILD[0] != null }}
+    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
     strategy:
       matrix:
-        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.matrix).EE_NEEDS_REBUILD }}
+        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
     uses: ./.github/workflows/ee-nlc-tag-push.yml
     with:
       SOURCE_REF: v${{ matrix.version }}
