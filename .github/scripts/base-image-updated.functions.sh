@@ -31,6 +31,5 @@ function base_image_outdated() {
 
 function get_base_image_sha() {
   local image=$1
-  docker pull "${image}" --quiet
-  docker image inspect --format '{{index .RootFS.Layers 0}}' "${image}"
+  skopeo inspect --format "{{ .Digest }}" "docker://${image}"
 }
