@@ -81,7 +81,6 @@ jobs:
           curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output ${DOCKER_DIR_OS}/hazelcast-distribution.zip; 
           
           docker buildx build --load \
-          --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-oss:test \
           "${DOCKER_DIR_OS}"
 
@@ -93,11 +92,9 @@ jobs:
 
       - name: Build Test EE image
         run: |
-          HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_EE }}"
           curl --fail --silent --show-error --location "${{ needs.prepare.outputs.HAZELCAST_EE_ZIP_URL }}" --output ${DOCKER_DIR_EE}/hazelcast-enterprise-distribution.zip;
           
           docker buildx build --load \
-          --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-ee:test \
           "${DOCKER_DIR_EE}"
 
@@ -155,7 +152,6 @@ jobs:
 
           docker buildx build --load \
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
-          --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-oss:test \
           "${DOCKER_DIR_OS}"
 
@@ -166,12 +162,10 @@ jobs:
 
       - name: Build Test EE image
         run: |
-          HZ_VERSION="${{ needs.prepare.outputs.HZ_VERSION_EE }}"
           curl --fail --silent --show-error --location "${{ needs.prepare.outputs.HAZELCAST_EE_ZIP_URL }}" --output ${DOCKER_DIR_EE}/hazelcast-enterprise-distribution.zip;
 
           docker buildx build --load \
           --build-arg JDK_VERSION=${{ matrix.jdk }} \
-          --build-arg HZ_VERSION=${HZ_VERSION} \
           --tag hazelcast-ee:test \
           "${DOCKER_DIR_EE}"
 
