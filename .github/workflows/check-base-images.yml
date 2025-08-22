@@ -127,7 +127,7 @@ jobs:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.matrix).EE_NEEDS_REBUILD }}
     uses: ./.github/workflows/tag_image_push.yml
     with:
-      SOURCE_REF: ${{ matrix.version }}
+      SOURCE_REF: v${{ matrix.version }}
     secrets: inherit
 
   rebuild-rhel:
@@ -141,7 +141,7 @@ jobs:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.matrix).EE_NEEDS_REBUILD }}
     uses: ./.github/workflows/tag_image_push_rhel.yml
     with:
-      SOURCE_REF: ${{ matrix.version }}
+      SOURCE_REF: v${{ matrix.version }}
     secrets: inherit
 
   rebuild-nlc:
@@ -153,7 +153,7 @@ jobs:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.matrix).EE_NEEDS_REBUILD }}
     uses: ./.github/workflows/ee-nlc-tag-push.yml
     with:
-      SOURCE_REF: ${{ matrix.version }}
+      SOURCE_REF: v${{ matrix.version }}
     secrets: inherit
 
   failure-notifications:
