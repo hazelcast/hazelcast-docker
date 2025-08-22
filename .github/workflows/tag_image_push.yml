@@ -121,10 +121,15 @@ jobs:
         variant: ${{ fromJSON(needs.distribution-variants.outputs.variants) }}
         distribution-type: ${{ fromJSON(needs.prepare.outputs.distribution-types) }}
     env:
-      DOCKER_ORG: hazelcast
+      LOCAL_REGISTRY: localhost:5000
+      REMOTE_REGISTRY: hazelcast
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       TEST_CONTAINER_NAME: hazelcast-test
-      TEST_IMAGE_NAME: hazelcast:test
+    services:
+      registry:
+        image: registry:3
+        ports:
+          - 5000:5000
     steps:
       - uses: actions/checkout@v5
         with:
@@ -138,46 +143,10 @@ jobs:
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
 
-      - name: Login to Docker Hub
-        if: inputs.DRY_RUN != 'true'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Get dist ZIP URL
         run: |
           . ${{ matrix.distribution-type.build-functions-script-path }}
           echo "HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant.classifier }}" "${HZ_VERSION}")" >> ${GITHUB_ENV}
-
-      - name: Build Test image
-        run: |
-          . ${{ matrix.distribution-type.build-functions-script-path }}
-
-          docker buildx build --load \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
-            --tag ${TEST_IMAGE_NAME} \
-            ${{ matrix.distribution-type.docker-dir }}
-
-      - name: Run smoke test against image
-        timeout-minutes: 2
-        run: |
-          .github/scripts/simple-smoke-test.sh ${TEST_IMAGE_NAME} "${TEST_CONTAINER_NAME}" ${{ matrix.distribution-type.label }} "${HZ_VERSION}" "${{ matrix.jdk }}"
-        env:
-          HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HZ_ENTERPRISE_LICENSE || '' }}
-
-      - name: Get docker logs
-        if: ${{ always() }}
-        run: |
-          docker logs "${TEST_CONTAINER_NAME}" > "docker-${TEST_CONTAINER_NAME}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}.log" || true
-
-      - name: Store docker logs as artifact
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-logs-tag-image-push-${{ matrix.distribution-type.label }}${{inputs.SOURCE_REF}}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}
-          path: docker-*.log
 
       - name: Check if latest EE LTS release
         if: matrix.distribution-type.label == 'ee'
@@ -187,14 +156,16 @@ jobs:
           hz_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
-      - name: Build and Push image
+      - name: Build and Push image to local registry
         run: |
           . .github/scripts/logging.functions.sh
           . .github/scripts/get-tags-to-push.sh
           . .github/scripts/docker.functions.sh
           . ${{ matrix.distribution-type.build-functions-script-path }}
 
-          IMAGE_NAME=${DOCKER_ORG}/${{ matrix.distribution-type.image-name }}
+          LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${{ matrix.distribution-type.image-name }}
+          echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
+
           DEFAULT_JDK="$(get_default_jdk ${{ matrix.distribution-type.docker-dir }})"
 
           case "${{ matrix.distribution-type.label }}" in
@@ -215,7 +186,8 @@ jobs:
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
           do
-            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
+            echo "TAG=${tag}" >> ${GITHUB_ENV}
+            TAGS_ARG="${TAGS_ARG} --tag ${LOCAL_IMAGE_NAME}:${tag}"
           done
 
           output=
@@ -232,17 +204,42 @@ jobs:
               ;;
           esac
 
-          if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
-            echonotice "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
-          else
-            output=--push
-          fi
-
-          docker buildx build ${output} \
+          docker buildx build --push \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} "${{ matrix.distribution-type.docker-dir }}"
+
+      - name: Run smoke test against image
+        timeout-minutes: 2
+        run: |
+          .github/scripts/simple-smoke-test.sh ${LOCAL_IMAGE_NAME}:${TAG} "${TEST_CONTAINER_NAME}" ${{ matrix.distribution-type.label }} "${HZ_VERSION}" "${{ matrix.jdk }}"
+        env:
+          HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HZ_ENTERPRISE_LICENSE || '' }}
+
+      - name: Get docker logs
+        if: ${{ always() }}
+        run: |
+          docker logs "${TEST_CONTAINER_NAME}" > "docker-${TEST_CONTAINER_NAME}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}.log" || true
+
+      - name: Store docker logs as artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs-${{ matrix.distribution-type.label }}${{ matrix.variant.suffix }}-${{ github.job }}-jdk${{ matrix.jdk }}
+          path: docker-*.log
+
+      - name: Login to Docker Hub
+        if: inputs.DRY_RUN != 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push image
+        if: inputs.DRY_RUN != 'true'
+        run: |
+          skopeo copy --multi-arch all docker://${LOCAL_IMAGE_NAME} docker://${REMOTE_REGISTRY}/${{ matrix.distribution-type.image-name }}
 
   create-release:
     needs: push
