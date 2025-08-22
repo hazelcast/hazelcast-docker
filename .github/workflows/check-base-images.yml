@@ -35,11 +35,6 @@ jobs:
           versions=$(printf '%s\n' $(get_latest_patch_versions "${MIN_VERSION}") | jq --raw-input . | jq --compact-output --slurp .)
           echo "Found latest patch versions: $versions"
           echo "matrix={\"version\":$versions}" >> $GITHUB_OUTPUT
-      - name: Slack notification
-        uses: hazelcast/docker-actions/slack-notification@master
-        if: failure()
-        with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
 
   calculate-rebuilds:
     runs-on: ubuntu-latest
