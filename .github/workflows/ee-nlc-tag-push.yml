@@ -83,7 +83,6 @@ jobs:
       - name: Build EE image
         run: |
           docker buildx build --load \
-            --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --tag hazelcast-nlc:test ${DOCKER_DIR}
@@ -127,7 +126,6 @@ jobs:
 
           PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
           docker buildx build --push \
-            --build-arg HZ_VERSION=${HZ_VERSION} \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             ${TAGS_ARG} \
