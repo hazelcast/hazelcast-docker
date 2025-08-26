@@ -74,7 +74,7 @@ jobs:
             fi
           }
 
-          check_image "EE" "hazelcast/hazelcast-enterprise:${{ matrix.version }}-slim" "v${{ matrix.version }}/hazelcast-enterprise/Dockerfile"
+          # check_image "EE" "hazelcast/hazelcast-enterprise:${{ matrix.version }}-slim" "v${{ matrix.version }}/hazelcast-enterprise/Dockerfile"
         # GitHub doesn't support outputs of matrix jobs - https://github.com/orgs/community/discussions/26639
         # Instead, write the content to artifact(s) and upload those to consume downstream
       - uses: actions/upload-artifact@v4
@@ -93,6 +93,7 @@ jobs:
       - uses: actions/download-artifact@v4
       - id: set-matrix
         run: |
+          set -x
           # Invert matrix
           rebuild_ee_matrix=$((cat **/rebuild-EE-* 2>/dev/null || true) | jq --raw-input --slurp --compact-output 'split("\n")[:-1]')
           echo "rebuild_ee_matrix=${rebuild_ee_matrix}" >> ${GITHUB_OUTPUT}
@@ -100,10 +101,9 @@ jobs:
   rebuild-ee:
     name: Rebuild EE images
     needs: convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
     strategy:
       matrix:
-        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.matrix).EE_NEEDS_REBUILD }}
+        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
     uses: ./.github/workflows/tag_image_push.yml
     with:
       SOURCE_REF: v${{ matrix.version }}
@@ -112,7 +112,6 @@ jobs:
   rebuild-rhel:
     name: Rebuild EE RHEL images
     needs: convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
     strategy:
       # RedHat does not support concurrent publishing, run sequentially
       max-parallel: 1
@@ -126,7 +125,6 @@ jobs:
   rebuild-nlc:
     name: Rebuild EE NLC images
     needs: convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
     strategy:
       matrix:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
