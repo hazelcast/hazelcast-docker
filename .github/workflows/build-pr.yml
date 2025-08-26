@@ -3,21 +3,13 @@ name: Build PR
 on:
   pull_request:
 
-env:
-  test_container_name: hazelcast-test
-  test_image_name: hazelcast:test
-  docker_log_file: docker-hazelcast-test.log
-
 jobs:
   prepare:
     runs-on: ubuntu-latest
     name: Prepare environment
     outputs:
-      HZ_VERSION_OSS: ${{ steps.get_hz_versions.outputs.HZ_VERSION_OSS }}
-      HZ_VERSION_EE: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
       LAST_RELEASED_HZ_VERSION_OSS: ${{ steps.get_hz_versions.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
-      HAZELCAST_EE_ZIP_URL: ${{ steps.get_ee_vars.outputs.HAZELCAST_EE_ZIP_URL }}
-      jdks: ${{ steps.jdks-with-default.outputs.jdks-with-default }}
+      jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
@@ -38,104 +30,6 @@ jobs:
       - name: Get HZ versions
         id: get_hz_versions
         uses: hazelcast/docker-actions/get-hz-versions@master
-
-      - name: Setup EE variables
-        id: get_ee_vars
-        run: |
-          . .github/scripts/ee-build.functions.sh
-          echo "HAZELCAST_EE_ZIP_URL=$(get_hz_dist_zip "" "${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}")" >> ${GITHUB_OUTPUT}
-
-      - name: Get supported JDKs
-        id: jdks
-        uses: hazelcast/docker-actions/get-supported-jdks@master
-        with:
-          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}'
-
-      - name: Append "default" JDK
-        id: jdks-with-default
-        run: |
-          echo "jdks-with-default=$(jq --compact-output '. + ["default"]' <<< '${{ steps.jdks.outputs.jdks }}')" >> "${GITHUB_OUTPUT}"
-
-  build-pr:
-    runs-on: ubuntu-latest
-    needs: prepare
-    name: Build ${{ matrix.distribution-type.label }} with jdk-${{ matrix.jdk }}
-    strategy:
-      fail-fast: false
-      matrix:
-        jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
-        distribution-type:
-          - label: oss
-            docker-dir: hazelcast-oss
-          - label: ee
-            docker-dir: hazelcast-enterprise
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v5
-        with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/merge
-          fetch-depth: 0
-
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build image
-        run: |
-          if [ "${{ matrix.distribution-type.label }}" = "oss" ]; then
-            # duplicated block as GH doesn't support passing sensitive data between jobs
-            . .github/scripts/oss-build.functions.sh
-            export HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
-            export HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
-            HAZELCAST_OSS_ZIP_URL=$(get_hz_dist_zip "" "${{ needs.prepare.outputs.HZ_VERSION_OSS }}")
-            
-            curl --fail --silent --show-error --location "$HAZELCAST_OSS_ZIP_URL" --output ${{ matrix.distribution-type.docker-dir }}/hazelcast-distribution.zip;
-          elif [ "${{ matrix.distribution-type.label }}" = "ee" ]; then
-            curl --fail --silent --show-error --location "${{ needs.prepare.outputs.HAZELCAST_EE_ZIP_URL }}" --output ${{ matrix.distribution-type.docker-dir }}/hazelcast-enterprise-distribution.zip;
-          fi
-
-          if [ "${{ matrix.jdk }}" = "default" ]; then
-            . .github/scripts/docker.functions.sh
-            build_arg=""
-          else
-            build_arg="--build-arg JDK_VERSION=${{ matrix.jdk }}"
-          fi
-
-          docker buildx build --load \
-          ${build_arg} \
-          --tag ${test_image_name} \
-          "${{ matrix.distribution-type.docker-dir }}"
-
-      - name: Run smoke test against image
-        timeout-minutes: 2
-        run: |
-          if [ "${{ matrix.distribution-type.label }}" = "oss" ]; then
-            version=${{ needs.prepare.outputs.HZ_VERSION_OSS }}
-          elif [ "${{ matrix.distribution-type.label }}" = "ee" ]; then
-            version=${{ needs.prepare.outputs.HZ_VERSION_EE }}
-          fi
-
-          if [ "${{ matrix.jdk }}" = "default" ]; then
-            . .github/scripts/docker.functions.sh
-            jdk=$(get_default_jdk ${{ matrix.distribution-type.docker-dir }})
-          else
-            jdk=${{ matrix.jdk }}
-          fi
-
-          .github/scripts/simple-smoke-test.sh ${test_image_name} "${{ env.test_container_name }}" ${{ matrix.distribution-type.label }} "${version}" "${jdk}"
-        env:
-          HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HZ_ENTERPRISE_LICENSE || '' }}
- 
-      - name: Get docker logs
-        if: ${{ always() }}
-        run: |
-          docker logs "${{ env.test_container_name }}" > "${{ env.docker_log_file }}"
-
-      - name: Store docker logs as artifact
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-logs-${{ matrix.distribution-type.label }}-${{ github.job }}-jdk-${{ matrix.jdk }}
-          path: ${{ env.docker_log_file }}
 
   test-push:
     name: Test pushing image (dry run)
