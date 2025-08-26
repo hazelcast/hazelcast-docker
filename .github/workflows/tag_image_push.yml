@@ -247,10 +247,8 @@ jobs:
           tag: ${{ inputs.SOURCE_REF }}
 
   readme:
-    needs:
-      - prepare
-      - push
-    if: inputs.DRY_RUN != 'true' && (needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes')
+    needs: push
+    if: inputs.DRY_RUN != 'true'
     uses: ./.github/workflows/update_readme.yml
     secrets: inherit
 
