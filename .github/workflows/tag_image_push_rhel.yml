@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
-      jdks: ${{ steps.jdks.outputs.jdks }}
+      jdks: "['21']"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
