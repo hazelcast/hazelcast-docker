@@ -219,7 +219,6 @@ jobs:
           elif [ "${{ matrix.distribution-type.label }}" = "ee" ]; then
             PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
           fi
-          
 
           if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
             echodebug "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
