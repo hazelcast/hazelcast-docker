@@ -234,7 +234,7 @@ jobs:
 
   create-release:
     needs: push
-    if: inputs.DRY_RUN != 'true' && (needs.prepare.outputs.should_build_ee == 'yes' || needs.prepare.outputs.should_build_oss == 'yes')
+    if: inputs.DRY_RUN != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Create release
