@@ -94,6 +94,7 @@ jobs:
       - name: Compute distribution type matrix
         id: distribution-type-matrix
         run: |
+          # We expect at least _one_ output distribution type, otherwise will produce an empty array that will break GitHub matrixes
           entries=()
 
           if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
