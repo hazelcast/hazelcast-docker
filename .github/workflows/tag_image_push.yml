@@ -67,7 +67,7 @@ jobs:
       should_build_oss: ${{ steps.resolve-editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
       HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
-      jdks: ${{ steps.jdks.outputs.jdks }}
+      jdks: "['21']"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
