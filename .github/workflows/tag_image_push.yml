@@ -148,7 +148,7 @@ jobs:
       - name: Get dist ZIP URL
         run: |
           . ${{ matrix.distribution-type.build-functions-script-path }}
-          echo "HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant.classifier }}" "${{ env.HZ_VERSION }}")" >> ${GITHUB_ENV}
+          echo "HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant.classifier }}" "${HZ_VERSION}")" >> ${GITHUB_ENV}
 
       - name: Build Test image
         run: |
@@ -163,14 +163,14 @@ jobs:
       - name: Run smoke test against image
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh ${TEST_IMAGE_NAME} "${{ env.TEST_CONTAINER_NAME }}" ${{ matrix.distribution-type.label }} "${{ env.HZ_VERSION }}" "${{ matrix.jdk }}"
+          .github/scripts/simple-smoke-test.sh ${TEST_IMAGE_NAME} "${TEST_CONTAINER_NAME}" ${{ matrix.distribution-type.label }} "${HZ_VERSION}" "${{ matrix.jdk }}"
         env:
           HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HZ_ENTERPRISE_LICENSE || '' }}
 
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          docker logs "${{ env.TEST_CONTAINER_NAME }}" > "docker-${{ env.TEST_CONTAINER_NAME }}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}.log" || true
+          docker logs "${TEST_CONTAINER_NAME}" > "docker-${TEST_CONTAINER_NAME}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}.log" || true
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
@@ -194,7 +194,7 @@ jobs:
           . .github/scripts/docker.functions.sh
           . ${{ matrix.distribution-type.build-functions-script-path }}
 
-          IMAGE_NAME=${{ env.DOCKER_ORG }}/${{ matrix.distribution-type.image-name }}
+          IMAGE_NAME=${DOCKER_ORG}/${{ matrix.distribution-type.image-name }}
           DEFAULT_JDK="$(get_default_jdk ${{ matrix.distribution-type.docker-dir }})"
 
           if [ "${{ matrix.distribution-type.label }}" = "oss" ]; then
@@ -204,7 +204,7 @@ jobs:
             IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
           fi
 
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.HZ_VERSION }}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${DEFAULT_JDK}" "${IS_LATEST_LTS}")
+          TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${DEFAULT_JDK}" "${IS_LATEST_LTS}")
           echodebug "TAGS_TO_PUSH=${TAGS_TO_PUSH}"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
