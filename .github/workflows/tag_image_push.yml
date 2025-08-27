@@ -156,7 +156,7 @@ jobs:
 
           docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$HAZELCAST_ZIP_URL \
+            --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             --tag ${TEST_IMAGE_NAME} \
             ${{ matrix.distribution-type.docker-dir }}
 
