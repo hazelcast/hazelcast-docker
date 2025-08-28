@@ -233,7 +233,7 @@ jobs:
           esac
 
           if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
-            echodebug "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
+            echonotice "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
           else
             output=--push
           fi
