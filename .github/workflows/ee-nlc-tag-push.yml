@@ -6,6 +6,12 @@ on:
       SOURCE_REF:
         description: 'The hazelcast-docker branch to build the image from'
         required: true
+  workflow_call:
+    inputs:
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to build the image from'
+        required: true
+        type: string
 
 env:
   test_container_name_ee: hazelcast-ee-test
@@ -104,7 +110,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-${{ github.job }}-jdk${{ matrix.jdk }}
+          name: docker-logs-nlc-tag-push-${{inputs.SOURCE_REF}}-jdk${{ matrix.jdk }}
           path: |
             ${{ env.DOCKER_LOG_FILE_EE }}
 
