@@ -197,12 +197,18 @@ jobs:
           IMAGE_NAME=${DOCKER_ORG}/${{ matrix.distribution-type.image-name }}
           DEFAULT_JDK="$(get_default_jdk ${{ matrix.distribution-type.docker-dir }})"
 
-          if [ "${{ matrix.distribution-type.label }}" = "oss" ]; then
-            # OSS has no LTS releases
-            IS_LATEST_LTS=false
-          elif [ "${{ matrix.distribution-type.label }}" = "ee" ]; then
-            IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-          fi
+          case "${{ matrix.distribution-type.label }}" in
+              "oss")
+              # OSS has no LTS releases
+              IS_LATEST_LTS=false
+              ;;
+              "ee")
+              IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
+              ;;
+              *)
+              echoerr "Unsupported LTS behaviour for ${{ matrix.distribution-type.label }}" ; return 1
+              ;;
+          esac
 
           TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${DEFAULT_JDK}" "${IS_LATEST_LTS}")
           echodebug "TAGS_TO_PUSH=${TAGS_TO_PUSH}"
@@ -214,11 +220,17 @@ jobs:
 
           output=
 
-          if [ "${{ matrix.distribution-type.label }}" = "oss" ]; then
-            PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
-          elif [ "${{ matrix.distribution-type.label }}" = "ee" ]; then
-            PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
-          fi
+          case "${{ matrix.distribution-type.label }}" in
+              "oss")
+              PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
+              ;;
+              "ee")
+              PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
+              ;;
+              *)
+              echoerr "Unsupported platform behaviour for ${{ matrix.distribution-type.label }}" ; return 1
+              ;;
+          esac
 
           if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
             echodebug "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
