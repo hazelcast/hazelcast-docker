@@ -66,7 +66,7 @@ jobs:
     outputs:
       should_build_oss: ${{ steps.resolve-editions.outputs.should_build_oss }}
       should_build_ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
-      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
+      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
@@ -94,7 +94,7 @@ jobs:
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}'
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
 
   distribution-variants:
     uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@master
