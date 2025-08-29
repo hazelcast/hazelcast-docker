@@ -127,7 +127,7 @@ jobs:
       TEST_CONTAINER_NAME: hazelcast-test
     services:
       registry:
-        image: registry:3
+        image: registry:latest
         ports:
           - 5000:5000
     steps:
