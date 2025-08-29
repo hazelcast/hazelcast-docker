@@ -163,7 +163,7 @@ jobs:
         run: |
           . ${{ matrix.distribution-type.build-functions-script-path }}
 
-          if [[ "${HZ_VERSION}" == *"SNAPSHOT"* ]]; then
+          if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
             HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
           fi
@@ -214,7 +214,7 @@ jobs:
           . .github/scripts/docker.functions.sh
           . ${{ matrix.distribution-type.build-functions-script-path }}
 
-          if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" == *"SNAPSHOT"* ]]; then
+          if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             registry=${{ secrets.JFROG_REGISTRY }}/docker/hazelcast
           else
             registry=hazelcast
@@ -223,7 +223,7 @@ jobs:
           IMAGE_NAME=${registry}/${{ matrix.distribution-type.image-name }}
           DEFAULT_JDK="$(get_default_jdk ${{ matrix.distribution-type.docker-dir }})"
 
-          if [[ "${HZ_VERSION}" == *"SNAPSHOT"* ]]; then
+          if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             VERSIONS=("$HZ_VERSION")
             if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
                 VERSIONS+=(latest-snapshot)

@@ -13,7 +13,7 @@ function get_hz_dist_zip() {
   # The slim is an artifact with a classifier, need to add `-` there
   suffix=${hz_variant:+-${hz_variant}}
 
-  if [[ "${hz_version}" == *"SNAPSHOT"* ]]
+  if [[ "${hz_version}" =~ SNAPSHOT ]]
   then  
       repository=snapshot
   else
