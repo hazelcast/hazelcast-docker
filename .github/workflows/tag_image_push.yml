@@ -214,7 +214,7 @@ jobs:
           . .github/scripts/docker.functions.sh
           . ${{ matrix.distribution-type.build-functions-script-path }}
 
-          if [[ "${{ matrix.distribution-type.label }}" = "oss" && "${HZ_VERSION}" == *"SNAPSHOT"* ]]; then
+          if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" == *"SNAPSHOT"* ]]; then
             registry=${{ secrets.JFROG_REGISTRY }}/docker/hazelcast
           else
             registry=hazelcast
