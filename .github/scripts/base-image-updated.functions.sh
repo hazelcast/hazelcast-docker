@@ -20,12 +20,8 @@ function base_image_outdated_from_dockerfile() {
 # 0 if the current image is outdated compared to the base image
 # 1 if the current image is up-to-date compared to the base image
 function base_image_outdated() {
-  local current_image=$1
-  local base_image=$2
-  local base_image_sha
-  base_image_sha=$(get_base_image_sha "${base_image}")
-  local current_image_sha
-  current_image_sha=$(get_base_image_sha "${current_image}")
+  local base_image_sha=$(get_base_image_sha "${2}")
+  local current_image_sha=$(get_base_image_sha "${1}")
   [[ "${current_image_sha}" != "${base_image_sha}" ]]
 }
 
