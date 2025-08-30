@@ -9,7 +9,7 @@ function packages_updatable_oss() {
   local image=$1
   local output
   output=$(docker run --user 0 --rm "${image}" sh -c 'apk update >/dev/null && apk list --upgradeable')
-  echodebug "${output}"
+  echonotice "${output}"
   [[ -n "${output}" ]]
 }
 
@@ -22,7 +22,7 @@ function packages_updatable_ee() {
   local output
   # use assumeno as a workaround for lack of dry-run option
   output=$(docker run --user 0 --rm "${image}" sh -c "microdnf --assumeno upgrade --nodocs")
-  echodebug "${output}"
+  echonotice "${output}"
   local package_upgrades
   package_upgrades=$(echo "${output}" | grep --count Upgrading)
   [[ "${package_upgrades}" -ne 0 ]]

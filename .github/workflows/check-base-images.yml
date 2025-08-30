@@ -53,6 +53,8 @@ jobs:
           path: v${{ matrix.version }}
       - name: Check if ${{ matrix.version }} base images updated
         run: |
+          set -x
+
           . .github/scripts/base-image-updated.functions.sh
           . .github/scripts/packages-updated.functions.sh
           . .github/scripts/logging.functions.sh
@@ -82,69 +84,3 @@ jobs:
           name: ${{ matrix.version }}
           path: rebuild-*
           if-no-files-found: ignore
-
-  convert-rebuilds-to-matrix:
-    runs-on: ubuntu-latest
-    name: Prepare matrix of rebuilds to execute
-    needs: calculate-rebuilds
-    outputs:
-      rebuild-ee-matrix: ${{ steps.set-matrix.outputs.rebuild_ee_matrix }}
-    steps:
-      - uses: actions/download-artifact@v5
-      - id: set-matrix
-        run: |
-          # Invert matrix
-          rebuild_ee_matrix=$((cat **/rebuild-EE-* 2>/dev/null || true) | jq --raw-input --slurp --compact-output 'split("\n")[:-1]')
-          echo "rebuild_ee_matrix=${rebuild_ee_matrix}" >> ${GITHUB_OUTPUT}
-
-  rebuild-ee:
-    name: Rebuild EE images
-    needs: convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
-    strategy:
-      matrix:
-        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
-    uses: ./.github/workflows/tag_image_push.yml
-    with:
-      SOURCE_REF: v${{ matrix.version }}
-    secrets: inherit
-
-  rebuild-rhel:
-    name: Rebuild EE RHEL images
-    needs: convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
-    strategy:
-      # RedHat does not support concurrent publishing, run sequentially
-      max-parallel: 1
-      matrix:
-        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
-    uses: ./.github/workflows/tag_image_push_rhel.yml
-    with:
-      SOURCE_REF: v${{ matrix.version }}
-    secrets: inherit
-
-  rebuild-nlc:
-    name: Rebuild EE NLC images
-    needs: convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
-    strategy:
-      matrix:
-        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
-    uses: ./.github/workflows/ee-nlc-tag-push.yml
-    with:
-      SOURCE_REF: v${{ matrix.version }}
-    secrets: inherit
-
-  failure-notifications:
-    runs-on: ubuntu-latest
-    name: Failure notification
-    if: failure() && github.event_name != 'workflow_dispatch'
-    needs:
-      - rebuild-ee
-      - rebuild-rhel
-      - rebuild-nlc
-    steps:
-      - name: Slack notification
-        uses: hazelcast/docker-actions/slack-notification@master
-        with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
