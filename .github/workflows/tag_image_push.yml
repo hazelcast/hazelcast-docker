@@ -61,7 +61,7 @@ jobs:
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
     outputs:
       distribution-types: ${{ steps.distribution-type-matrix.outputs.matrix }}
-      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
+      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
@@ -89,7 +89,7 @@ jobs:
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}'
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
 
       - name: Compute distribution type matrix
         id: distribution-type-matrix
