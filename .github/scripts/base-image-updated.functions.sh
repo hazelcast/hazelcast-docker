@@ -22,16 +22,10 @@ function base_image_outdated_from_dockerfile() {
 function base_image_outdated() {
   local base_image_sha=$(get_base_image_sha "${2}")
   local current_image_sha=$(get_base_image_sha "${1}")
-  [[ "${current_image_sha}" != "${base_image_sha}" ]]
 }
 
 function get_base_image_sha() {
   local image=$1
   docker pull "${image}" --quiet
-  echonotice excerpt
-  echonotice $(docker image inspect --format '{{index .RootFS.Layers 0}}' "${image}")
-  echonotice full
-  echonotice $(docker image inspect "${image}")
-  echonotice fin
   docker image inspect --format '{{index .RootFS.Layers 0}}' "${image}"
 }
