@@ -32,5 +32,10 @@ function base_image_outdated() {
 function get_base_image_sha() {
   local image=$1
   docker pull "${image}" --quiet
+  echonotice excerpt
+  echonotice $(docker image inspect --format '{{index .RootFS.Layers 0}}' "${image}")
+  echonotice full
+  echonotice $(docker image inspect "${image}")
+  echonotice fin
   docker image inspect --format '{{index .RootFS.Layers 0}}' "${image}"
 }
