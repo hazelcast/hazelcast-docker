@@ -60,7 +60,7 @@ $ docker run -p 5702:5701 -e HZ_LICENSEKEY=<your_license_key> -e HZ_NETWORK_PUBL
 ```
 
 Note that:
-* This example assumes unencrypted communication channels for Hazelcast members and clients. Hazelcast allows you to encrypt socket-level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](#tls_enabled) to learn about enabling TLS/SSL encryption.
+* This example assumes unencrypted communication channels for Hazelcast members and clients. Hazelcast allows you to encrypt socket-level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](#using-tls-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
 
 ### Management Center Hello World
 
@@ -179,7 +179,7 @@ $ docker run -e CLASSPATH="/opt/hazelcast/CLASSPATH_EXT/*" -v /home/ubuntu/hazel
 Alternatively, you can [extend Hazelcast base image](#extending-hazelcast-base-image) adding your custom JARs.
 
 
-<a name="#tls_enabled"></a>
+<a name="using-tls-hazelcast-enterprise-only"></a>
 ### Using TLS (Hazelcast Enterprise Only)
 
 The `HZ_NETWORK_SSL_ENABLED` environment variable can be used to enable TLS for the communication. The key material folder should be mounted and properly referenced by using `JAVA_OPTS` variable.
