@@ -179,7 +179,6 @@ $ docker run -e CLASSPATH="/opt/hazelcast/CLASSPATH_EXT/*" -v /home/ubuntu/hazel
 Alternatively, you can [extend Hazelcast base image](#extending-hazelcast-base-image) adding your custom JARs.
 
 
-<a name="using-tls-hazelcast-enterprise-only"></a>
 ### Using TLS (Hazelcast Enterprise Only)
 
 The `HZ_NETWORK_SSL_ENABLED` environment variable can be used to enable TLS for the communication. The key material folder should be mounted and properly referenced by using `JAVA_OPTS` variable.
