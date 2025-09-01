@@ -255,7 +255,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-${{ matrix.distribution-type.label }}${{ matrix.variant.suffix }}-${{ github.job }}-jdk${{ matrix.jdk }}
+          name: docker-logs-tag-image-push-${{ matrix.distribution-type.label }}${{inputs.SOURCE_REF}}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}
           path: docker-*.log
 
       - name: Login to Docker Hub
