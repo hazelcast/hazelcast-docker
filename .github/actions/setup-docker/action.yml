@@ -8,4 +8,6 @@ runs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       with:
+        # Workaround "dial tcp: lookup registry on {ip}: no such host"
+        # See example - https://docs.docker.com/build/ci/github-actions/local-registry/
         driver-opts: network=host
