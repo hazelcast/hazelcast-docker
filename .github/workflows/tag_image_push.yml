@@ -200,7 +200,6 @@ jobs:
               ;;
           esac
 
-          IMAGE_NAME=${registry}/${IMAGE_NAME}
           LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${IMAGE_NAME}
           echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
 
