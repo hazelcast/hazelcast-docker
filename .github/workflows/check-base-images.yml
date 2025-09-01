@@ -106,18 +106,6 @@ jobs:
       SOURCE_REF: v${{ matrix.version }}
     secrets: inherit
 
-  rebuild-nlc:
-    name: Rebuild EE NLC images
-    needs: convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
-    strategy:
-      matrix:
-        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
-    uses: ./.github/workflows/ee-nlc-tag-push.yml
-    with:
-      SOURCE_REF: v${{ matrix.version }}
-    secrets: inherit
-
   failure-notifications:
     runs-on: ubuntu-latest
     name: Failure notification
@@ -125,7 +113,6 @@ jobs:
     needs:
       - rebuild-ee
       - rebuild-rhel
-      - rebuild-nlc
     steps:
       - name: Slack notification
         uses: hazelcast/docker-actions/slack-notification@master

@@ -105,10 +105,11 @@ jobs:
           entries=()
 
           if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
-            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"hazelcast","build-functions-script-path":".github/scripts/oss-build.functions.sh"}')
+            entries+=('{"label":"oss","release-type":"oss","docker-dir":"source_path/hazelcast-oss"}')
           fi
           if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "yes" ]; then
-            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"hazelcast-enterprise","build-functions-script-path":".github/scripts/ee-build.functions.sh"}')
+            entries+=('{"label":"ee","release-type":"ee","docker-dir":"source_path/hazelcast-enterprise"}')
+            entries+=('{"label":"nlc","release-type":"ee","docker-dir":"source_path/hazelcast-enterprise"}')
           fi
 
           json="[$(IFS=,; echo "${entries[*]}")]"
@@ -159,9 +160,17 @@ jobs:
           username: ${{ secrets.JFROG_USERNAME }}
           password: ${{ secrets.JFROG_PASSWORD }}
 
+      - name: Configure AWS credentials
+        if: matrix.distribution-type.label == 'nlc'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
       - name: Get dist ZIP URL
         run: |
-          . ${{ matrix.distribution-type.build-functions-script-path }}
+          . .github/scripts/${{ matrix.distribution-type.label }}-build.functions.sh
 
           if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
@@ -169,11 +178,11 @@ jobs:
           fi
 
           echo "HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant.classifier }}" "${HZ_VERSION}")" >> ${GITHUB_ENV}
+        env:
+          REPO_URL: ${{ matrix.distribution-type.label == 'nlc' && secrets.S3_NLC_URL || '' }}
 
       - name: Build Test image
         run: |
-          . ${{ matrix.distribution-type.build-functions-script-path }}
-
           docker buildx build --load \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
@@ -183,9 +192,10 @@ jobs:
       - name: Run smoke test against image
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh ${TEST_IMAGE_NAME} "${TEST_CONTAINER_NAME}" ${{ matrix.distribution-type.label }} "${HZ_VERSION}" "${{ matrix.jdk }}"
+          .github/scripts/simple-smoke-test.sh ${TEST_IMAGE_NAME} "${TEST_CONTAINER_NAME}" ${{ matrix.distribution-type.release-type }} "${HZ_VERSION}" "${{ matrix.jdk }}"
         env:
-          HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HZ_ENTERPRISE_LICENSE || '' }}
+          HZ_LICENSEKEY: ${{ matrix.distribution-type.release-type == 'ee' && secrets.HZ_ENTERPRISE_LICENSE || '' }}
+          HZ_INSTANCETRACKING_FILENAME: ${{ matrix.distribution-type.label == 'nlc' && 'instance-tracking.txt' || '' }}
 
       - name: Get docker logs
         if: ${{ always() }}
@@ -212,18 +222,34 @@ jobs:
           . .github/scripts/logging.functions.sh
           . .github/scripts/get-tags-to-push.sh
           . .github/scripts/docker.functions.sh
-          . ${{ matrix.distribution-type.build-functions-script-path }}
 
-          if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
+          if [[ "${{ matrix.distribution-type.release-type }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             registry=${{ secrets.JFROG_REGISTRY }}/docker/hazelcast
           else
             registry=hazelcast
           fi
 
-          IMAGE_NAME=${registry}/${{ matrix.distribution-type.image-name }}
+          case "${{ matrix.distribution-type.label }}" in
+              "oss")
+              IMAGE_NAME=hazelcast
+              ;;
+              "ee")
+              IMAGE_NAME=hazelcast-enterprise
+              ;;
+              "nlc")
+              IMAGE_NAME=${{ secrets.NLC_IMAGE_NAME }}
+              ;;
+              *)
+              echoerr "Unknown image name for ${{ matrix.distribution-type.label }}" ; return 1
+              ;;
+          esac
+
+          IMAGE_NAME=${registry}/${IMAGE_NAME}
           DEFAULT_JDK="$(get_default_jdk ${{ matrix.distribution-type.docker-dir }})"
 
-          if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
+          if [[ "${{ matrix.distribution-type.release-type }}" == "nlc" ]]; then
+            TAGS_TO_PUSH=$(augment_with_suffixed_tags "${HZ_VERSION}" "" "${{ matrix.jdk }}" "${DEFAULT_JDK}")
+          elif [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             VERSIONS=("$HZ_VERSION")
             if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
                 VERSIONS+=(latest-snapshot)
@@ -232,8 +258,8 @@ jobs:
             TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${DEFAULT_JDK}")
           else
             case "${{ matrix.distribution-type.label }}" in
-                "oss")
-                # OSS has no LTS releases
+                "oss"|"nlc")
+                # Have no LTS releases
                 IS_LATEST_LTS=false
                 ;;
                 "ee")
@@ -260,7 +286,7 @@ jobs:
               "oss")
               PLATFORMS="$(get_alpine_supported_platforms "${{ matrix.jdk }}")"
               ;;
-              "ee")
+              "ee"|"nlc")
               PLATFORMS="$(get_ubi_supported_platforms "${{ matrix.jdk }}")"
               ;;
               *)
@@ -286,6 +312,10 @@ jobs:
             ${TAGS_ARG} \
             ${LABEL_ARG} \
             --platform=${PLATFORMS} "${{ matrix.distribution-type.docker-dir }}"
+
+      - name: Check RedHat service status
+        if: failure() && matrix.distribution-type.label == 'nlc'
+        uses: hazelcast/docker-actions/check-redhat-service-status@master
 
   create-release:
     needs:
