@@ -203,7 +203,7 @@ jobs:
             TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${DEFAULT_JDK}" "${IS_LATEST_LTS}")
           fi
 
-          echodebug "TAGS_TO_PUSH=${TAGS_TO_PUSH}"
+          echo "TAGS_TO_PUSH=${TAGS_TO_PUSH}"
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
           do
