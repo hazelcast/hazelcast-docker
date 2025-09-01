@@ -320,3 +320,4 @@ jobs:
         uses: hazelcast/docker-actions/slack-notification@master
         with:
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          status: failure
