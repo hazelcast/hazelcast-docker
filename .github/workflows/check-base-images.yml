@@ -29,13 +29,15 @@ jobs:
       - id: set-matrix
         name: Get latest patch versions
         run: |
+          . .github/scripts/logging.functions.sh
           . .github/scripts/version.functions.sh
           MIN_VERSION=${MINIMAL_SUPPORTED_VERSION:-$DEFAULT_MINIMAL_SUPPORTED_VERSION}
-          echo "Getting latest patch versions starting from $MIN_VERSION"
+          echodebug "Getting latest patch versions starting from $MIN_VERSION"
           versions=$(printf '%s\n' $(get_latest_patch_versions "${MIN_VERSION}") | jq --raw-input . | jq --compact-output --slurp .)
-          echo "Found latest patch versions: $versions"
+          echodebug "Found latest patch versions: ${versions}"
           echo "matrix={\"version\":$versions}" >> $GITHUB_OUTPUT
 
+  # Only checks enterprise
   calculate-rebuilds:
     runs-on: ubuntu-latest
     name: Calculate if ${{ matrix.version }} needs a rebuild
@@ -44,39 +46,20 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v5
-      - name: Checkout version ${{ matrix.version }}
-        uses: actions/checkout@v5
+      - id: check-base-images
+        uses: hazelcast/docker-actions/check-base-images@master
         with:
           ref: v${{ matrix.version }}
-          path: v${{ matrix.version }}
+          image-name: hazelcast/hazelcast-enterprise:${{ matrix.version }}-slim
+          dockerfile-path: "hazelcast-enterprise/Dockerfile"
+
       - name: Check if ${{ matrix.version }} base images updated
+        if: steps.check-base-images.outputs.outdated
         run: |
-          . .github/scripts/base-image-updated.functions.sh
-          . .github/scripts/packages-updated.functions.sh
-          . .github/scripts/logging.functions.sh
-
-          check_image() {
-            local label=$1
-            local image=$2
-            local dockerfile=$3
-
-            echo "Checking ${label} image"
-            if base_image_outdated_from_dockerfile "${image}" "${dockerfile}"; then
-              echo "${{ matrix.version }}" >> rebuild-${label}-${{ matrix.version }}
-              echonotice "Image ${label} needs rebuild"
-            elif packages_updatable_ee "${image}"; then
-              echo "${{ matrix.version }}" >> rebuild-${label}-${{ matrix.version }}
-              echonotice "System package upgrades for ${label} image available"
-            else
-              echodebug "Image ${label} is up-to-date"
-            fi
-          }
-
-          check_image "EE" "hazelcast/hazelcast-enterprise:${{ matrix.version }}-slim" "v${{ matrix.version }}/hazelcast-enterprise/Dockerfile"
+          echo "${{ matrix.version }}" >> rebuild-ee-${{ matrix.version }}
         # GitHub doesn't support outputs of matrix jobs - https://github.com/orgs/community/discussions/26639
         # Instead, write the content to artifact(s) and upload those to consume downstream
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.version }}
