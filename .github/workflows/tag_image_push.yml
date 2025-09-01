@@ -173,7 +173,6 @@ jobs:
           . .github/scripts/logging.functions.sh
           . .github/scripts/get-tags-to-push.sh
           . .github/scripts/docker.functions.sh
-          . ${{ matrix.distribution-type.build-functions-script-path }}
 
           LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${{ matrix.distribution-type.image-name }}
           echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
