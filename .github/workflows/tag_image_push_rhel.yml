@@ -43,7 +43,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}
+      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
       jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
@@ -59,7 +59,7 @@ jobs:
         id: jdks
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
-          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION_EE }}'
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
 
   build:
     needs: prepare
@@ -208,7 +208,7 @@ jobs:
 
       - name: Check RedHat service status
         if: failure()
-        uses: ./.github/actions/check-redhat-service-status
+        uses: hazelcast/docker-actions/check-redhat-service-status@master
 
       - name: Slack notification
         uses: hazelcast/docker-actions/slack-notification@master

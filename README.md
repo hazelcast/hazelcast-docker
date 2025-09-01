@@ -39,7 +39,7 @@ After setting up the cluster, you can start the [client](https://github.com/haze
 
 You can launch a Hazelcast Enterprise Docker Container by running the following command. Check [Hazelcast Enterprise Versions](#hazelcast-enterprise-versions) for the versions to replace $HAZELCAST_VERSION.
 
-Please request a trial license [here](https://hazelcast.com/hazelcast-enterprise-download/) or contact sales@hazelcast.com.
+Please request a trial license [here](https://hazelcast.com/hazelcast-enterprise-download/trial) or contact sales@hazelcast.com.
 
 ```
 $ docker run -e HZ_LICENSEKEY=<your_license_key> hazelcast/hazelcast-enterprise:$HAZELCAST_VERSION
