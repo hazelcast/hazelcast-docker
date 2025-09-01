@@ -273,7 +273,7 @@ jobs:
           username: ${{ secrets.JFROG_USERNAME }}
           password: ${{ secrets.JFROG_PASSWORD }}
 
-      - name: Push image
+      - name: Push image to remote registry
         if: inputs.DRY_RUN != 'true'
         run: |
           if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
@@ -282,7 +282,14 @@ jobs:
             remote_registry=hazelcast
           fi
 
-          skopeo copy --multi-arch --all docker://${LOCAL_IMAGE_NAME} docker://${remote_registry}/${{ matrix.distribution-type.image-name }}
+          # Skopeo expects HTTPS registry but local is HTTP
+          skopeo sync \
+            --all \
+            --src-tls-verify=false \
+            --src docker \
+            --dest docker \
+            ${LOCAL_IMAGE_NAME} \
+            ${remote_registry}
 
   create-release:
     needs:
