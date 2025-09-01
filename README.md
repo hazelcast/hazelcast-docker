@@ -60,7 +60,7 @@ $ docker run -p 5702:5701 -e HZ_LICENSEKEY=<your_license_key> -e HZ_NETWORK_PUBL
 ```
 
 Note that:
-* This example assumes unencrypted communication channels for Hazelcast members and clients. Hazelcast allows you to encrypt socket-level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](https://github.com/hazelcast/hazelcast-docker#tls_enabled-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
+* This example assumes unencrypted communication channels for Hazelcast members and clients. Hazelcast allows you to encrypt socket-level communication between Hazelcast members and between Hazelcast clients and members. Refer to [this section](#using-tls-hazelcast-enterprise-only) to learn about enabling TLS/SSL encryption.
 
 ### Management Center Hello World
 
