@@ -38,10 +38,11 @@ function echo_group_end() {
 }
 
 function __log() {
-  local level=${1}
+  local level=$1
   shift
-  local msg=${*}
+  local msg="$*"
 
   # Support multi-line strings by replacing line separator with GitHub Actions compatible one
-  echo "::${level}::${*//${msg}'\n'/%0A}" 1>&2;
+  msg="${msg//$'\n'/%0A}"
+  echo "::${level}::$msg" 1>&2
 }
