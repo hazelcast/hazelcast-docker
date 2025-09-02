@@ -194,6 +194,8 @@ jobs:
               ;;
               "nlc")
               IMAGE_NAME=${{ secrets.NLC_IMAGE_NAME }}
+              # Extract the image name from the fully-qualified destination
+              IMAGE_NAME="${IMAGE_NAME##*/}"
               ;;
               *)
               echoerr "Unknown image name for ${{ matrix.distribution-type.label }}" ; return 1
@@ -293,7 +295,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Login to JFrog
+      - name: Login to JFrog registry
         if: inputs.DRY_RUN != 'true'
         uses: docker/login-action@v3
         with:
@@ -301,11 +303,23 @@ jobs:
           username: ${{ secrets.JFROG_USERNAME }}
           password: ${{ secrets.JFROG_PASSWORD }}
 
+      - name: Login to NLC registry
+        if: inputs.DRY_RUN != 'true' && matrix.distribution-type.label == 'nlc'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.NLC_REPOSITORY }}
+          username: ${{ secrets.NLC_REPO_USERNAME }}
+          password: ${{ secrets.NLC_REPO_TOKEN }}
+
       - name: Push image to remote registry
         if: inputs.DRY_RUN != 'true'
         run: |
           if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             remote_registry=${{ secrets.JFROG_REGISTRY }}/docker/hazelcast
+          elseif [[ "${{ matrix.distribution-type.label }}" == "nlc" ]]; then
+            remote_registry=${{ secrets.NLC_REPOSITORY }}
+            # Extract the registry from the fully-qualified destination
+            remote_registry="${remote_registry%/*}"
           else
             remote_registry=hazelcast
           fi
