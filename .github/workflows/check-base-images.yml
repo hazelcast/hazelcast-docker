@@ -56,7 +56,7 @@ jobs:
       - name: Check if ${{ matrix.version }} base images updated
         if: steps.check-base-images.outputs.outdated
         run: |
-          echo "${{ matrix.version }}" >> rebuild-ee-${{ matrix.version }}
+          echo "${{ matrix.version }}" >> rebuild-EE-${{ matrix.version }}
         # GitHub doesn't support outputs of matrix jobs - https://github.com/orgs/community/discussions/26639
         # Instead, write the content to artifact(s) and upload those to consume downstream
 
