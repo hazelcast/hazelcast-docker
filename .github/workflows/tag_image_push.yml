@@ -170,7 +170,6 @@ jobs:
 
       - name: Build and Push image to local registry
         run: |
-          . .github/scripts/logging.functions.sh
           . .github/scripts/get-tags-to-push.sh
           . .github/scripts/docker.functions.sh
 
@@ -210,8 +209,6 @@ jobs:
             echo "TAG=${tag}" >> ${GITHUB_ENV}
             TAGS_ARG="${TAGS_ARG} --tag ${LOCAL_IMAGE_NAME}:${tag}"
           done
-
-          output=
 
           case "${{ matrix.distribution-type.label }}" in
               "oss")
@@ -254,7 +251,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-tag-image-push-${{ matrix.distribution-type.label }}${{inputs.SOURCE_REF}}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}
+          name: docker-logs-tag-image-push-${{ matrix.distribution-type.label }}-${{inputs.SOURCE_REF}}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}
           path: docker-*.log
 
       - name: Login to Docker Hub
