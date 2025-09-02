@@ -15,7 +15,8 @@ function echowarning() {
 # Prints the given message as a notice
 function echonotice() {
   # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-a-notice-message
-  __log "notice" "${*}"
+  # __log "notice" "${*}"
+  echo "::notice::${*//$'\n'/%0A}" 1>&2;
 }
 
 # Prints the given message to debug logs, _if enabled_
