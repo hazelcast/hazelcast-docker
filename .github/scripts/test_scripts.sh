@@ -1,5 +1,10 @@
-#!/usr/bin/env bash
+. .github/scripts/logging.functions.sh
 
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+echonotice singleline test
 
-find "$SCRIPT_DIR" -name "*_tests.sh" -print0 | xargs -0 -n1 bash
+test_string="Line 1: starting test
+Line 2: still testing
+Line 3: almost done
+Line 4: finished test"
+
+echonotice "$test_string"
