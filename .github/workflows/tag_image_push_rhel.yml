@@ -1,10 +1,10 @@
-name: Build EE RHEL image
+name: Push EE RHEL image
 
 on:
   workflow_dispatch:
     inputs:
       SOURCE_REF:
-        description: 'The hazelcast-docker branch to build the image from'
+        description: 'The hazelcast-docker branch to use as a reference to obtain the image from'
         required: true
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
@@ -15,29 +15,16 @@ on:
           - ''
           - 'false'
           - 'true'
-      DRY_RUN:
-        description: 'Skip pushing the images to remote registry'
-        required: false
-        default: 'false'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
   workflow_call:
     inputs:
       SOURCE_REF:
-        description: 'The hazelcast-docker branch to build the image from'
+        description: 'The hazelcast-docker branch to use as a reference to obtain the image from'
         required: true
         type: string
       IS_LTS_OVERRIDE:
         description: 'Override is LTS release'
         required: false
         default: ''
-        type: string
-      DRY_RUN:
-        description: 'Skip pushing the images to remote registry'
-        required: false
-        default: 'false'
         type: string
 jobs:
   prepare:
@@ -86,9 +73,6 @@ jobs:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path
 
-      - name: Setup Docker
-        uses: ./.github/actions/setup-docker
-
       - uses: madhead/semver-utils@latest
         id: version
         with:
@@ -115,11 +99,9 @@ jobs:
           echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
           echo "RHEL_PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
 
-      - name: Set RHEL image as environment variable
+      - name: Set scan repository as environment variable
         run: |
-          SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}
-          echo "SCAN_REPOSITORY=${SCAN_REPOSITORY}" >> $GITHUB_ENV
-          echo "RHEL_IMAGE=${SCAN_REPOSITORY}:${HZ_VERSION}-jdk${{ matrix.jdk }}" >> $GITHUB_ENV
+          echo "SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}" >> $GITHUB_ENV
 
       - name: Log in to Red Hat Scan Registry
         uses: docker/login-action@v3
@@ -135,41 +117,29 @@ jobs:
           hz_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
-      - name: Build the Hazelcast Enterprise image
+      - name: Copy image to Quay
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
-          . .github/scripts/ee-build.functions.sh
 
-          IMAGE_NAME=${SCAN_REPOSITORY}
           DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR})"
 
           IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
           TAGS_TO_PUSH=$(get_tags_to_push "${{ env.HZ_VERSION }}" "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
-          TAGS_ARG=""
+
           for tag in ${TAGS_TO_PUSH[@]}
           do
-            TAGS_ARG="${TAGS_ARG} --tag ${IMAGE_NAME}:${tag}"
+            # Keep a reference to _a_ tag to get the image later on
+            echo "TAG=${tag}" >> ${GITHUB_ENV}
+
+            # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
+            skopeo copy \
+              --override-os linux \
+              --override-arch amd64 \
+              docker://hazelcast/hazelcast-enterprise:${tag} \
+              docker://${SCAN_REPOSITORY}:${tag}
           done
-
-          output=
-
-          PLATFORMS="linux/amd64"
-
-          if [ "${{ inputs.DRY_RUN }}" == "true" ] ; then
-            echo "DRY RUN: Skipping push for platforms ${PLATFORMS} and tags: ${TAGS_TO_PUSH}"
-          else
-            output=--push
-          fi
-
-          # provenance disabled as causes RedHat publish failure 
-          docker buildx build ${output} \
-            --provenance=false \
-            --build-arg JDK_VERSION=${{ matrix.jdk }} \
-            --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" "${{ env.HZ_VERSION }}") \
-            ${TAGS_ARG} \
-            --platform=${PLATFORMS} "${DOCKER_DIR}"
 
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
@@ -179,11 +149,10 @@ jobs:
           skip_cache: true
 
       - name: Run preflight scan
-        if: inputs.DRY_RUN != 'true'
         run: |
           source .github/scripts/logging.functions.sh
 
-          PREFLIGHT_OUTPUT=$(preflight check container "${RHEL_IMAGE}" \
+          PREFLIGHT_OUTPUT=$(preflight check container "${SCAN_REPOSITORY}:${TAG}" \
             --submit --pyxis-api-token=${RHEL_API_KEY} \
             --certification-component-id=${RHEL_PROJECT_ID} \
             --docker-config ~/.docker/config.json \
@@ -202,7 +171,6 @@ jobs:
           fi
 
       - name: Publish the Hazelcast Enterprise image
-        if: inputs.DRY_RUN != 'true'
         run: |
           .github/scripts/publish-rhel.sh "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
 
