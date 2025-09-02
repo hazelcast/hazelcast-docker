@@ -43,6 +43,5 @@ function __log() {
   local msg=${*}
 
   # Support multi-line strings by replacing line separator with GitHub Actions compatible one
-  msg="${msg//$'\n'/%0A}"
-  echo "::${level}::$msg" 1>&2
+  echo "::${level}::${msg//$'\n'/%0A}" 1>&2
 }
