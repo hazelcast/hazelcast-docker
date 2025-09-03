@@ -102,7 +102,7 @@ jobs:
           hz_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
-      - name: Copy image to Quay
+      - name: Copy image to RedHat Container Registry
         run: |
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
