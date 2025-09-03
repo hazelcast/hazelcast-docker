@@ -51,7 +51,6 @@ wait_for_container_scan()
     local NOF_RETRIES=$(( TIMEOUT_IN_MINS / 2 ))
     # Wait until the image is scanned
     for i in $(seq 1 "${NOF_RETRIES}"); do
-        local IMAGE
         local SCAN_STATUS
         local IMAGE_CERTIFIED
 
@@ -83,34 +82,11 @@ wait_for_container_scan()
     done
 }
 
-publish_the_image()
+request_operation()
 {
-    echo "Starting publishing the image for ${IMAGE_ID}"
+    local operation=$1
 
-    local IMAGE
-    local IMAGE_EXISTS
-
-    IMAGE=$(get_image not_published)
-    IMAGE_EXISTS=$(echo "${IMAGE}" | jq -r '.total')
-
-    if [[ ${IMAGE_EXISTS} == "1" ]]; then
-        local SCAN_STATUS
-        local IMAGE_CERTIFIED
-
-        SCAN_STATUS=$(echo "${IMAGE}" | jq -r '.data[0].container_grades.status')
-        IMAGE_CERTIFIED=$(echo "${IMAGE}" | jq -r '.data[0].certified')
-
-        if [[ ${SCAN_STATUS} != "completed" ||  "${IMAGE_CERTIFIED}" != "true" ]]; then
-            echoerr "Image you are trying to publish did not pass the certification test, its status is \"${SCAN_STATUS}\" and certified is \"${IMAGE_CERTIFIED}\""
-            return 1
-        fi
-    else
-        echoerr "Image you are trying to publish does not exist."
-        echoerr "${IMAGE}"
-        return 1
-    fi
-
-    echo "Publishing the image ${IMAGE_ID}..."
+    echo "Submitting '${operation}' request for the image ${IMAGE_ID}..."
     # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPostImageRequestByCertProjectId.html
     RESPONSE=$( \
         curl --fail \
@@ -120,11 +96,10 @@ publish_the_image()
              --header "X-API-KEY: ${RHEL_API_KEY}" \
              --header 'Cache-Control: no-cache' \
              --header 'Content-Type: application/json' \
-             --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"publish\" }" \
+             --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"${operation}\" }" \
              "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
 
-    echo "Response: ${RESPONSE}"
-    echo "Created a publish request, please check if the image is published."
+    echo "'${operation} response: ${RESPONSE}"
 }
 
 wait_for_container_publish()
@@ -173,44 +148,12 @@ wait_for_container_publish()
     done
 }
 
-sync_tags()
-{
-    echo "Starting sync tags for ${IMAGE_ID}"
-
-    local IMAGE
-    local IMAGE_EXISTS
-
-    IMAGE=$(get_image published)
-    IMAGE_EXISTS=$(echo "${IMAGE}" | jq -r '.total')
-
-    if [[ ${IMAGE_EXISTS} == "0" ]]; then
-        echo "Image you are trying to sync does not exist."
-        return 1
-    fi
-
-    echo "Syncing tags of the image ${IMAGE_ID}..."
-    # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPostImageRequestByCertProjectId.html
-    RESPONSE=$( \
-        curl --fail \
-             --silent \
-             --show-error \
-             --retry 5 --retry-all-errors \
-             --header "X-API-KEY: ${RHEL_API_KEY}" \
-             --header 'Cache-Control: no-cache' \
-             --header 'Content-Type: application/json' \
-             --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"sync-tags\" }" \
-             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
-
-    echo "Response: ${RESPONSE}"
-    echo "Created a sync-tags request, please check if the tags image are in sync."
-}
-
 RHEL_PROJECT_ID=$1
 IMAGE_ID=$2
 RHEL_API_KEY=$3
 TIMEOUT_IN_MINS=$4
 
 wait_for_container_scan
-publish_the_image
+request_operation publish
 wait_for_container_publish
-sync_tags
+request_operation sync-tags
