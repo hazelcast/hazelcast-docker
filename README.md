@@ -136,7 +136,7 @@ Note that by default Hazelcast uses up to 80% of the container memory limit, but
 
 ### Configuring Hazelcast via Environment Variables
 
-Configuration entries of your cluster can be overwritten without changing the declarative configuration files (XML/YAML), see [Overriding Configuration documentation section](https://docs.hazelcast.com/hazelcast/latest/configuration/configuring-with-system-properties).
+Configuration entries of your cluster can be overridden without changing the declarative configuration files (XML/YAML), see [Overriding Configuration documentation section](https://docs.hazelcast.com/hazelcast/latest/configuration/configuring-with-system-properties).
 
 Assume that you want to have the following configuration for your cluster, represented as YAML:
 ```yaml
