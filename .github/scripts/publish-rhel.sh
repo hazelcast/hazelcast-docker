@@ -99,7 +99,7 @@ request_operation()
              --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"${operation}\" }" \
              "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
 
-    echo "'${operation} response: ${RESPONSE}"
+    echo "'${operation}' response: ${RESPONSE}"
 }
 
 wait_for_container_publish()
