@@ -107,6 +107,19 @@ jobs:
           . .github/scripts/get-tags-to-push.sh 
           . .github/scripts/docker.functions.sh
 
+          copy_image()
+          {
+            local source_tag=$1
+            local destination_tag=$2
+
+            # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
+            skopeo copy \
+              --override-os linux \
+              --override-arch amd64 \
+              docker://hazelcast/hazelcast-enterprise:${source_tag} \
+              docker://${SCAN_REPOSITORY}:${destination_tag}
+          }
+
           DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR})"
 
           IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
@@ -115,16 +128,24 @@ jobs:
 
           for tag in ${TAGS_TO_PUSH[@]}
           do
-            # Keep a reference to _a_ tag to get the image later on
-            echo "TAG=${tag}" >> ${GITHUB_ENV}
-
-            # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
-            skopeo copy \
-              --override-os linux \
-              --override-arch amd64 \
-              docker://hazelcast/hazelcast-enterprise:${tag} \
-              docker://${SCAN_REPOSITORY}:${tag}
+            copy_image ${tag} ${tag}
           done
+
+          # Add a "unique" tag to workaround RedHat bug
+          # Get the first tag (arbitrary - will all refer to the same image)
+          tag=($TAGS_TO_PUSH)
+          # Keep a reference to _a_ tag to get the image later on
+          echo "TAG=${tag}" >> ${GITHUB_ENV}
+
+          # Get digest of the image
+          DIGEST=$(skopeo inspect \
+            --override-os linux \
+            --override-arch amd64 \
+            docker://hazelcast/hazelcast-enterprise:${tag} \
+            --format '{{.Digest}}')
+
+          # Add the digest as a dummy tag
+          copy_image ${tag} ${DIGEST#sha256:}
 
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
