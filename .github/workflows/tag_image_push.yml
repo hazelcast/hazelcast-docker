@@ -230,7 +230,7 @@ jobs:
           else
             LABEL_ARG=""
           fi
- 
+
           docker buildx build --push \
             --build-arg JDK_VERSION=${{ matrix.jdk }} \
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
