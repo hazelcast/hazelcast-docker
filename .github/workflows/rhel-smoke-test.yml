@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
+        description: 'Version of Hazelcast to test the image for, e.g. 5.1.1, 5.0.1'
         required: true
 
 jobs:
