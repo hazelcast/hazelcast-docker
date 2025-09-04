@@ -7,22 +7,6 @@ set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
 get_image()
 {
-    local PUBLISHED=$1
-
-    case "${PUBLISHED}" in
-        "published")
-        local PUBLISHED_FILTER="repositories.published==true"
-        ;;
-        "not_published")
-        local PUBLISHED_FILTER="repositories.published!=true"
-        ;;
-        *)
-        echoerr "Need first parameter as 'published' or 'not_published', not '${PUBLISHED}'." ; return 1
-        ;;
-    esac
-
-    local FILTER="filter=deleted==false;${PUBLISHED_FILTER};_id==${IMAGE_ID}"
-
     local RESPONSE
     # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetImagesForCertProjectById.html
     RESPONSE=$( \
@@ -30,20 +14,27 @@ get_image()
              --silent \
              --show-error \
              --header "X-API-KEY: ${RHEL_API_KEY}" \
-             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?${FILTER}")
+             "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/images?filter=_id==${IMAGE_ID}")
 
+    echodebug "${RESPONSE}"
     echo "${RESPONSE}"
 }
 
-wait_for_container_scan()
-{    
+is_image_published()
+{
     local IMAGE
+    IMAGE=$(get_image)
+
+    # Return the published status of the most recent repository entry
+    jq -r '.data[].repositories[-1].published' <<< "${IMAGE}"
+}
+
+wait_for_container_scan()
+{
     local IS_PUBLISHED
+    IS_PUBLISHED=$(is_image_published)
 
-    IMAGE=$(get_image published)
-    IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
-
-    if [[ ${IS_PUBLISHED} == "1" ]]; then
+    if [[ ${IS_PUBLISHED} == "true" ]]; then
         echo "Image is already published, exiting"
         return 0
     fi
@@ -51,10 +42,11 @@ wait_for_container_scan()
     local NOF_RETRIES=$(( TIMEOUT_IN_MINS / 2 ))
     # Wait until the image is scanned
     for i in $(seq 1 "${NOF_RETRIES}"); do
+        local IMAGE
         local SCAN_STATUS
         local IMAGE_CERTIFIED
 
-        IMAGE=$(get_image not_published)
+        IMAGE=$(get_image)
         SCAN_STATUS=$(echo "${IMAGE}" | jq -r '.data[0].container_grades.status')
         IMAGE_CERTIFIED=$(echo "${IMAGE}" | jq -r '.data[0].certified')
 
@@ -84,9 +76,10 @@ wait_for_container_scan()
 
 request_operation()
 {
-    local operation=$1
+    local OPERATION=$1
 
-    echo "Submitting '${operation}' request for the image ${IMAGE_ID}..."
+    echo "Submitting '${OPERATION}' request for the image ${IMAGE_ID}..."
+    local RESPONSE
     # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPostImageRequestByCertProjectId.html
     RESPONSE=$( \
         curl --fail \
@@ -96,10 +89,10 @@ request_operation()
              --header "X-API-KEY: ${RHEL_API_KEY}" \
              --header 'Cache-Control: no-cache' \
              --header 'Content-Type: application/json' \
-             --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"${operation}\" }" \
+             --data "{\"image_id\":\"${IMAGE_ID}\" , \"operation\" : \"${OPERATION}\" }" \
              "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${RHEL_PROJECT_ID}/requests/images")
 
-    echo "'${operation}' response: ${RESPONSE}"
+    echo "'${OPERATION}' response: ${RESPONSE}"
 }
 
 wait_for_container_publish()
@@ -107,13 +100,10 @@ wait_for_container_publish()
     local NOF_RETRIES=$(( TIMEOUT_IN_MINS * 2 ))
     # Wait until the image is published
     for i in $(seq 1 "${NOF_RETRIES}"); do
-        local IMAGE
         local IS_PUBLISHED
+        IS_PUBLISHED=$(is_image_published)
 
-        IMAGE=$(get_image published)
-        IS_PUBLISHED=$(echo "${IMAGE}" | jq -r '.total')
-
-        if [[ ${IS_PUBLISHED} == "1" ]]; then
+        if [[ ${IS_PUBLISHED} == "true" ]]; then
             echo "Image is published, exiting."
             return 0
         else
@@ -123,10 +113,23 @@ wait_for_container_publish()
         sleep 30
 
         if [[ ${i} == "${NOF_RETRIES}" ]]; then
-            IMAGE=$(get_image not_published)
-
             echoerr "Timeout! Publish could not be finished"
+            
+            echoerr "Request Status:"
+            local IMAGE_REQUESTS
+            # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetImageRequestsByImageId.html
+            IMAGE_REQUESTS=$( \
+                curl --fail \
+                    --silent \
+                    --show-error \
+                    --header "X-API-KEY: ${RHEL_API_KEY}" \
+                    "https://catalog.redhat.com/api/containers/v1/images/id/${IMAGE_ID}/requests")
+
+            echoerr "${IMAGE_REQUESTS}"
+            
             echoerr "Image Status:"
+            local IMAGE
+            IMAGE=$(get_image)
             echoerr "${IMAGE}"
 
             # Add additional logging context if possible
@@ -137,7 +140,6 @@ wait_for_container_publish()
                 TEST_RESULTS=$(curl --fail \
                     --silent \
                     --show-error \
-                    --request GET \
                     --header "X-API-KEY: ${RHEL_API_KEY}" \
                     "https://catalog.redhat.com/api/containers/${TEST_RESULTS_ENDPOINT}")
                 echoerr "${TEST_RESULTS}"
