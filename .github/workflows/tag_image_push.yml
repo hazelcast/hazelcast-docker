@@ -138,8 +138,6 @@ jobs:
           - 5000:5000
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
 
       - uses: actions/checkout@v5
         with:
@@ -167,6 +165,7 @@ jobs:
         with:
           hz_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Build and Push image to local registry
         run: |
@@ -237,6 +236,8 @@ jobs:
             ${TAGS_ARG} \
             ${LABEL_ARG} \
             --platform=${PLATFORMS} "${{ matrix.distribution-type.docker-dir }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Run smoke test against image
         timeout-minutes: 2

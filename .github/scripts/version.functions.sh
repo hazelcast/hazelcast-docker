@@ -1,21 +1,39 @@
-function get_supported_versions() {
+CACHED_TAGS=$(gh api repos/${GITHUB_REPOSITORY}/tags --paginate)
+
+# List versions versions above and including MINIMAL_VERSION
+function __get_supported_versions() {
     local MINIMAL_VERSION=$1
-    git tag | sort -V | grep '^v' | cut -c2- | sed -n "/^${MINIMAL_VERSION}.*\$/,\$p" | grep -v BETA | grep -v DEVEL
+
+    # Get all tags, dropping the "v" prefix
+    local tags
+    tags=$(jq -r '.[] 
+              | .name 
+              | select(test("^v"))
+              | ltrimstr("v")' <<< "${CACHED_TAGS}")
+
+    tags=$(sort --version-sort <<< "${tags}")
+
+    # drop everything before MINIMAL_VERSION
+    tags=$(sed -n "/^${MINIMAL_VERSION}.*\$/,\$p" <<< "${tags}")
+
+    # drop BETA and DEVEL versions
+    grep --invert-match --extended-regexp 'BETA|DEVEL' <<< "${tags}"
 }
 
-function get_minor_versions() {
+# List of major.minor versions above and including MINIMAL_VERSION
+function __get_minor_versions() {
   local MINIMAL_VERSION=$1
-  get_supported_versions "$MINIMAL_VERSION" | cut -d'-' -f1 |  cut  -d'.' -f1,2 | uniq
+  __get_supported_versions "$MINIMAL_VERSION" | cut -d'-' -f1 |  cut  -d'.' -f1,2 | uniq
 }
 
 function get_latest_patch_version() {
   local MINOR_VERSION=$(echo "$1" | cut  -d'-' -f1 |  cut  -d'.' -f1,2)
-  get_supported_versions "" | grep "^$MINOR_VERSION" | tail -n 1
+  __get_supported_versions "" | grep "^$MINOR_VERSION" | tail -n 1
 }
 
 function get_latest_patch_versions() {
     local MINIMAL_VERSION=$1
-    MINOR_VERSIONS=$(get_minor_versions "$MINIMAL_VERSION")
+    MINOR_VERSIONS=$(__get_minor_versions "$MINIMAL_VERSION")
     LATEST_PATCH_VERSIONS=()
     for minor in ${MINOR_VERSIONS}
     do
@@ -28,11 +46,17 @@ function version_less_or_equal() {
   [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
 
-function get_tags_descending() {
-  git tag -l "v*" | sort -V -r | grep -v '-'
+function __get_tags_descending() {
+  local tags
+  tags=$(jq -r '.[] 
+            | .name 
+            | select(test("^v"))' <<< "${CACHED_TAGS}")
+
+  tags=$(sort --version-sort --reverse <<< "${tags}")
+  grep --invert-match '-' <<< "${tags}"
 }
 
-function file_exists_in_tag() {
+function __file_exists_in_tag() {
   local file=$1
   local tag=$2
   if [ "$#" -ne 2 ]; then
@@ -53,8 +77,8 @@ function get_last_version_with_file() {
     echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} <file>"
     exit 1
   fi
-  for tag in $(get_tags_descending); do
-    if file_exists_in_tag "$file" "$tag"; then
+  for tag in $(__get_tags_descending); do
+    if __file_exists_in_tag "$file" "$tag"; then
       echo "$tag" | cut -c2-
       return
     fi

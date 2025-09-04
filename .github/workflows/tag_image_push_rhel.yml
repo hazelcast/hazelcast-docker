@@ -78,8 +78,6 @@ jobs:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
 
       - uses: actions/checkout@v5
         with:
@@ -134,6 +132,7 @@ jobs:
         with:
           hz_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
+          GH_TOKEN: ${{ github.token }}
 
       - name: Build the Hazelcast Enterprise image
         run: |
@@ -170,6 +169,8 @@ jobs:
             --build-arg HAZELCAST_ZIP_URL=$(get_hz_dist_zip "" "${{ env.HZ_VERSION }}") \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} "${DOCKER_DIR}"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1

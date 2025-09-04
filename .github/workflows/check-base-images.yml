@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
       - id: get-maintenance-versions
         uses: hazelcast/hazelcast/.github/actions/get-supported-maintenance-versions@master
       - name: Calculate minimal supported version
@@ -36,6 +34,8 @@ jobs:
           versions=$(printf '%s\n' $(get_latest_patch_versions "${MIN_VERSION}") | jq --raw-input . | jq --compact-output --slurp .)
           echodebug "Found latest patch versions: ${versions}"
           echo "matrix={\"version\":$versions}" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   # Only checks enterprise
   calculate-rebuilds:

@@ -1,6 +1,8 @@
 name: Check if latest EE LTS release
 description: Check if latest EE LTS release
 inputs:
+  GITHUB_TOKEN:
+    required: true
   hz_version:
     description: Version to be released
     required: true
@@ -44,3 +46,5 @@ runs:
         else 
            echo "is_latest_lts=false" >> $GITHUB_OUTPUT
         fi
+      env:
+        GH_TOKEN: ${{ inputs.GITHUB_TOKEN }}

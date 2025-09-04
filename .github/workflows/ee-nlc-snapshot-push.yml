@@ -129,6 +129,8 @@ jobs:
             --label hazelcast.ee.revision=${{ inputs.HZ_EE_REVISION }} \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} ${DOCKER_DIR}
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Check RedHat service status
         if: failure()
         uses: hazelcast/docker-actions/check-redhat-service-status@master

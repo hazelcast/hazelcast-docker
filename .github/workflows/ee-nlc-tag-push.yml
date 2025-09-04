@@ -136,6 +136,8 @@ jobs:
             --build-arg HAZELCAST_ZIP_URL=${HAZELCAST_ZIP_URL} \
             ${TAGS_ARG} \
             --platform=${PLATFORMS} ${DOCKER_DIR}
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Check RedHat service status
         if: failure()
         uses: hazelcast/docker-actions/check-redhat-service-status@master
