@@ -20,25 +20,8 @@ get_image()
     echo "${RESPONSE}"
 }
 
-is_image_published()
-{
-    local IMAGE
-    IMAGE=$(get_image)
-
-    # Return the published status of the most recent repository entry
-    jq -r '.data[].repositories[-1].published' <<< "${IMAGE}"
-}
-
 wait_for_container_scan()
 {
-    local IS_PUBLISHED
-    IS_PUBLISHED=$(is_image_published)
-
-    if [[ ${IS_PUBLISHED} == "true" ]]; then
-        echo "Image is already published, exiting"
-        return 0
-    fi
-
     local NOF_RETRIES=$(( TIMEOUT_IN_MINS / 2 ))
     # Wait until the image is scanned
     for i in $(seq 1 "${NOF_RETRIES}"); do
@@ -100,36 +83,31 @@ wait_for_container_publish()
     local NOF_RETRIES=$(( TIMEOUT_IN_MINS * 2 ))
     # Wait until the image is published
     for i in $(seq 1 "${NOF_RETRIES}"); do
+        local IMAGE
         local IS_PUBLISHED
-        IS_PUBLISHED=$(is_image_published)
+
+        IMAGE=$(get_image)
+        # Return the published status of the most recent repository entry
+        IS_PUBLISHED=$(jq -r '.data[].repositories[-1].published' <<< "${IMAGE}")
 
         if [[ ${IS_PUBLISHED} == "true" ]]; then
             echo "Image is published, exiting."
             return 0
-        else
-            echo "Image is still not published, waiting..."
-        fi
-
-        sleep 30
-
-        if [[ ${i} == "${NOF_RETRIES}" ]]; then
+        elif [[ ${i} == "${NOF_RETRIES}" ]]; then
             echoerr "Timeout! Publish could not be finished"
             
             echoerr "Request Status:"
             local IMAGE_REQUESTS
             # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetImageRequestsByImageId.html
-            IMAGE_REQUESTS=$( \
-                curl --fail \
-                    --silent \
-                    --show-error \
-                    --header "X-API-KEY: ${RHEL_API_KEY}" \
-                    "https://catalog.redhat.com/api/containers/v1/images/id/${IMAGE_ID}/requests")
+            IMAGE_REQUESTS=$(curl --fail \
+                --silent \
+                --show-error \
+                --header "X-API-KEY: ${RHEL_API_KEY}" \
+                "https://catalog.redhat.com/api/containers/v1/images/id/${IMAGE_ID}/requests")
 
             echoerr "${IMAGE_REQUESTS}"
             
             echoerr "Image Status:"
-            local IMAGE
-            IMAGE=$(get_image)
             echoerr "${IMAGE}"
 
             # Add additional logging context if possible
@@ -146,6 +124,10 @@ wait_for_container_publish()
             done
 
             return 42
+        else        
+            echo "Image is still not published, waiting..."
+
+            sleep 30
         fi
     done
 }
