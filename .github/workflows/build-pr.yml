@@ -40,12 +40,3 @@ jobs:
       RELEASE_TYPE: ALL
       DRY_RUN: true
     secrets: inherit
-
-  test-push-rhel:
-    name: Test pushing RHEL image (dry run)
-    needs: [ prepare ]
-    uses: ./.github/workflows/tag_image_push_rhel.yml
-    with:
-      SOURCE_REF: v${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
-      DRY_RUN: true
-    secrets: inherit
