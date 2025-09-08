@@ -85,23 +85,11 @@ jobs:
     needs: convert-rebuilds-to-matrix
     if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
     strategy:
-      matrix:
-        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
-    uses: ./.github/workflows/tag_image_push.yml
-    with:
-      SOURCE_REF: v${{ matrix.version }}
-    secrets: inherit
-
-  rebuild-rhel:
-    name: Rebuild EE RHEL images
-    needs: convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
-    strategy:
       # RedHat does not support concurrent publishing, run sequentially
       max-parallel: 1
       matrix:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
-    uses: ./.github/workflows/tag_image_push_rhel.yml
+    uses: ./.github/workflows/tag_image_push.yml
     with:
       SOURCE_REF: v${{ matrix.version }}
     secrets: inherit
@@ -124,7 +112,6 @@ jobs:
     if: failure() && github.event_name != 'workflow_dispatch'
     needs:
       - rebuild-ee
-      - rebuild-rhel
       - rebuild-nlc
     steps:
       - name: Slack notification
