@@ -131,7 +131,7 @@ jobs:
 
           # Add a "unique" tag to workaround RedHat bug
           # Get the first tag
-          tag=($TAGS_TO_PUSH)
+          tag=${TAGS_TO_PUSH%% *}
           # Keep a reference to _a_ tag to get the image later on
           echo "TAG=${tag}" >> ${GITHUB_ENV}
 
