@@ -205,11 +205,11 @@ jobs:
           fi
 
           echo "TAGS_TO_PUSH=${TAGS_TO_PUSH}"
+          # Keep a reference to _a_ tag to get the image later on
+          echo "TAG=($TAGS_TO_PUSH)" >> ${GITHUB_ENV}
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
           do
-            # Keep a reference to _a_ tag to get the image later on
-            echo "TAG=${tag}" >> ${GITHUB_ENV}
             TAGS_ARG="${TAGS_ARG} --tag ${LOCAL_IMAGE_NAME}:${tag}"
           done
 

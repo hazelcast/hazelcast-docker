@@ -130,20 +130,13 @@ jobs:
           done
 
           # Add a "unique" tag to workaround RedHat bug
-          # Get the first tag (arbitrary - will all refer to the same image)
+          # Get the first tag
           tag=($TAGS_TO_PUSH)
           # Keep a reference to _a_ tag to get the image later on
           echo "TAG=${tag}" >> ${GITHUB_ENV}
 
-          # Get digest of the image
-          DIGEST=$(skopeo inspect \
-            --override-os linux \
-            --override-arch amd64 \
-            docker://hazelcast/hazelcast-enterprise:${tag} \
-            --format '{{.Digest}}')
-
-          # Add the digest as a dummy tag
-          copy_image ${tag} ${DIGEST#sha256:}
+          # Add date as a dummy tag (e.g. 5.4.1-jdk17-2025-09-09-13-03-47)
+          copy_image ${tag} ${tag}-$(date +"%Y-%m-%d-%H-%M-%S")
 
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
