@@ -56,6 +56,7 @@ jobs:
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       DOCKER_DIR: source_path/hazelcast-enterprise
+    environment: live
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -79,21 +80,22 @@ jobs:
           version: ${{ env.HZ_VERSION }}
 
       - name: Set scan registry secrets
+        id: scan_registry_secrets
         run: |
-          echo "SCAN_REGISTRY_USER=${{ secrets[format('SCAN_REGISTRY_USER_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
-          echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
-          echo "RHEL_PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
+          PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}
+          echo "PROJECT_ID=${PROJECT_ID}" >> ${GITHUB_OUTPUT}
 
-      - name: Set scan repository as environment variable
-        run: |
-          echo "SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}" >> $GITHUB_ENV
+          echo "USERNAME=redhat-isv-containers+${PROJECT_ID}-robot" >> ${GITHUB_OUTPUT}
+          echo "PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}" >> ${GITHUB_OUTPUT}
+
+          echo "SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${PROJECT_ID}" >> ${GITHUB_OUTPUT}
 
       - name: Log in to Red Hat Scan Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.SCAN_REGISTRY }}
-          username: ${{ env.SCAN_REGISTRY_USER }}
-          password: ${{ env.SCAN_REGISTRY_PASSWORD }}
+          username: ${{ steps.scan_registry_secrets.outputs.USERNAME }}
+          password: ${{ steps.scan_registry_secrets.outputs.PASSWORD }}
 
       - name: Check if latest EE LTS release
         id: is_latest_lts
@@ -123,7 +125,7 @@ jobs:
               --override-os linux \
               --override-arch amd64 \
               docker://hazelcast/hazelcast-enterprise:${tag} \
-              docker://${SCAN_REPOSITORY}:${tag}
+              docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${tag}
           done
 
       - name: Install `preflight` OpenShift tool from GitHub
@@ -137,9 +139,9 @@ jobs:
         run: |
           source .github/scripts/logging.functions.sh
 
-          PREFLIGHT_OUTPUT=$(preflight check container "${SCAN_REPOSITORY}:${TAG}" \
+          PREFLIGHT_OUTPUT=$(preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${TAG}" \
             --submit --pyxis-api-token=${RHEL_API_KEY} \
-            --certification-component-id=${RHEL_PROJECT_ID} \
+            --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
             --docker-config ~/.docker/config.json \
             2>&1)
 
@@ -157,7 +159,7 @@ jobs:
 
       - name: Publish the Hazelcast Enterprise image
         run: |
-          .github/scripts/publish-rhel.sh "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
+          .github/scripts/publish-rhel.sh "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
 
       - name: Check RedHat service status
         if: failure()
