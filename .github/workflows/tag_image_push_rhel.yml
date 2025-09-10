@@ -56,7 +56,8 @@ jobs:
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       DOCKER_DIR: source_path/hazelcast-enterprise
-    environment: live
+    #environment: live
+    environment: sandbox
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
