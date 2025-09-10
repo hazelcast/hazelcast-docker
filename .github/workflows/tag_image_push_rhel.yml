@@ -84,10 +84,12 @@ jobs:
         id: scan_registry_secrets
         run: |
           # Some repositories have a separate projects for each (major) version
-          PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}
-          if [[ -z "${PROJECT_ID}" ]]; then
-            PROJECT_ID=${{ secrets.RHEL_PROJECT_ID }}
-          fi
+          # TODO UPDATE
+          PROJECT_ID=${{ secrets.WIP_RHEL_PROJECT_ID }}
+          #PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}
+          #if [[ -z "${PROJECT_ID}" ]]; then
+          #  PROJECT_ID=${{ secrets.RHEL_PROJECT_ID }}
+          #fi
           echo "PROJECT_ID=${PROJECT_ID}" >> ${GITHUB_OUTPUT}
 
           echo "USERNAME=redhat-isv-containers+${PROJECT_ID}-robot" >> ${GITHUB_OUTPUT}
