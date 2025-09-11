@@ -33,7 +33,7 @@ jobs:
 
   test-push:
     name: Test pushing image (dry run)
-    needs: [ prepare ]
+    needs: prepare
     uses: ./.github/workflows/tag_image_push.yml
     with:
       SOURCE_REF: v${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
