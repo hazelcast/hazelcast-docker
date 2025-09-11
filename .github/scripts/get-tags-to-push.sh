@@ -97,7 +97,3 @@ function __sort_tags() {
   tags=$(sort --general-numeric-sort --reverse <<< "${tags}")
   paste -sd' ' - <<< "${tags}"
 }
-
-
-tags="5.5 5.5.0 5.5.0-jdk11 latest latest-lts"
-echo $(__sort_tags $tags)
