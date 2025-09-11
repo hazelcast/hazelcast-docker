@@ -135,8 +135,8 @@ jobs:
           # Keep a reference to _a_ tag to get the image later on
           echo "PRIMARY_TAG=${tag}" >> ${GITHUB_ENV}
 
-          # Add date as a dummy tag (e.g. 5.4.1-jdk17-2025-09-09-13-03-47)
-          copy_image ${PRIMARY_TAG} ${PRIMARY_TAG}-$(date +"%Y-%m-%d-%H-%M-%S")
+          # Add date as a dummy tag (e.g. 5.4.1-jdk17-20250909130347)
+          copy_image ${PRIMARY_TAG} ${PRIMARY_TAG}-$(date +"%Y%m%d%H%M%S")
 
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
