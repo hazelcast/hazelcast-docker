@@ -1,6 +1,17 @@
 name: Push EE RHEL image
 
 on:
+  workflow_dispatch:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
+        required: true
+      JDKS:
+        required: true
+      IS_LATEST_LTS:
+        required: true
+      DEFAULT_JDK:
+        required: true
   workflow_call:
     inputs:
       HZ_VERSION:
