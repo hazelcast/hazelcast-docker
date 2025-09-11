@@ -206,7 +206,7 @@ jobs:
 
           echo "TAGS_TO_PUSH=${TAGS_TO_PUSH}"
           # Keep a reference to _a_ tag to get the image later on
-          echo "TAG=${TAGS_TO_PUSH%% *}" >> ${GITHUB_ENV}
+          echo "PRIMARY_TAG=${TAGS_TO_PUSH%% *}" >> ${GITHUB_ENV}
           TAGS_ARG=""
           for tag in ${TAGS_TO_PUSH[@]}
           do
@@ -241,7 +241,7 @@ jobs:
       - name: Run smoke test against image
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh ${LOCAL_IMAGE_NAME}:${TAG} "${TEST_CONTAINER_NAME}" ${{ matrix.distribution-type.label }} "${HZ_VERSION}" "${{ matrix.jdk }}"
+          .github/scripts/simple-smoke-test.sh ${LOCAL_IMAGE_NAME}:${PRIMARY_TAG} "${TEST_CONTAINER_NAME}" ${{ matrix.distribution-type.label }} "${HZ_VERSION}" "${{ matrix.jdk }}"
         env:
           HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HZ_ENTERPRISE_LICENSE || '' }}
 

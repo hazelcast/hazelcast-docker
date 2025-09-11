@@ -131,12 +131,12 @@ jobs:
 
           # Add a "unique" tag to workaround RedHat bug
           # Get the first tag
-          tag=${TAGS_TO_PUSH%% *}
+          PRIMARY_TAG=${TAGS_TO_PUSH%% *}
           # Keep a reference to _a_ tag to get the image later on
-          echo "TAG=${tag}" >> ${GITHUB_ENV}
+          echo "PRIMARY_TAG=${tag}" >> ${GITHUB_ENV}
 
           # Add date as a dummy tag (e.g. 5.4.1-jdk17-2025-09-09-13-03-47)
-          copy_image ${tag} ${tag}-$(date +"%Y-%m-%d-%H-%M-%S")
+          copy_image ${PRIMARY_TAG} ${PRIMARY_TAG}-$(date +"%Y-%m-%d-%H-%M-%S")
 
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
@@ -149,7 +149,7 @@ jobs:
         run: |
           source .github/scripts/logging.functions.sh
 
-          PREFLIGHT_OUTPUT=$(preflight check container "${SCAN_REPOSITORY}:${TAG}" \
+          PREFLIGHT_OUTPUT=$(preflight check container "${SCAN_REPOSITORY}:${PRIMARY_TAG}" \
             --submit --pyxis-api-token=${RHEL_API_KEY} \
             --certification-component-id=${RHEL_PROJECT_ID} \
             --docker-config ~/.docker/config.json \
