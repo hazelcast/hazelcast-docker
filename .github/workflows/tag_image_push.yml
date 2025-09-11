@@ -132,6 +132,9 @@ jobs:
       LOCAL_REGISTRY: localhost:5000
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       TEST_CONTAINER_NAME: hazelcast-test
+    outputs:
+      is_latest_lts: ${{ steps.is_latest_lts.outputs.is_latest_lts }}
+      default_jdk: ${{ steps.build.outputs.DEFAULT_JDK }}
     services:
       registry:
         image: registry:latest
@@ -170,6 +173,7 @@ jobs:
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Build and Push image to local registry
+        id: build
         run: |
           . .github/scripts/logging.functions.sh
           . .github/scripts/get-tags-to-push.sh
@@ -179,6 +183,7 @@ jobs:
           echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
 
           DEFAULT_JDK="$(get_default_jdk ${{ matrix.distribution-type.docker-dir }})"
+          echo "DEFAULT_JDK=${DEFAULT_JDK}" >> ${GITHUB_OUTPUT}
 
           if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             VERSIONS=("$HZ_VERSION")
@@ -321,8 +326,10 @@ jobs:
     if: inputs.DRY_RUN != 'true' && needs.prepare.outputs.should-build-ee && !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT')
     uses: ./.github/workflows/tag_image_push_rhel.yml
     with:
-      SOURCE_REF: ${{ inputs.SOURCE_REF }}
-      IS_LTS_OVERRIDE: ${{ inputs.IS_LTS_OVERRIDE }}
+      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      JDKS: ${{ needs.prepare.outputs.jdks }} 
+      IS_LATEST_LTS: ${{ needs.push.outputs.is_latest_lts }}
+      DEFAULT_JDK: ${{ needs.push.outputs.default_jdk }}
     secrets: inherit
 
   failure-notifications:

@@ -3,78 +3,49 @@ name: Push EE RHEL image
 on:
   workflow_dispatch:
     inputs:
-      SOURCE_REF:
-        description: 'The hazelcast-docker branch to use as a reference to obtain the image from'
+      HZ_VERSION:
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
         required: true
-      IS_LTS_OVERRIDE:
-        description: 'Override is LTS release'
-        required: false
-        default: ''
-        type: choice
-        options:
-          - ''
-          - 'false'
-          - 'true'
+      JDKS:
+        required: true
+      IS_LATEST_LTS:
+        required: true
+      DEFAULT_JDK:
+        required: true
   workflow_call:
     inputs:
-      SOURCE_REF:
-        description: 'The hazelcast-docker branch to use as a reference to obtain the image from'
+      HZ_VERSION:
         required: true
         type: string
-      IS_LTS_OVERRIDE:
-        description: 'Override is LTS release'
-        required: false
-        default: ''
+      JDKS:
+        required: true
+        type: string
+      IS_LATEST_LTS:
+        required: true
+        type: string
+      DEFAULT_JDK:
+        required: true
         type: string
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    outputs:
-      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
-      jdks: ${{ steps.jdks.outputs.jdks }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ inputs.SOURCE_REF }}
-
-      - name: Get HZ versions
-        id: get_hz_versions
-        uses: hazelcast/docker-actions/get-hz-versions@master
-
-      - name: Get supported JDKs
-        id: jdks
-        uses: hazelcast/docker-actions/get-supported-jdks@master
-        with:
-          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
-
   build:
-    needs: prepare
     env:
       SCAN_REGISTRY: "quay.io"
       TIMEOUT_IN_MINS: 240
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
-      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      DOCKER_DIR: source_path/hazelcast-enterprise
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
+        jdk: ${{ fromJSON(inputs.JDKS) }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ inputs.SOURCE_REF }}
-          path: source_path
-
       - uses: madhead/semver-utils@latest
         id: version
         with:
-          version: ${{ env.HZ_VERSION }}
+          version: ${{ inputs.HZ_VERSION }}
 
       - name: Set scan registry secrets
         run: |
@@ -93,17 +64,9 @@ jobs:
           username: ${{ env.SCAN_REGISTRY_USER }}
           password: ${{ env.SCAN_REGISTRY_PASSWORD }}
 
-      - name: Check if latest EE LTS release
-        id: is_latest_lts
-        uses: ./.github/actions/check-if-latest-lts-release
-        with:
-          hz_version: ${{ env.HZ_VERSION }}
-          is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
-
       - name: Copy image to RedHat Container Registry
         run: |
           . .github/scripts/get-tags-to-push.sh 
-          . .github/scripts/docker.functions.sh
 
           copy_image()
           {
@@ -118,10 +81,7 @@ jobs:
               docker://${SCAN_REPOSITORY}:${destination_tag}
           }
 
-          DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR})"
-
-          IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ env.HZ_VERSION }}" "" "${{ matrix.jdk }}" "$DEFAULT_JDK" "$IS_LATEST_LTS")
+          TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
 
           for tag in ${TAGS_TO_PUSH[@]}
@@ -174,9 +134,3 @@ jobs:
       - name: Check RedHat service status
         if: failure()
         uses: hazelcast/docker-actions/check-redhat-service-status@master
-
-      - name: Slack notification
-        uses: hazelcast/docker-actions/slack-notification@master
-        if: failure() && github.triggering_actor == 'devOpsHazelcast'
-        with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
