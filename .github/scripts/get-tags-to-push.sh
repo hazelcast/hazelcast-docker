@@ -3,6 +3,7 @@
 # shellcheck source=../.github/scripts/versions.functions.sh
 . .github/scripts/version.functions.sh
 
+# Returns tags, ordered by specificality 
 function get_version_only_tags_to_push() {
   local VERSION_TO_RELEASE=$1
   local IS_LATEST_LTS=$2
@@ -41,9 +42,10 @@ function get_version_only_tags_to_push() {
     TAGS_TO_PUSH+=("latest-lts")
   fi
 
-  echo "${TAGS_TO_PUSH[@]}"
+  __sort_tags "${TAGS_TO_PUSH[@]}"
 }
 
+# Returns tags, ordered by specificality
 function get_tags_to_push() {
 
   if [ "$#" -ne 5 ]; then
@@ -56,12 +58,15 @@ function get_tags_to_push() {
   local CURRENT_JDK=$3
   local DEFAULT_JDK=$4
   local IS_LATEST_LTS=$5
-  local VERSION_ONLY_TAGS_TO_PUSH=$(get_version_only_tags_to_push "$VERSION_TO_RELEASE" "$IS_LATEST_LTS")
-  augment_with_suffixed_tags "${VERSION_ONLY_TAGS_TO_PUSH[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK"
+
+  local tags
+  tags=$(get_version_only_tags_to_push "$VERSION_TO_RELEASE" "$IS_LATEST_LTS")
+  tags=$(__augment_with_suffixed_tags "${tags[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
+
+  __sort_tags "${tags}"
 }
 
-function augment_with_suffixed_tags() {
-
+function __augment_with_suffixed_tags() {
   if [ "$#" -ne 4 ]; then
     echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} INITIAL_TAGS SUFFIX CURRENT_JDK DEFAULT_JDK"
     exit 1;
@@ -81,4 +86,14 @@ function augment_with_suffixed_tags() {
     done
 
   echo "${TAGS_TO_PUSH[@]}"
+}
+
+# Sort tags by specificality - most specific first (e.g. "5.5.0-jdk11 5.5.0 5.5 latest-lts latest")
+# Expects space-separated list as input
+# Internally converts to line-separator separated list for sorting and then inverses
+function __sort_tags() {
+  local tags=$*
+  tags=$(tr ' ' '\n' <<< "${tags}")
+  tags=$(sort --general-numeric-sort --reverse <<< "${tags}")
+  paste -sd' ' - <<< "${tags}"
 }
