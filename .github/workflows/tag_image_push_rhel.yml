@@ -35,8 +35,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      # RedHat does not support concurrent publishing, run sequentially
-      max-parallel: 1
       matrix:
         jdk: ${{ fromJSON(inputs.JDKS) }}
     steps:
@@ -68,23 +66,37 @@ jobs:
 
       - name: Copy image to RedHat Container Registry
         run: |
-          . .github/scripts/get-tags-to-push.sh
+          . .github/scripts/get-tags-to-push.sh 
+
+          copy_image()
+          {
+            local source_tag=$1
+            local destination_tag=$2
+
+            # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
+            skopeo copy \
+              --override-os linux \
+              --override-arch amd64 \
+              docker://hazelcast/hazelcast-enterprise:${source_tag} \
+              docker://${SCAN_REPOSITORY}:${destination_tag}
+          }
 
           TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
 
           for tag in ${TAGS_TO_PUSH[@]}
           do
-            # Keep a reference to _a_ tag to get the image later on
-            echo "TAG=${tag}" >> ${GITHUB_ENV}
-
-            # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
-            skopeo copy \
-              --override-os linux \
-              --override-arch amd64 \
-              docker://hazelcast/hazelcast-enterprise:${tag} \
-              docker://${SCAN_REPOSITORY}:${tag}
+            copy_image ${tag} ${tag}
           done
+
+          # Add a "unique" tag to workaround RedHat bug
+          # Get the first tag
+          PRIMARY_TAG=${TAGS_TO_PUSH%% *}
+          # Keep a reference to _a_ tag to get the image later on
+          echo "PRIMARY_TAG=${tag}" >> ${GITHUB_ENV}
+
+          # Add date as a dummy tag (e.g. 5.4.1-jdk17-20250909130347)
+          copy_image ${PRIMARY_TAG} ${PRIMARY_TAG}-$(date +"%Y%m%d%H%M%S")
 
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
@@ -97,7 +109,7 @@ jobs:
         run: |
           source .github/scripts/logging.functions.sh
 
-          PREFLIGHT_OUTPUT=$(preflight check container "${SCAN_REPOSITORY}:${TAG}" \
+          PREFLIGHT_OUTPUT=$(preflight check container "${SCAN_REPOSITORY}:${PRIMARY_TAG}" \
             --submit --pyxis-api-token=${RHEL_API_KEY} \
             --certification-component-id=${RHEL_PROJECT_ID} \
             --docker-config ~/.docker/config.json \
