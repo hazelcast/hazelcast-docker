@@ -15,7 +15,7 @@ function assert_get_version_only_tags_to_push {
   local VERSION_TO_RELEASE=$1
   local IS_LTS=$2
   local EXPECTED_TAGS_TO_PUSH=$3
-  local ACTUAL_TAGS_TO_PUSH=$(get_version_only_tags_to_push "$VERSION_TO_RELEASE" "$IS_LTS")
+  local ACTUAL_TAGS_TO_PUSH=$(__get_version_only_tags_to_push "$VERSION_TO_RELEASE" "$IS_LTS")
   local MSG="Tags to push for version $VERSION_TO_RELEASE and is_lts = '$IS_LTS' should be equal to $EXPECTED_TAGS_TO_PUSH, not $ACTUAL_TAGS_TO_PUSH"
   assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
@@ -26,7 +26,7 @@ function assert_augment_with_suffixed_tags {
   local CURRENT_JDK=$3
   local DEFAULT_JDK=$4
   local EXPECTED_TAGS_TO_PUSH=$5
-  local ACTUAL_TAGS_TO_PUSH=$(__augment_with_suffixed_tags "${INITIAL_TAGS[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
+  local ACTUAL_TAGS_TO_PUSH=$(augment_with_suffixed_tags "${INITIAL_TAGS[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
   local MSG="Suffixed tags to push for (tags=$INITIAL_TAGS suffix=$SUFFIX current_jdk=$CURRENT_JDK default_jdk=$DEFAULT_JDK) should be equal to: $EXPECTED_TAGS_TO_PUSH"
   assert_eq "$EXPECTED_TAGS_TO_PUSH" "$ACTUAL_TAGS_TO_PUSH" "$MSG" && log_success "$MSG" || TESTS_RESULT=$?
 }
@@ -57,11 +57,11 @@ assert_get_version_only_tags_to_push "99.0.0" "true" "99.0.0 99.0 99 latest-lts 
 assert_get_version_only_tags_to_push "5.2.0" "true" "5.2.0 latest-lts"
 
 log_header "Tests for augment_with_suffixed_tags"
-assert_augment_with_suffixed_tags "1.2.3" "" "11" "11" "1.2.3 1.2.3-jdk11"
-assert_augment_with_suffixed_tags "1.2.3 latest" "" "11" "11" "1.2.3 1.2.3-jdk11 latest latest-jdk11"
+assert_augment_with_suffixed_tags "1.2.3" "" "11" "11" "1.2.3-jdk11 1.2.3"
+assert_augment_with_suffixed_tags "1.2.3 latest" "" "11" "11" "1.2.3-jdk11 1.2.3 latest-jdk11 latest"
 assert_augment_with_suffixed_tags "1.2.3" "" "17" "11" "1.2.3-jdk17"
 assert_augment_with_suffixed_tags "1.2.3 latest" "" "17" "11" "1.2.3-jdk17 latest-jdk17"
-assert_augment_with_suffixed_tags "1.2.3" "-slim" "11" "11" "1.2.3-slim 1.2.3-slim-jdk11"
+assert_augment_with_suffixed_tags "1.2.3" "-slim" "11" "11" "1.2.3-slim-jdk11 1.2.3-slim"
 assert_augment_with_suffixed_tags "1.2.3" "-slim" "17" "11" "1.2.3-slim-jdk17"
 assert_augment_with_suffixed_tags "1.2.3 latest" "-slim" "17" "11" "1.2.3-slim-jdk17 latest-slim-jdk17"
 assert_augment_with_suffixed_tags "1.2.3 latest-lts" "-slim" "17" "11" "1.2.3-slim-jdk17 latest-lts-slim-jdk17"
