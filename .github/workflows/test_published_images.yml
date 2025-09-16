@@ -68,6 +68,7 @@ jobs:
     uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@master
 
   test:
+    environment: live
     runs-on: ubuntu-latest
     needs:
       - set-matrix

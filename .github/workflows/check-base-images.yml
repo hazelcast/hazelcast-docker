@@ -104,6 +104,7 @@ jobs:
     uses: ./.github/workflows/ee-nlc-tag-push.yml
     with:
       SOURCE_REF: v${{ matrix.version }}
+      ENVIRONMENT: live
     secrets: inherit
 
   failure-notifications:
