@@ -170,7 +170,7 @@ jobs:
       - name: Push image to remote registry
         if: inputs.DRY_RUN != 'true'
         run: |
-          remote_registry=${{ secrets.NLC_REPOSITORY }}
+          remote_registry=${{ secrets.NLC_IMAGE_NAME }}
           # Extract the registry from the fully-qualified destination
           remote_registry="${remote_registry%/*}"
 
