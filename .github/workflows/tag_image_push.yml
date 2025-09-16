@@ -266,8 +266,8 @@ jobs:
         if: inputs.DRY_RUN != 'true'
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Login to JFrog
         if: inputs.DRY_RUN != 'true'
