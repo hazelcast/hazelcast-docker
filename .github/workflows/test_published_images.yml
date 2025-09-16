@@ -193,7 +193,7 @@ jobs:
             # Identify absolute version based on earlier parsing of version number
             if [[ -n "${{ steps.image-version.outputs.major }}" ]]; then
               echo "Testing NLC"
-              simple-smoke-test "${{ secrets.NLC_REPOSITORY }}/hazelcast_cloud" "hazelcast-nlc"
+              simple-smoke-test "${{ secrets.NLC_REPOSITORY }}/hazelcast_cloud" "${{ secrets.NLC_IMAGE_NAME }}"
             fi
 
             echo "Testing Red Hat Catalog"
