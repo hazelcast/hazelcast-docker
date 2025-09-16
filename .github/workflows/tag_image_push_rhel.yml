@@ -12,6 +12,8 @@ on:
         required: true
       DEFAULT_JDK:
         required: true
+      ENVIRONMENT:
+        required: true
   workflow_call:
     inputs:
       HZ_VERSION:
@@ -26,12 +28,17 @@ on:
       DEFAULT_JDK:
         required: true
         type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
 jobs:
   build:
     env:
       SCAN_REGISTRY: "quay.io"
       TIMEOUT_IN_MINS: 240
       RHEL_API_KEY: ${{ secrets.RHEL_API_KEY }}
+    environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -48,21 +55,33 @@ jobs:
           version: ${{ inputs.HZ_VERSION }}
 
       - name: Set scan registry secrets
+        id: scan_registry_secrets
         run: |
-          echo "SCAN_REGISTRY_USER=${{ secrets[format('SCAN_REGISTRY_USER_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
-          echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
-          echo "RHEL_PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
+          # Some repositories have a separate projects for each (major) version
+          # First see if a version-specific secret exists, falling back to default
 
-      - name: Set scan repository as environment variable
-        run: |
-          echo "SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}" >> $GITHUB_ENV
+          PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}
+          if [[ -z "${PROJECT_ID}" ]]; then
+            PROJECT_ID=${{ secrets.RHEL_PROJECT_ID }}
+          fi
+          echo "PROJECT_ID=${PROJECT_ID}" >> ${GITHUB_OUTPUT}
+
+          echo "USERNAME=redhat-isv-containers+${PROJECT_ID}-robot" >> ${GITHUB_OUTPUT}
+
+          PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}
+          if [[ -z "${PASSWORD}" ]]; then
+            PASSWORD=${{ secrets.SCAN_REGISTRY_PASSWORD }}
+          fi
+          echo "PASSWORD=${PASSWORD}" >> ${GITHUB_OUTPUT}
+
+          echo "SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${PROJECT_ID}" >> ${GITHUB_OUTPUT}
 
       - name: Log in to Red Hat Scan Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.SCAN_REGISTRY }}
-          username: ${{ env.SCAN_REGISTRY_USER }}
-          password: ${{ env.SCAN_REGISTRY_PASSWORD }}
+          username: ${{ steps.scan_registry_secrets.outputs.USERNAME }}
+          password: ${{ steps.scan_registry_secrets.outputs.PASSWORD }}
 
       - name: Copy image to RedHat Container Registry
         run: |
@@ -78,7 +97,7 @@ jobs:
               --override-os linux \
               --override-arch amd64 \
               docker://hazelcast/hazelcast-enterprise:${source_tag} \
-              docker://${SCAN_REPOSITORY}:${destination_tag}
+              docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${destination_tag}
           }
 
           TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
@@ -109,9 +128,9 @@ jobs:
         run: |
           source .github/scripts/logging.functions.sh
 
-          PREFLIGHT_OUTPUT=$(preflight check container "${SCAN_REPOSITORY}:${PRIMARY_TAG}" \
+          PREFLIGHT_OUTPUT=$(preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${PRIMARY_TAG}" \
             --submit --pyxis-api-token=${RHEL_API_KEY} \
-            --certification-component-id=${RHEL_PROJECT_ID} \
+            --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
             --docker-config ~/.docker/config.json \
             2>&1)
 
@@ -129,7 +148,7 @@ jobs:
 
       - name: Publish the Hazelcast Enterprise image
         run: |
-          .github/scripts/publish-rhel.sh "${RHEL_PROJECT_ID}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
+          .github/scripts/publish-rhel.sh "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" "${IMAGE_ID}" "${RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
 
       - name: Check RedHat service status
         if: failure()
