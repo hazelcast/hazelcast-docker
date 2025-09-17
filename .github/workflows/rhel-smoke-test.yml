@@ -50,8 +50,8 @@ jobs:
       - name: Set scan registry secrets
         id: scan_registry_secrets
         run: |
-          echo "SCAN_REGISTRY_USER=redhat-isv-containers+${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}-robot" >> ${GITHUB_OUTPUT}
-          echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}" >> ${GITHUB_OUTPUT}
+          echo "USERNAMD=redhat-isv-containers+${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}-robot" >> ${GITHUB_OUTPUT}
+          echo "PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}" >> ${GITHUB_OUTPUT}
 
       - name: Log in to Red Hat Scan Registry
         uses: docker/login-action@v3
