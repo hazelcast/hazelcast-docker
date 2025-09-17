@@ -79,7 +79,7 @@ jobs:
           oc new-project "${PROJECT_NAME}"
 
           oc create secret generic hz-license-secret \
-            --from-literal=key="${{ secrets.HZ_ENTERPRISE_LICENSE }}"
+            --from-literal=key="${{ secrets.HAZELCAST_ENTERPRISE_KEY }}"
 
           helm repo add hazelcast https://hazelcast-charts.s3.amazonaws.com/
           helm repo update

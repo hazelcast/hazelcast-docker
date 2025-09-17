@@ -248,7 +248,7 @@ jobs:
         run: |
           .github/scripts/simple-smoke-test.sh ${LOCAL_IMAGE_NAME}:${PRIMARY_TAG} "${TEST_CONTAINER_NAME}" ${{ matrix.distribution-type.label }} "${HZ_VERSION}" "${{ matrix.jdk }}"
         env:
-          HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HZ_ENTERPRISE_LICENSE || '' }}
+          HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HAZELCAST_ENTERPRISE_KEY || '' }}
 
       - name: Get docker logs
         if: ${{ always() }}

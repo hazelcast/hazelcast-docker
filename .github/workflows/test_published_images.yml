@@ -167,7 +167,7 @@ jobs:
           esac
 
           if [[ "${{ matrix.distribution-type }}" == "ee" ]]; then
-            export HZ_LICENSEKEY=${{ secrets.HZ_ENTERPRISE_LICENSE }}
+            export HZ_LICENSEKEY=${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
             export HZ_INSTANCETRACKING_FILENAME=instance-tracking.txt
           fi
 
