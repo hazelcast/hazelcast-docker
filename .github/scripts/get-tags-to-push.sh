@@ -4,7 +4,7 @@
 . .github/scripts/version.functions.sh
 
 # Returns tags, ordered by specificality 
-function get_version_only_tags_to_push() {
+function __get_version_only_tags_to_push() {
   local VERSION_TO_RELEASE=$1
   local IS_LATEST_LTS=$2
 
@@ -60,13 +60,13 @@ function get_tags_to_push() {
   local IS_LATEST_LTS=$5
 
   local tags
-  tags=$(get_version_only_tags_to_push "$VERSION_TO_RELEASE" "$IS_LATEST_LTS")
-  tags=$(__augment_with_suffixed_tags "${tags[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
+  tags=$(__get_version_only_tags_to_push "$VERSION_TO_RELEASE" "$IS_LATEST_LTS")
+  tags=$(augment_with_suffixed_tags "${tags[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
 
   __sort_tags "${tags}"
 }
 
-function __augment_with_suffixed_tags() {
+function augment_with_suffixed_tags() {
   if [ "$#" -ne 4 ]; then
     echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} INITIAL_TAGS SUFFIX CURRENT_JDK DEFAULT_JDK"
     exit 1;
@@ -85,7 +85,7 @@ function __augment_with_suffixed_tags() {
       TAGS_TO_PUSH+=(${tag}${SUFFIX}-jdk${CURRENT_JDK})
     done
 
-  echo "${TAGS_TO_PUSH[@]}"
+  __sort_tags "${TAGS_TO_PUSH[@]}"
 }
 
 # Sort tags by specificality - most specific first (e.g. "5.5.0-jdk11 5.5.0 5.5 latest-lts latest")
