@@ -330,6 +330,7 @@ jobs:
       JDKS: ${{ needs.prepare.outputs.jdks }} 
       IS_LATEST_LTS: ${{ needs.push.outputs.is_latest_lts }}
       DEFAULT_JDK: ${{ needs.push.outputs.default_jdk }}
+      ENVIRONMENT: live
     secrets: inherit
 
   failure-notifications:
