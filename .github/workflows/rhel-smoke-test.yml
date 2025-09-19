@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       HZ_VERSION:
-        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
+        description: 'Version of Hazelcast to test the image for, e.g. 5.1.1, 5.0.1'
         required: true
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
       SCAN_REGISTRY: "quay.io"
       HZ_VERSION: ${{ inputs.HZ_VERSION }}
       PROJECT_NAME: test-${{ github.run_id }}-${{ github.run_attempt }}
-
+    environment: live
     runs-on: ubuntu-latest
     steps:
       - name: Set HZ version as environment variable
@@ -48,16 +48,17 @@ jobs:
             OCP_CLUSTER_URL,CN/OCP_CLUSTER_URL
 
       - name: Set scan registry secrets
+        id: scan_registry_secrets
         run: |
-          echo "SCAN_REGISTRY_USER=${{ secrets[format('SCAN_REGISTRY_USER_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
-          echo "SCAN_REGISTRY_PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}" >> $GITHUB_ENV
+          echo "USERNAME=redhat-isv-containers+${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}-robot" >> ${GITHUB_OUTPUT}
+          echo "PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}" >> ${GITHUB_OUTPUT}
 
       - name: Log in to Red Hat Scan Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.SCAN_REGISTRY }}
-          username: ${{ env.SCAN_REGISTRY_USER }}
-          password: ${{ env.SCAN_REGISTRY_PASSWORD }}
+          username: ${{ steps.scan_registry_secrets.outputs.USERNAME }}
+          password: ${{ steps.scan_registry_secrets.outputs.PASSWORD }}
 
       - name: Install `oc` OpenShift tool from mirror
         uses: redhat-actions/openshift-tools-installer@v1
@@ -79,7 +80,7 @@ jobs:
           oc new-project "${PROJECT_NAME}"
 
           oc create secret generic hz-license-secret \
-            --from-literal=key="${{ secrets.HZ_ENTERPRISE_LICENSE }}"
+            --from-literal=key="${{ secrets.HAZELCAST_ENTERPRISE_KEY }}"
 
           helm repo add hazelcast https://hazelcast-charts.s3.amazonaws.com/
           helm repo update
