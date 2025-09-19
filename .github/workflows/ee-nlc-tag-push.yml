@@ -17,6 +17,10 @@ on:
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
         required: false
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        default: live
   workflow_call:
     inputs:
       SOURCE_REF:
@@ -31,6 +35,10 @@ on:
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
         required: false
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
         type: string
 
 jobs:
@@ -56,6 +64,7 @@ jobs:
           HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
 
   push:
+    environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     needs: prepare
     strategy:
@@ -108,11 +117,7 @@ jobs:
           . .github/scripts/get-tags-to-push.sh
           . .github/scripts/docker.functions.sh
 
-          IMAGE_NAME=${{ secrets.NLC_IMAGE_NAME }}
-          # Extract the image name from the fully-qualified destination
-          IMAGE_NAME="${IMAGE_NAME##*/}"
-
-          LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${IMAGE_NAME}
+          LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${{ secrets.NLC_IMAGE_NAME }}
           echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
 
           DEFAULT_JDK="$(get_default_jdk ${DOCKER_DIR})"
@@ -170,7 +175,7 @@ jobs:
       - name: Push image to remote registry
         if: inputs.DRY_RUN != 'true'
         run: |
-          remote_registry=${{ secrets.NLC_IMAGE_NAME }}
+          remote_registry=${{ secrets.NLC_REPOSITORY }}/hazelcast_cloud/${{ secrets.NLC_IMAGE_NAME }}
           # Extract the registry from the fully-qualified destination
           remote_registry="${remote_registry%/*}"
 
