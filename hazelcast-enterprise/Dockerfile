@@ -78,5 +78,7 @@ WORKDIR ${HZ_HOME}
 ### Switch to hazelcast user
 USER ${USER_NAME}
 
+HEALTHCHECK CMD ["hz-healthcheck"]
+
 # Start Hazelcast server
 CMD ["hz", "start"]

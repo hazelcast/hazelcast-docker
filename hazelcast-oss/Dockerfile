@@ -62,5 +62,7 @@ WORKDIR ${HZ_HOME}
 RUN addgroup -S hazelcast && adduser -S hazelcast -G hazelcast
 USER hazelcast
 
+HEALTHCHECK CMD ["hz-healthcheck"]
+
 # Start Hazelcast server
 CMD ["hz", "start"]
