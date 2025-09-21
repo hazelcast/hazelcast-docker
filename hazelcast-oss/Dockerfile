@@ -6,9 +6,12 @@ ARG HZ_VERSION=5.7.0-SNAPSHOT
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
+ARG USER_NAME="hazelcast"
+ARG USER_GROUP="hazelcast"
 ARG JDK_VERSION="21"
 # Optional, defaults to latest released version
 ARG HAZELCAST_ZIP_URL=""
+ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-distribution.zip"
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -28,30 +31,30 @@ EXPOSE 5701
 COPY *.jar hazelcast-*.zip maven.functions.sh ${HZ_HOME}/
 
 # Install
-RUN echo "Upgrading APK packages" \
+RUN echo "Upgrading packages" \
     && apk upgrade --no-cache \
-    && echo "Installing new APK packages" \
+    && echo "Installing new packages" \
     && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl libxml2-utils zip unzip \
-    && if [[ ! -f ${HZ_HOME}/hazelcast-distribution.zip ]]; then \
+    && if [[ ! -f ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} ]]; then \
        if [ -z ${HAZELCAST_ZIP_URL} ]; then \
             source ${HZ_HOME}/maven.functions.sh; \
             HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-distribution https://repo.maven.apache.org/maven2)".zip; \
        fi; \
        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
        mkdir --parents ${HZ_HOME}; \
-       curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-distribution.zip; \
+       curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME}; \
     else \
-           echo "Using local hazelcast-distribution.zip"; \
+           echo "Using local ${HAZELCAST_ZIP_FILE_NAME}"; \
     fi \
-    && unzip -qq ${HZ_HOME}/hazelcast-distribution.zip 'hazelcast-*/**' -d ${HZ_HOME}/tmp/ \
+    && unzip -qq ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} 'hazelcast-*/**' -d ${HZ_HOME}/tmp/ \
     && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
-    && echo "Cleaning APK packages and redundant files/folders" \
+    && echo "Removing unnecessary packages and redundant files/folders" \
     && apk del libxml2-utils zip unzip \
-    && rm -rf /var/cache/apk/* ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/hazelcast-distribution.zip ${HZ_HOME}/tmp \
+    && rm -rf /var/cache/apk/* ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} ${HZ_HOME}/tmp \
     # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
     && chmod +x ${HZ_HOME}/bin/*
 
@@ -59,8 +62,10 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/c
 
 WORKDIR ${HZ_HOME}
 
-RUN addgroup -S hazelcast && adduser -S hazelcast -G hazelcast
-USER hazelcast
+RUN echo "Adding non-root user" \
+    && addgroup -S ${USER_GROUP} \
+    && adduser -S ${USER_NAME} -G ${USER_GROUP}
+USER ${USER_NAME}
 
 # Start Hazelcast server
 CMD ["hz", "start"]
