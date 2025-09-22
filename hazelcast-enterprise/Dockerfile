@@ -39,11 +39,11 @@ COPY licenses /licenses
 COPY *.jar hazelcast-*.zip maven.functions.sh ${HZ_HOME}/
 
 # Install
-RUN echo "Installing new packages" \
-    && microdnf -y update --nodocs \
-    && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
-        --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java util-linux \
-    && if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
+RUN echo "Installing new packages"
+RUN microdnf -y update --nodocs
+RUN microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
+        --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java util-linux
+RUN if [[ ! -f ${HZ_HOME}/hazelcast-enterprise-distribution.zip ]]; then \
         if [ -z ${HAZELCAST_ZIP_URL} ]; then \
             source ${HZ_HOME}/maven.functions.sh; \
             HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast hazelcast-enterprise-distribution https://repository.hazelcast.com/release)".zip; \
@@ -53,25 +53,25 @@ RUN echo "Installing new packages" \
         curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/hazelcast-enterprise-distribution.zip; \
     else \
            echo "Using local hazelcast-enterprise-distribution.zip"; \
-    fi \
-    && unzip -qq ${HZ_HOME}/hazelcast-enterprise-distribution.zip 'hazelcast-*/**' -d ${HZ_HOME}/tmp/ \
-    && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
-    && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
-    && echo "Granting read permission to ${HZ_HOME}" \
-    && chmod -R +r ${HZ_HOME} \
-    && echo "Removing cached package data and unnecessary tools" \
-    && microdnf -y remove zip unzip \
-    && microdnf -y clean all \
-    && rm -rf ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/hazelcast-enterprise-distribution.zip maven.functions.sh${HZ_HOME}/tmp \
+    fi
+RUN unzip -qq ${HZ_HOME}/hazelcast-enterprise-distribution.zip 'hazelcast-*/**' -d ${HZ_HOME}/tmp/
+RUN mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/
+RUN echo "Setting Pardot ID to 'docker'"
+RUN echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties"
+RUN echo "Granting read permission to ${HZ_HOME}"
+RUN chmod -R +r ${HZ_HOME}
+RUN echo "Removing cached package data and unnecessary tools"
+RUN microdnf -y remove zip unzip
+RUN microdnf -y clean all
+RUN rm -rf ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/hazelcast-enterprise-distribution.zip maven.functions.sh${HZ_HOME}/tmp
     # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
-    && chmod +x ${HZ_HOME}/bin/*
+RUN chmod +x ${HZ_HOME}/bin/*
 
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
-RUN echo "Adding non-root user" \
-    && groupadd --system hazelcast \
-    && useradd --no-log-init --system --gid hazelcast --create-home ${USER_NAME}
+RUN echo "Adding non-root user"
+RUN groupadd --system hazelcast
+RUN useradd --no-log-init --system --gid hazelcast --create-home ${USER_NAME}
 
 WORKDIR ${HZ_HOME}
 
