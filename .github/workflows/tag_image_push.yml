@@ -249,13 +249,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.distribution-type.docker-dir }}
-          push: true
+          labels: ${{ steps.labels.outputs.label }}
           platforms: ${{ steps.platforms.outputs.platforms }}
+          push: true
+          tags: ${{ steps.tags.outputs.TAGS }}
           build-args: |
             JDK_VERSION=${{ matrix.jdk }}
             HAZELCAST_ZIP_URL=${{ steps.dist-zip-url.outputs.HAZELCAST_ZIP_URL }}
-          tags: ${{ steps.tags.outputs.TAGS }}
-          labels: ${{ steps.labels.outputs.label }}
 
       - name: Run smoke test against image
         timeout-minutes: 2
