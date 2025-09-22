@@ -173,7 +173,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: docker-logs-tag-image-push-nlc-${{inputs.SOURCE_REF}}-jdk${{ matrix.jdk }}
+          name: docker-logs-tag-image-push-nlc-${{ env.HZ_VERSION }}-jdk${{ matrix.jdk }}
           path: docker-*.log
 
       - name: Login to NLC registry
