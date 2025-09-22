@@ -124,6 +124,7 @@ jobs:
       - prepare
       - distribution-variants
     strategy:
+      fail-fast: false
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
         variant: ${{ fromJSON(needs.distribution-variants.outputs.variants) }}
