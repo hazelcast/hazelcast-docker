@@ -7,9 +7,6 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     name: Prepare environment
-    outputs:
-      LAST_RELEASED_HZ_VERSION_OSS: ${{ steps.get_hz_versions.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
-      jdks: ${{ steps.jdks.outputs.jdks }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
@@ -27,16 +24,11 @@ jobs:
         run: |
           .github/scripts/test_scripts.sh
 
-      - name: Get HZ versions
-        id: get_hz_versions
-        uses: hazelcast/docker-actions/get-hz-versions@master
-
   test-push:
     name: Test pushing image (dry run)
-    needs: prepare
     uses: ./.github/workflows/tag_image_push.yml
     with:
-      SOURCE_REF: v${{ needs.prepare.outputs.LAST_RELEASED_HZ_VERSION_OSS }}
+      SOURCE_REF: ${{ github.ref }}
       RELEASE_TYPE: ALL
       DRY_RUN: true
     secrets: inherit
