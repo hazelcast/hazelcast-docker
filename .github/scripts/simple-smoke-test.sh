@@ -59,6 +59,12 @@ function derive_expected_distribution_type() {
   esac
 }
 
+function hz_health_check_cmd() {
+  local status
+  status=$(docker inspect "${container_name}" --format '{{json .State.Health.Status}}' | jq -r)
+  [[ "${status}" == "healthy" ]]
+}
+
 image=$1
 container_name=$2
 input_distribution_type=$3

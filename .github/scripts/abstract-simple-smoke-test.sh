@@ -43,10 +43,14 @@ function check_metadata() {
     fi
 }
 
+function hz_health_check_cmd() {
+  curl --silent --fail "127.0.0.1:5701/hazelcast/health/ready"
+}
+
 function test_health() {
   local attempts=0
   local max_attempts=30
-  until curl --silent --fail "127.0.0.1:5701/hazelcast/health/ready"; do
+  until hz_health_check_cmd; do
     if [[ ${attempts} -eq ${max_attempts} ]];then
         echoerr "Hazelcast not responding"
         exit 1;
