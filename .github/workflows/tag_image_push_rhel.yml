@@ -13,7 +13,12 @@ on:
       DEFAULT_JDK:
         required: true
       ENVIRONMENT:
+        description: 'Environment to use'
         required: true
+        type: choice
+        options:
+          - sandbox
+          - live
   workflow_call:
     inputs:
       HZ_VERSION:
