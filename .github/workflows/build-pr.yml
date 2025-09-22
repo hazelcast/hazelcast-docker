@@ -28,7 +28,7 @@ jobs:
     name: Test pushing image (dry run)
     uses: ./.github/workflows/tag_image_push.yml
     with:
-      SOURCE_REF: ${{ github.ref }}
+      SOURCE_REF: ${{ github.head_ref }}
       RELEASE_TYPE: ALL
       DRY_RUN: true
     secrets: inherit
