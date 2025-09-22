@@ -21,6 +21,10 @@ on:
         description: 'Environment to use'
         required: true
         default: live
+        type: choice
+        options:
+          - sandbox
+          - live
   workflow_call:
     inputs:
       SOURCE_REF:
