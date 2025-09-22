@@ -54,7 +54,7 @@ jobs:
           dockerfile-path: "hazelcast-enterprise/Dockerfile"
 
       - name: Check if ${{ matrix.version }} base images updated
-        if: steps.check-base-images.outputs.outdated
+        if: steps.check-base-images.outputs.outdated == 'true'
         run: |
           echo "${{ matrix.version }}" >> rebuild-EE-${{ matrix.version }}
         # GitHub doesn't support outputs of matrix jobs - https://github.com/orgs/community/discussions/26639
@@ -83,7 +83,7 @@ jobs:
   rebuild-ee:
     name: Rebuild EE images
     needs: convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
+    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
     strategy:
       matrix:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
@@ -95,7 +95,7 @@ jobs:
   rebuild-nlc:
     name: Rebuild EE NLC images
     needs: convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != null }}
+    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
     strategy:
       matrix:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
