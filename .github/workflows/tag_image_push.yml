@@ -106,10 +106,10 @@ jobs:
           entries=()
 
           if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
-            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"hazelcast","build-functions-script-path":".github/scripts/oss-build.functions.sh"}')
+            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","build-functions-script-path":".github/scripts/oss-build.functions.sh"}')
           fi
           if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "yes" ]; then
-            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"hazelcast-enterprise","build-functions-script-path":".github/scripts/ee-build.functions.sh"}')
+            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","build-functions-script-path":".github/scripts/ee-build.functions.sh"}')
           fi
 
           json="[$(IFS=,; echo "${entries[*]}")]"
