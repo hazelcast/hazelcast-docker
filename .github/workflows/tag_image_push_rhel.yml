@@ -107,7 +107,7 @@ jobs:
             skopeo copy \
               --override-os linux \
               --override-arch amd64 \
-              docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${source_tag} \
+              docker://hazelcast/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${source_tag} \
               docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${destination_tag}
           }
 

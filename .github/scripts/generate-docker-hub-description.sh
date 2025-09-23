@@ -67,5 +67,5 @@ function fill_readme_with_tags() {
 }
 
 cp README.md README-docker.md
-fill_readme_with_tags README-docker.md "${NAMESPACE}/${OSS_IMAGE_NAME}" "### Hazelcast Versions"
-fill_readme_with_tags README-docker.md "${NAMESPACE}/${EE_IMAGE_NAME}" "### Hazelcast Enterprise Versions"
+fill_readme_with_tags README-docker.md "hazelcast/${OSS_IMAGE_NAME}" "### Hazelcast Versions"
+fill_readme_with_tags README-docker.md "hazelcast/${EE_IMAGE_NAME}" "### Hazelcast Enterprise Versions"

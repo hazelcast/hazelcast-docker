@@ -52,7 +52,7 @@ jobs:
         uses: hazelcast/docker-actions/check-base-images@master
         with:
           ref: v${{ matrix.version }}
-          image-name: ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ matrix.version }}-slim
+          image-name: hazelcast/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ matrix.version }}-slim
           dockerfile-path: "hazelcast-enterprise/Dockerfile"
 
       - name: Check if ${{ matrix.version }} base images updated
