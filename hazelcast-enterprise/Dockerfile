@@ -79,5 +79,7 @@ RUN echo "Adding non-root user" \
     && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME}
 USER ${USER_NAME}
 
+HEALTHCHECK CMD ["hz-healthcheck"]
+
 # Start Hazelcast server
 CMD ["hz", "start"]

@@ -67,5 +67,7 @@ RUN echo "Adding non-root user" \
     && adduser -S ${USER_NAME} -G ${USER_GROUP}
 USER ${USER_NAME}
 
+HEALTHCHECK CMD ["hz-healthcheck"]
+
 # Start Hazelcast server
 CMD ["hz", "start"]
