@@ -32,3 +32,11 @@ jobs:
       RELEASE_TYPE: ALL
       DRY_RUN: true
     secrets: inherit
+
+  test-push-nlc:
+    name: Test pushing image (dry run)
+    uses: ./.github/workflows/ee-nlc-tag-push.yml
+    with:
+      SOURCE_REF: ${{ github.ref }}
+      DRY_RUN: true
+    secrets: inherit
