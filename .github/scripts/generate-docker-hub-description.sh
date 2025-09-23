@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eEuo pipefail ${RUNNER_DEBUG:+-x}
+set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
 function get_formatted_latest_docker_tags() {
   local REPO_NAME=$1
@@ -37,13 +37,13 @@ function fill_readme_with_tags() {
    get_formatted_latest_docker_tags "$repo_name" > "$tags_file"
 
    sed -i -e "/$matching_line/ {
-        a\
+a\\
 
-        a\
-        #### Latest Versions
-        a\
+a\\
+#### Latest Versions
+a\\
 
-        r $tags_file
+r $tags_file
     }" "$filename"
 
    rm "$tags_file"
