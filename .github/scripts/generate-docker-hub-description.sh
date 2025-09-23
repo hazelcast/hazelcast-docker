@@ -54,13 +54,13 @@ function fill_readme_with_tags() {
    get_formatted_latest_docker_tags "$repo_name" > "$tags_file"
 
    sed -i -e "/$matching_line/ {
-        a\
+a\\
 
-        a\
-        #### Latest Versions
-        a\
+a\\
+#### Latest Versions
+a\\
 
-        r $tags_file
+r $tags_file
     }" "$filename"
 
    rm "$tags_file"
