@@ -6,12 +6,33 @@ on:
       MINIMAL_SUPPORTED_VERSION:
         description: 'Minimal supported version from which we should start checking images, e.g. 5.1, 5.0.1, 4.2.3. Default derived from supported maintenance versions'
         required: false
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: choice
+        options:
+          - sandbox
+          - live
   schedule:
     - cron: '0 6 * * *'
 
 jobs:
+  get-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.determine-environment.outputs.determine-environment }}
+    steps:
+      - id: determine-environment
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "environment=${{ inputs.ENVIRONMENT }}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "environment=live" >> "${GITHUB_OUTPUT}"
+          fi
+
   get-latest-patch-versions:
-    environment: live
+    needs: get-environment
+    environment: ${{ needs.get-environment.outputs.environment }}
     runs-on: ubuntu-latest
     name: Get latest patch versions
     outputs:
@@ -40,10 +61,12 @@ jobs:
 
   # Only checks enterprise
   calculate-rebuilds:
-    environment: live
+    environment: ${{ needs.get-environment.outputs.environment }}
     runs-on: ubuntu-latest
     name: Calculate if ${{ matrix.version }} needs a rebuild
-    needs: get-latest-patch-versions
+    needs:
+      - get-environment
+      - get-latest-patch-versions
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
@@ -96,7 +119,9 @@ jobs:
 
   rebuild-nlc:
     name: Rebuild EE NLC images
-    needs: convert-rebuilds-to-matrix
+    needs:
+      - get-environment
+      - convert-rebuilds-to-matrix
     if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
     strategy:
       matrix:
@@ -104,7 +129,6 @@ jobs:
     uses: ./.github/workflows/ee-nlc-tag-push.yml
     with:
       SOURCE_REF: v${{ matrix.version }}
-      ENVIRONMENT: live
     secrets: inherit
 
   failure-notifications:
