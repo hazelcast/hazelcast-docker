@@ -330,6 +330,8 @@ jobs:
       - push
     if: inputs.DRY_RUN != 'true' && !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT')
     uses: ./.github/workflows/update_readme.yml
+    with:
+      ENVIRONMENT: live
     secrets: inherit
 
   push-rhel:

@@ -11,6 +11,7 @@ on:
 
 jobs:
   get-latest-patch-versions:
+    environment: live
     runs-on: ubuntu-latest
     name: Get latest patch versions
     outputs:
@@ -39,6 +40,7 @@ jobs:
 
   # Only checks enterprise
   calculate-rebuilds:
+    environment: live
     runs-on: ubuntu-latest
     name: Calculate if ${{ matrix.version }} needs a rebuild
     needs: get-latest-patch-versions
@@ -50,7 +52,7 @@ jobs:
         uses: hazelcast/docker-actions/check-base-images@master
         with:
           ref: v${{ matrix.version }}
-          image-name: hazelcast/hazelcast-enterprise:${{ matrix.version }}-slim
+          image-name: ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ matrix.version }}-slim
           dockerfile-path: "hazelcast-enterprise/Dockerfile"
 
       - name: Check if ${{ matrix.version }} base images updated
