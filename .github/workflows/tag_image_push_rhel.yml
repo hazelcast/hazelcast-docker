@@ -10,8 +10,10 @@ on:
         description: 'Output of `hazelcast/docker-actions/get-supported-jdks` - e.g. `[17, 21]`'
         required: true
       IS_LATEST_LTS:
+        description: 'Output of `check-if-latest-lts-release` - e.g. `false`'
         required: true
       DEFAULT_JDK:
+        description: 'Output of `docker.functions.sh`s `get_default_jdk` - e.g. `21`'
         required: true
       ENVIRONMENT:
         description: 'Environment to use'
@@ -27,9 +29,11 @@ on:
         required: true
         type: string
       IS_LATEST_LTS:
+        description: 'Output of `check-if-latest-lts-release` - e.g. `false`'
         required: true
         type: string
       DEFAULT_JDK:
+        description: 'Output of `docker.functions.sh`s `get_default_jdk` - e.g. `21`'
         required: true
         type: string
       ENVIRONMENT:
