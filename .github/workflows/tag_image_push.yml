@@ -63,6 +63,7 @@ on:
 
 jobs:
   prepare:
+    environment: live
     runs-on: ubuntu-latest
     env:
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
