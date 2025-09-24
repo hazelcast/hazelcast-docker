@@ -50,5 +50,5 @@ r $tags_file
 }
 
 cp README.md README-docker.md
-fill_readme_with_tags README-docker.md "hazelcast/hazelcast" "### Hazelcast Versions"
-fill_readme_with_tags README-docker.md "hazelcast/hazelcast-enterprise" "### Hazelcast Enterprise Versions"
+fill_readme_with_tags README-docker.md "${NAMESPACE}/hazelcast" "### Hazelcast Versions"
+fill_readme_with_tags README-docker.md "${NAMESPACE}/hazelcast-enterprise" "### Hazelcast Enterprise Versions"

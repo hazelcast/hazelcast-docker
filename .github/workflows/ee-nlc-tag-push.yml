@@ -188,10 +188,6 @@ jobs:
       - name: Push image to remote registry
         if: inputs.DRY_RUN != 'true'
         run: |
-          remote_registry=${{ secrets.NLC_REPOSITORY }}/hazelcast_cloud/${{ secrets.NLC_IMAGE_NAME }}
-          # Extract the registry from the fully-qualified destination
-          remote_registry="${remote_registry%/*}"
-
           # Skopeo expects HTTPS registry but local is HTTP
           skopeo sync \
             --all \
@@ -199,7 +195,7 @@ jobs:
             --src docker \
             --dest docker \
             ${LOCAL_IMAGE_NAME} \
-            ${remote_registry}
+            ${{ secrets.NLC_REPOSITORY }}/${{ vars.NLC_NAMESPACE }}
 
       - name: Check RedHat service status
         if: failure()

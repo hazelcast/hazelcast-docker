@@ -9,13 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        repository:
-          - hazelcast/hazelcast
-          - hazelcast/hazelcast-enterprise
         include:
-          - repository: hazelcast/hazelcast
+          - image_name: hazelcast
             short-description: Hazelcast Docker Image
-          - repository: hazelcast/hazelcast-enterprise
+          - image_name: hazelcast-enterprise
             short-description: Hazelcast Enterprise Docker Image
 
     steps:
@@ -25,13 +22,15 @@ jobs:
       - name: Generate Docker Hub Description
         run: |
           .github/scripts/generate-docker-hub-description.sh
+        env:
+          NAMESPACE: ${{ vars.DOCKERHUB_NAMESPACE }}
 
       - name: Update Docker Hub Description
         uses: peter-evans/dockerhub-description@432a30c9e07499fd01da9f8a49f0faf9e0ca5b77 # v4.0.2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          repository: ${{ matrix.repository }}
+          repository: ${{ vars.DOCKERHUB_NAMESPACE }}/${{ matrix.image_name }}
           short-description: ${{ matrix.short-description }}
           readme-filepath: ./README-docker.md
 
