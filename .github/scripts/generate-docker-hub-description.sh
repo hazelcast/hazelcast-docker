@@ -2,17 +2,24 @@
 
 set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
+# Returns an output _like_:
+# - 5, 5-jdk21, 5.5, 5.5-jdk21, 5.5.0, 5.5.0-jdk21, latest, latest-jdk21
+# - 5-jdk11, 5.3.7, 5.3.7-jdk11, latest-jdk11
+# - 5-jdk17, 5.5-jdk17, 5.5.0-jdk17, latest-jdk17
 function get_formatted_latest_docker_tags() {
   local REPO_NAME=$1
   local PAGE=1
   local TAGS=""
+  local TOKEN=$(get_docker_access_token)
+
   while true; do
     local RESPONSE=$( \
       curl --fail \
         --silent \
         --show-error \
+        --header "Authorization: Bearer ${TOKEN}" \
         "https://hub.docker.com/v2/repositories/$REPO_NAME/tags/?page=${PAGE}&page_size=100")
-    local CURRENT_TAGS=$(echo "${RESPONSE}" | jq -r '.results | group_by(.full_size) | .[] | {image: .[0].name, tags: [.[].name]}')
+    local CURRENT_TAGS=$(echo "${RESPONSE}" | jq -r '.results | group_by(.digest) | .[] | {image: .[0].name, tags: [.[].name]}')
     local TAGS="${TAGS}${CURRENT_TAGS}"
     local  HAS_NEXT=$(echo "${RESPONSE}" | jq -r '.next')
     if [ "$HAS_NEXT" == "null" ]; then
@@ -27,6 +34,17 @@ function get_formatted_latest_docker_tags() {
 )')
 
   echo "${LATEST_TAGS}"| jq -sr '.[] | " - " + (.tags | sort_by(.) | join(", "))' | sort -V
+}
+
+# https://docs.docker.com/reference/api/hub/latest/#tag/authentication-api/operation/AuthCreateAccessToken
+function get_docker_access_token() {
+  curl --fail \
+    --silent \
+    --show-error \
+    --header "Content-Type: application/json" \
+    --data "{\"identifier\":\"${USERNAME}\",\"secret\":\"${PASSWORD}\"}" \
+    https://hub.docker.com/v2/auth/token | 
+    jq -r '.access_token'
 }
 
 function fill_readme_with_tags() {
@@ -50,5 +68,5 @@ r $tags_file
 }
 
 cp README.md README-docker.md
-fill_readme_with_tags README-docker.md "${NAMESPACE}/hazelcast" "### Hazelcast Versions"
-fill_readme_with_tags README-docker.md "${NAMESPACE}/hazelcast-enterprise" "### Hazelcast Enterprise Versions"
+fill_readme_with_tags README-docker.md "${NAMESPACE}/${OSS_IMAGE_NAME}" "### Hazelcast Versions"
+fill_readme_with_tags README-docker.md "${NAMESPACE}/${EE_IMAGE_NAME}" "### Hazelcast Enterprise Versions"
