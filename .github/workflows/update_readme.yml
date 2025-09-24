@@ -48,6 +48,7 @@ jobs:
         run: |
           .github/scripts/generate-docker-hub-description.sh
         env:
+          NAMESPACE: ${{ vars.DOCKERHUB_NAMESPACE }}
           OSS_IMAGE_NAME: ${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}
           EE_IMAGE_NAME: ${{ vars.DOCKERHUB_EE_IMAGE_NAME }}
           USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
