@@ -59,10 +59,17 @@ function derive_expected_distribution_type() {
   esac
 }
 
+# Reference to super function
+eval "super_$(declare -f hz_health_check_cmd)"
+
 function hz_health_check_cmd() {
-  local status
-  status=$(docker inspect "${container_name}" --format '{{json .State.Health.Status}}' | jq -r)
-  [[ "${status}" == "healthy" ]]
+  # Not all image versions support healthcheck
+  local healthcheck_status
+  if healthcheck_status=$(docker inspect "${container_name}" --format '{{json .State.Health.Status}}' | jq -r); then
+    [[ "${healthcheck_status}" == "healthy" ]]
+  else
+    super_hz_health_check_cmd
+  fi
 }
 
 image=$1
