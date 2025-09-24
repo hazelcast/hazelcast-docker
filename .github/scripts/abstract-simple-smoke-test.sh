@@ -44,6 +44,11 @@ function check_metadata() {
 }
 
 function hz_health_check_cmd() {
+  curl_hz_health_check_cmd
+}
+
+# Default implementation
+function hz_health_check_cmd_curl() {
   curl --silent --fail "127.0.0.1:5701/hazelcast/health/ready"
 }
 
