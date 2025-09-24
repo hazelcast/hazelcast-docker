@@ -31,8 +31,6 @@ jobs:
           fi
 
   get-latest-patch-versions:
-    needs: get-environment
-    environment: ${{ needs.get-environment.outputs.environment }}
     runs-on: ubuntu-latest
     name: Get latest patch versions
     outputs:
@@ -119,9 +117,7 @@ jobs:
 
   rebuild-nlc:
     name: Rebuild EE NLC images
-    needs:
-      - get-environment
-      - convert-rebuilds-to-matrix
+    needs: convert-rebuilds-to-matrix
     if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
     strategy:
       matrix:
