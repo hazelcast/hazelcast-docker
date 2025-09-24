@@ -10,7 +10,7 @@ function get_formatted_latest_docker_tags() {
   local REPO_NAME=$1
   local PAGE=1
   local TAGS=""
-  local TOKEN=$(get_docker_token)
+  local TOKEN=$(get_docker_access_token)
 
   while true; do
     local RESPONSE=$( \
@@ -36,14 +36,15 @@ function get_formatted_latest_docker_tags() {
   echo "${LATEST_TAGS}"| jq -sr '.[] | " - " + (.tags | sort_by(.) | join(", "))' | sort -V
 }
 
-function get_docker_token() {
+# https://docs.docker.com/reference/api/hub/latest/#tag/authentication-api/operation/AuthCreateAccessToken
+function get_docker_access_token() {
   curl --fail \
     --silent \
     --show-error \
     --header "Content-Type: application/json" \
-    --data "{\"username\":\"${USERNAME}\",\"password\":\"${PASSWORD}\"}" \
-    https://hub.docker.com/v2/users/login/ | 
-    jq -r '.token'
+    --data "{\"identifier\":\"${USERNAME}\",\"secret\":\"${PASSWORD}\"}" \
+    https://hub.docker.com/v2/auth/token | 
+    jq -r '.access_token'
 }
 
 function fill_readme_with_tags() {
