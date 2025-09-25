@@ -20,15 +20,9 @@ jobs:
   get-environment:
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.determine-environment.outputs.environment }}
+      environment: ${{ inputs.ENVIRONMENT || 'live' }}
     steps:
-      - id: determine-environment
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "environment=${{ inputs.ENVIRONMENT }}" >> "${GITHUB_OUTPUT}"
-          else
-            echo "environment=live" >> "${GITHUB_OUTPUT}"
-          fi
+      - run: exit 0
 
   get-latest-patch-versions:
     runs-on: ubuntu-latest
