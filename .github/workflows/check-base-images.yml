@@ -20,129 +20,21 @@ jobs:
   get-environment:
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.determine-environment.outputs.environment }}
+      environment1: ${{ steps.determine-environment.outputs.environment1 }}
+      environment2: ${{ inputs.ENVIRONMENT || 'live' }}
     steps:
       - id: determine-environment
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "environment=${{ inputs.ENVIRONMENT }}" >> "${GITHUB_OUTPUT}"
-          else
-            echo "environment=live" >> "${GITHUB_OUTPUT}"
-          fi
+          echo "environment1=${{ inputs.ENVIRONMENT || 'live' }}" >> "${GITHUB_OUTPUT}"
 
-  get-latest-patch-versions:
-    runs-on: ubuntu-latest
-    name: Get latest patch versions
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    env:
-      MINIMAL_SUPPORTED_VERSION: ${{ inputs.MINIMAL_SUPPORTED_VERSION }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - id: get-maintenance-versions
-        uses: hazelcast/hazelcast/.github/actions/get-supported-maintenance-versions@master
-      - name: Calculate minimal supported version
-        run: echo "DEFAULT_MINIMAL_SUPPORTED_VERSION=$(echo '${{ steps.get-maintenance-versions.outputs.versions }}' | jq '.[0]')" >> $GITHUB_ENV
-      - id: set-matrix
-        name: Get latest patch versions
-        run: |
-          . .github/scripts/logging.functions.sh
-          . .github/scripts/version.functions.sh
-          MIN_VERSION=${MINIMAL_SUPPORTED_VERSION:-$DEFAULT_MINIMAL_SUPPORTED_VERSION}
-          echodebug "Getting latest patch versions starting from $MIN_VERSION"
-          versions=$(printf '%s\n' $(get_latest_patch_versions "${MIN_VERSION}") | jq --raw-input . | jq --compact-output --slurp .)
-          echodebug "Found latest patch versions: ${versions}"
-          echo "matrix={\"version\":$versions}" >> $GITHUB_OUTPUT
-
-  # Only checks enterprise
   calculate-rebuilds:
-    environment: ${{ needs.get-environment.outputs.environment }}
     runs-on: ubuntu-latest
-    name: Calculate if ${{ matrix.version }} needs a rebuild
     needs:
       - get-environment
-      - get-latest-patch-versions
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
     steps:
-      - id: check-base-images
-        uses: hazelcast/docker-actions/check-base-images@master
-        with:
-          ref: v${{ matrix.version }}
-          image-name: ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ matrix.version }}-slim
-          dockerfile-path: "hazelcast-enterprise/Dockerfile"
-
       - name: Check if ${{ matrix.version }} base images updated
         if: steps.check-base-images.outputs.outdated == 'true'
         run: |
-          echo "${{ matrix.version }}" >> rebuild-EE-${{ matrix.version }}
-        # GitHub doesn't support outputs of matrix jobs - https://github.com/orgs/community/discussions/26639
-        # Instead, write the content to artifact(s) and upload those to consume downstream
+          echo "environment1 is ${{ needs.get-environment.outputs.environment1}}"
+          echo "environment2 is ${{ needs.get-environment.outputs.environment2}}"
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.version }}
-          path: rebuild-*
-          if-no-files-found: ignore
-
-  convert-rebuilds-to-matrix:
-    runs-on: ubuntu-latest
-    name: Prepare matrix of rebuilds to execute
-    needs: calculate-rebuilds
-    outputs:
-      rebuild-ee-matrix: ${{ steps.set-matrix.outputs.rebuild_ee_matrix }}
-    steps:
-      - uses: actions/download-artifact@v5
-      - id: set-matrix
-        run: |
-          # Invert matrix
-          rebuild_ee_matrix=$((cat **/rebuild-EE-* 2>/dev/null || true) | jq --raw-input --slurp --compact-output 'split("\n")[:-1]')
-          echo "rebuild_ee_matrix=${rebuild_ee_matrix}" >> ${GITHUB_OUTPUT}
-
-  rebuild-ee:
-    name: Rebuild EE images
-    needs:
-      - get-environment
-      - convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
-    strategy:
-      matrix:
-        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
-    uses: ./.github/workflows/tag_image_push.yml
-    with:
-      SOURCE_REF: v${{ matrix.version }}
-      ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
-    secrets: inherit
-
-  rebuild-nlc:
-    name: Rebuild EE NLC images
-    needs:
-      - get-environment
-      - convert-rebuilds-to-matrix
-    if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
-    strategy:
-      matrix:
-        version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
-    uses: ./.github/workflows/ee-nlc-tag-push.yml
-    with:
-      SOURCE_REF: v${{ matrix.version }}
-      ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
-    secrets: inherit
-
-  failure-notifications:
-    runs-on: ubuntu-latest
-    name: Failure notification
-    if: failure() && github.event_name != 'workflow_dispatch'
-    needs:
-      - rebuild-ee
-      - rebuild-nlc
-    steps:
-      - name: Slack notification
-        uses: hazelcast/docker-actions/slack-notification@master
-        with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-          status: failure
