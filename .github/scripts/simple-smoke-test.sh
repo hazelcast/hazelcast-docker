@@ -5,6 +5,9 @@ set -o errexit ${RUNNER_DEBUG:+-x}
 # shellcheck source=../.github/scripts/abstract-simple-smoke-test.sh
 . .github/scripts/abstract-simple-smoke-test.sh
 
+# shellcheck source=../.github/scripts/version.functions.sh
+. .github/scripts/version.functions.sh
+
 function remove_container_if_exists() {
     local containers
     containers=$(docker ps --all --quiet --filter name="${container_name}")
@@ -60,9 +63,14 @@ function derive_expected_distribution_type() {
 }
 
 function hz_health_check_cmd() {
-  local status
-  status=$(docker inspect "${container_name}" --format '{{json .State.Health.Status}}' | jq -r)
-  [[ "${status}" == "healthy" ]]
+  # Not all image versions support healthcheck
+  if version_less_or_equal "${expected_version}" 5.6.99; then
+    hz_health_check_cmd_curl
+  else
+    local status
+    status=$(docker inspect "${container_name}" --format '{{json .State.Health.Status}}' | jq -r)
+    [[ "${status}" == "healthy" ]]
+  fi
 }
 
 image=$1
