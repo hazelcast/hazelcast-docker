@@ -20,7 +20,7 @@ jobs:
   get-environment:
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.determine-environment.outputs.determine-environment }}
+      environment: ${{ steps.determine-environment.outputs.environment }}
     steps:
       - id: determine-environment
         run: |
