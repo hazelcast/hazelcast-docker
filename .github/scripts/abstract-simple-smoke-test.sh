@@ -44,7 +44,7 @@ function check_metadata() {
 }
 
 function hz_health_check_cmd() {
-  curl_hz_health_check_cmd
+  hz_health_check_cmd_curl
 }
 
 # Default implementation
