@@ -33,7 +33,6 @@ jobs:
       - get-environment
     steps:
       - name: Check if ${{ matrix.version }} base images updated
-        if: steps.check-base-images.outputs.outdated == 'true'
         run: |
           echo "environment1 is ${{ needs.get-environment.outputs.environment1}}"
           echo "environment2 is ${{ needs.get-environment.outputs.environment2}}"
