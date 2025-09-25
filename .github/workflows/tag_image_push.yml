@@ -63,6 +63,7 @@ on:
 
 jobs:
   prepare:
+    environment: live
     runs-on: ubuntu-latest
     env:
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
@@ -106,10 +107,10 @@ jobs:
           entries=()
 
           if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
-            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"hazelcast","build-functions-script-path":".github/scripts/oss-build.functions.sh"}')
+            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","build-functions-script-path":".github/scripts/oss-build.functions.sh"}')
           fi
           if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "yes" ]; then
-            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"hazelcast-enterprise","build-functions-script-path":".github/scripts/ee-build.functions.sh"}')
+            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","build-functions-script-path":".github/scripts/ee-build.functions.sh"}')
           fi
 
           json="[$(IFS=,; echo "${entries[*]}")]"
@@ -330,6 +331,8 @@ jobs:
       - push
     if: inputs.DRY_RUN != 'true' && !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT')
     uses: ./.github/workflows/update_readme.yml
+    with:
+      ENVIRONMENT: live
     secrets: inherit
 
   push-rhel:
