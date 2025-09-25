@@ -20,7 +20,7 @@ jobs:
   get-environment:
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.determine-environment.outputs.determine-environment }}
+      environment: ${{ steps.determine-environment.outputs.environment }}
     steps:
       - id: determine-environment
         run: |
@@ -105,7 +105,9 @@ jobs:
 
   rebuild-ee:
     name: Rebuild EE images
-    needs: convert-rebuilds-to-matrix
+    needs:
+      - get-environment
+      - convert-rebuilds-to-matrix
     if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
     strategy:
       matrix:
@@ -113,11 +115,14 @@ jobs:
     uses: ./.github/workflows/tag_image_push.yml
     with:
       SOURCE_REF: v${{ matrix.version }}
+      ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
     secrets: inherit
 
   rebuild-nlc:
     name: Rebuild EE NLC images
-    needs: convert-rebuilds-to-matrix
+    needs:
+      - get-environment
+      - convert-rebuilds-to-matrix
     if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
     strategy:
       matrix:
@@ -125,6 +130,7 @@ jobs:
     uses: ./.github/workflows/ee-nlc-tag-push.yml
     with:
       SOURCE_REF: v${{ matrix.version }}
+      ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
     secrets: inherit
 
   failure-notifications:

@@ -35,6 +35,13 @@ on:
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
         required: false
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: choice
+        options:
+          - sandbox
+          - live
   workflow_call:
     inputs:
       SOURCE_REF:
@@ -60,10 +67,14 @@ on:
         description: 'Commit id of Hazelcast snapshot jar'
         required: false
         type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
 
 jobs:
   prepare:
-    environment: live
+    environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     env:
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
@@ -120,6 +131,7 @@ jobs:
     uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@master
 
   push:
+    environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     needs:
       - prepare
@@ -332,7 +344,7 @@ jobs:
     if: inputs.DRY_RUN != 'true' && !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT')
     uses: ./.github/workflows/update_readme.yml
     with:
-      ENVIRONMENT: live
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
 
   push-rhel:
@@ -347,7 +359,7 @@ jobs:
       JDKS: ${{ needs.prepare.outputs.jdks }} 
       IS_LATEST_LTS: ${{ needs.push.outputs.is_latest_lts }}
       DEFAULT_JDK: ${{ needs.push.outputs.default_jdk }}
-      ENVIRONMENT: live
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
 
   failure-notifications:
