@@ -156,6 +156,8 @@ jobs:
 
       - name: Get dist ZIP
         run: |
+          . .github/scripts/build.functions.sh
+
           case "${{ matrix.distribution-type.label }}" in
               "oss")
                 if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
@@ -179,18 +181,14 @@ jobs:
               ;;
           esac
 
-          mvn \
-            dependency:2.10:get \
-            -DremoteRepositories="${repo}" \
-            -DgroupId="com.hazelcast" \
-            -DartifactId="${{ matrix.distribution-type.artifact-id }}" \
-            -Dversion="${HZ_VERSION}" \
-            -Dclassifier="${{ matrix.variant.classifier }}" \
-            -Dpackaging=zip \
-            -Dtransitive=false \
-            -Ddest="${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.artifact-id }}.zip" \
-            --batch-mode \
-            --no-transfer-progress
+          download_maven_artifact \
+            "${repo}" \
+            "com.hazelcast" \
+            "${{ matrix.distribution-type.artifact-id }}" \
+            "${HZ_VERSION}" \
+            "${{ matrix.variant.classifier }}" \
+            zip \
+            "${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.artifact-id }}.zip"
 
       - name: Check if latest EE LTS release
         if: matrix.distribution-type.label == 'ee'
