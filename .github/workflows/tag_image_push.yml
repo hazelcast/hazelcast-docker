@@ -158,8 +158,7 @@ jobs:
         run: |
           case "${{ matrix.distribution-type.label }}" in
               "oss")
-                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]
-                then
+                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
                     repo="https://${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}:${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}@repository.hazelcast.com/snapshot-internal"
                 else
                     # Implicit Maven central
@@ -167,8 +166,7 @@ jobs:
                 fi
               ;;
               "ee")
-                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]
-                then  
+                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then  
                     repo=snapshot
                 else
                     repo=release
