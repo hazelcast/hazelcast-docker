@@ -107,10 +107,10 @@ jobs:
           entries=()
 
           if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
-            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","build-functions-script-path":".github/scripts/oss-build.functions.sh"}')
+            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","artifact-id":"hazelcast-distribution"}')
           fi
           if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "yes" ]; then
-            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","build-functions-script-path":".github/scripts/ee-build.functions.sh"}')
+            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","artifact-id":"hazelcast-enterprise-distribution"}')
           fi
 
           json="[$(IFS=,; echo "${entries[*]}")]"
@@ -154,17 +154,45 @@ jobs:
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
 
-      - name: Get dist ZIP URL
-        id: dist-zip-url
+      - name: Get dist ZIP
         run: |
-          . ${{ matrix.distribution-type.build-functions-script-path }}
+          case "${{ matrix.distribution-type.label }}" in
+              "oss")
+                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]
+                then
+                    repo="https://${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}:${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}@repository.hazelcast.com/snapshot-internal"
+                else
+                    # Implicit Maven central
+                    repo=""
+                fi
+              ;;
+              "ee")
+                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]
+                then  
+                    repo=snapshot
+                else
+                    repo=release
+                fi
 
-          if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-            HZ_SNAPSHOT_INTERNAL_USERNAME=${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
-            HZ_SNAPSHOT_INTERNAL_PASSWORD=${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
-          fi
+                repo="https://repository.hazelcast.com/${repo}"
+              ;;
+              *)
+              echoerr "Unsupported repository behaviour for ${{ matrix.distribution-type.label }}" ; return 1
+              ;;
+          esac
 
-          echo "HAZELCAST_ZIP_URL=$(get_hz_dist_zip "${{ matrix.variant.classifier }}" "${HZ_VERSION}")" >> ${GITHUB_OUTPUT}
+          mvn \
+            dependency:2.10:get \
+            -DremoteRepositories="${repo}" \
+            -DgroupId="com.hazelcast" \
+            -DartifactId="${{ matrix.distribution-type.artifact-id }}" \
+            -Dversion="${HZ_VERSION}" \
+            -Dclassifier="${{ matrix.variant.classifier }}" \
+            -Dpackaging=zip \
+            -Dtransitive=false \
+            -Ddest="${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.artifact-id }}.zip" \
+            --batch-mode \
+            --no-transfer-progress
 
       - name: Check if latest EE LTS release
         if: matrix.distribution-type.label == 'ee'
@@ -256,7 +284,6 @@ jobs:
           tags: ${{ steps.tags.outputs.TAGS }}
           build-args: |
             JDK_VERSION=${{ matrix.jdk }}
-            HAZELCAST_ZIP_URL=${{ steps.dist-zip-url.outputs.HAZELCAST_ZIP_URL }}
 
       - name: Run smoke test against image
         timeout-minutes: 2
