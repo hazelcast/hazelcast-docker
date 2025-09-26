@@ -167,12 +167,12 @@ jobs:
               ;;
               "ee")
                 if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then  
-                    repo=snapshot
+                    sub_repo=snapshot
                 else
-                    repo=release
+                    sub_repo=release
                 fi
 
-                repo="https://repository.hazelcast.com/${repo}"
+                repo="https://repository.hazelcast.com/${sub_repo}"
               ;;
               *)
               echoerr "Unsupported repository behaviour for ${{ matrix.distribution-type.label }}" ; return 1
