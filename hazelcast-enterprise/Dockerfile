@@ -45,7 +45,7 @@ RUN echo "Upgrading packages" \
     && microdnf -y update --nodocs \
     && echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
-        --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless zip tar tzdata-java util-linux \
+        --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless unzip tar tzdata-java util-linux \
     && if [[ ! -f ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} ]]; then \
         if [ -z ${HAZELCAST_ZIP_URL} ]; then \
             source ${HZ_HOME}/maven.functions.sh; \
@@ -64,7 +64,7 @@ RUN echo "Upgrading packages" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Removing unnecessary packages and redundant files/folders" \
-    && microdnf -y remove zip unzip \
+    && microdnf -y remove unzip \
     && microdnf -y clean all \
     && rm -rf ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} maven.functions.sh${HZ_HOME}/tmp \
     # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
