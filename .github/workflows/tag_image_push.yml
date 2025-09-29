@@ -169,16 +169,16 @@ jobs:
           case "${{ matrix.distribution-type.label }}" in
               "oss")
                 if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-                    repo="${{ vars.MAVEN_OSS_SNAPSHOT_REPO }}}"
+                    repo="${{ vars.MAVEN_OSS_SNAPSHOT_REPO }}"
                 else
-                    repo="${{ vars.MAVEN_OSS_RELEASE_REPO }}}"
+                    repo="${{ vars.MAVEN_OSS_RELEASE_REPO }}"
                 fi
               ;;
               "ee")
                 if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-                    repo="${{ vars.MAVEN_EE_SNAPSHOT_REPO }}}"
+                    repo="${{ vars.MAVEN_EE_SNAPSHOT_REPO }}"
                 else
-                    repo="${{ vars.MAVEN_EE_RELEASE_REPO }}}"
+                    repo="${{ vars.MAVEN_EE_RELEASE_REPO }}"
                 fi
               ;;
               *)
