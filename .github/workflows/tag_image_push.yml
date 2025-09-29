@@ -166,7 +166,7 @@ jobs:
                 fi
               ;;
               "ee")
-                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then  
+                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
                     sub_repo=snapshot
                 else
                     sub_repo=release
