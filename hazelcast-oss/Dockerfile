@@ -34,7 +34,7 @@ COPY *.jar hazelcast-*.zip maven.functions.sh ${HZ_HOME}/
 RUN echo "Upgrading packages" \
     && apk upgrade --no-cache \
     && echo "Installing new packages" \
-    && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl libxml2-utils zip unzip \
+    && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl libxml2-utils unzip \
     && if [[ ! -f ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} ]]; then \
        if [ -z ${HAZELCAST_ZIP_URL} ]; then \
             source ${HZ_HOME}/maven.functions.sh; \
@@ -53,7 +53,7 @@ RUN echo "Upgrading packages" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Removing unnecessary packages and redundant files/folders" \
-    && apk del libxml2-utils zip unzip \
+    && apk del libxml2-utils unzip \
     && rm -rf /var/cache/apk/* ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} ${HZ_HOME}/tmp \
     # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
     && chmod +x ${HZ_HOME}/bin/*
