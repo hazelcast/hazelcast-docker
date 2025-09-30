@@ -166,25 +166,32 @@ jobs:
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
 
+      # https://github.com/s4u/maven-settings-action/releases/tag/v4.0.0
+      - uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788
+        with:
+          servers: |
+            [{
+                "id": "snapshot-internal",
+                "username": "${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}",
+                "password": "${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}"
+            }]
+
       - name: Get dist ZIP
         run: |
           case "${{ matrix.distribution-type.label }}" in
               "oss")
                 if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-                    repo="https://${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}:${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}@repository.hazelcast.com/snapshot-internal"
+                    repo="${{ vars.MAVEN_OSS_SNAPSHOT_REPO }}"
                 else
-                    # Implicit Maven central
-                    repo=""
+                    repo="${{ vars.MAVEN_OSS_RELEASE_REPO }}"
                 fi
               ;;
               "ee")
                 if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-                    sub_repo=snapshot
+                    repo="${{ vars.MAVEN_EE_SNAPSHOT_REPO }}"
                 else
-                    sub_repo=release
+                    repo="${{ vars.MAVEN_EE_RELEASE_REPO }}"
                 fi
-
-                repo="https://repository.hazelcast.com/${sub_repo}"
               ;;
               *)
               echoerr "Unsupported repository behaviour for ${{ matrix.distribution-type.label }}" ; return 1
