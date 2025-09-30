@@ -17,6 +17,13 @@ on:
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
         required: false
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: choice
+        options:
+          - sandbox
+          - live
   workflow_call:
     inputs:
       SOURCE_REF:
@@ -31,6 +38,10 @@ on:
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
         required: false
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
         type: string
 
 jobs:
@@ -56,7 +67,7 @@ jobs:
           HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
 
   push:
-    environment: live
+    environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     needs: prepare
     strategy:
