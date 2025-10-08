@@ -18,10 +18,7 @@ on:
       ENVIRONMENT:
         description: 'Environment to use'
         required: true
-        type: choice
-        options:
-          - sandbox
-          - live
+        type: environment
   workflow_call:
     inputs:
       HZ_VERSION:
