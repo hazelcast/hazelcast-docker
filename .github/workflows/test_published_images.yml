@@ -94,6 +94,12 @@ jobs:
         with:
           version: ${{ inputs.EXPECTED_HZ_VERSION }}
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
@@ -106,21 +112,16 @@ jobs:
         with:
           secret-ids: |
             REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT,REDHAT/REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT
+            NLC/IMAGE_REGISTRY
           parse-json-secrets: true
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Login to NLC Repository
+      - name: Login to NLC registry
         if: matrix.distribution-type == 'ee'
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.NLC_REPOSITORY }}
-          username: ${{ secrets.NLC_REPO_USERNAME }}
-          password: ${{ secrets.NLC_REPO_TOKEN }}
+          registry: ${{ env.NLC_IMAGE_REGISTRY_URL }}
+          username: ${{ env.NLC_IMAGE_REGISTRY_USERNAME }}
+          password: ${{ env.NLC_IMAGE_REGISTRY_TOKEN }}
 
       - name: Login to Red Hat Catalog
         if: matrix.distribution-type == 'ee'
