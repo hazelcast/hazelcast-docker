@@ -196,7 +196,6 @@ jobs:
         uses: aws-actions/aws-secretsmanager-get-secrets@v2
         with:
           secret-ids: |
-            REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT,REDHAT/REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT
             NLC/IMAGE_REGISTRY
             SLACK_WEBHOOK,SLACK/WEBHOOK_HAZELCAST_DOCKER_NOTIFICATIONS
           parse-json-secrets: true
