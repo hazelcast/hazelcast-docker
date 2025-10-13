@@ -29,7 +29,7 @@ on:
         required: true
         type: string
       JDKS:
-        description: 'JDKs - e.g. `[17, 21]`'
+        description: 'Supported JDKs - e.g. `[17, 21]`'
         required: true
         type: string
       IS_LATEST_LTS:
