@@ -7,7 +7,7 @@ on:
         description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
         required: true
       JDKS:
-        description: 'JDKs - e.g. `[17, 21]`'
+        description: 'Supported JDKs - e.g. `[17, 21]`'
         required: true
       IS_LATEST_LTS:
         description: 'Is Latest LTS? e.g. `false`'
