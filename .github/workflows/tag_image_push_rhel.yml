@@ -7,13 +7,13 @@ on:
         description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
         required: true
       JDKS:
-        description: 'e.g. `[17, 21]`'
+        description: 'JDKs - e.g. `[17, 21]`'
         required: true
       IS_LATEST_LTS:
-        description: 'e.g. `false`'
+        description: 'Is Latest LTS? e.g. `false`'
         required: true
       DEFAULT_JDK:
-        description: 'e.g. `21`'
+        description: 'Default JDK - e.g. `21`'
         required: true
       ENVIRONMENT:
         description: 'Environment to use'
@@ -29,15 +29,15 @@ on:
         required: true
         type: string
       JDKS:
-        description: 'e.g. `[17, 21]`'
+        description: 'JDKs - e.g. `[17, 21]`'
         required: true
         type: string
       IS_LATEST_LTS:
-        description: 'e.g. `false`'
+        description: 'Is Latest LTS? e.g. `false`'
         required: true
         type: string
       DEFAULT_JDK:
-        description: 'e.g. `21`'
+        description: 'Default JDK - e.g. `21`'
         required: true
         type: string
       ENVIRONMENT:
