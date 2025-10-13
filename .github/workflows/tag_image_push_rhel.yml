@@ -13,7 +13,7 @@ on:
         description: 'Is Latest LTS? e.g. `false`'
         required: true
       DEFAULT_JDK:
-        description: 'Default JDK - e.g. `21`'
+        description: 'The Java major version (e.g. `21`, `8`) used by default in the image'
         required: true
       ENVIRONMENT:
         description: 'Environment to use'
@@ -37,7 +37,7 @@ on:
         required: true
         type: string
       DEFAULT_JDK:
-        description: 'Default JDK - e.g. `21`'
+        description: 'The Java major version (e.g. `21`, `8`) used by default in the image'
         required: true
         type: string
       ENVIRONMENT:
