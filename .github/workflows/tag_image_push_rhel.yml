@@ -29,22 +29,10 @@ jobs:
               docker://quay.io/redhat-isv-containers/${{ secrets.RHEL_PROJECT_ID_V5 }}:${destination_tag}
           }
 
-          TAGS_TO_PUSH="5.4.3-jdk21 5.4.3 5.4-jdk21 5.4"
-          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
-
-          for tag in ${TAGS_TO_PUSH[@]}
-          do
-            copy_image ${tag} ${tag}
-          done
-
-          # Add a "unique" tag to workaround RedHat bug
-          # Get the first tag
-          PRIMARY_TAG=${TAGS_TO_PUSH%% *}
-          # Keep a reference to _a_ tag to get the image later on
-          echo "PRIMARY_TAG=${PRIMARY_TAG}" >> ${GITHUB_ENV}
+          copy_image 5.4.3-jdk21 5.4.3-jdk21
 
           # Add date as a dummy tag (e.g. 5.4.1-jdk17-20250909130347)
-          copy_image ${PRIMARY_TAG} ${PRIMARY_TAG}-$(date +"%Y%m%d%H%M%S")
+          copy_image 5.4.3-jdk21 5.4.3-jdk21-$(date +"%Y%m%d%H%M%S")
 
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
@@ -55,7 +43,7 @@ jobs:
 
       - name: Run preflight scan
         run: |
-          preflight check container "quay.io/redhat-isv-containers/${{ secrets.RHEL_PROJECT_ID_V5 }}:${PRIMARY_TAG}" \
+          preflight check container "quay.io/redhat-isv-containers/${{ secrets.RHEL_PROJECT_ID_V5 }}:5.4.3-jdk21" \
             --submit --pyxis-api-token=${{ secrets.RHEL_API_KEY }} \
             --certification-component-id=${{ secrets.RHEL_PROJECT_ID_V5 }} \
             --docker-config ~/.docker/config.json
