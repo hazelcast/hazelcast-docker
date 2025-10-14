@@ -7,33 +7,6 @@ jobs:
     environment: live
     runs-on: ubuntu-latest
     steps:
-      - name: Log in to Red Hat Scan Registry
-        uses: docker/login-action@v3
-        with:
-          registry: quay.io
-          username: redhat-isv-containers+${{ secrets.RHEL_PROJECT_ID_V5 }}-robot
-          password: ${{ secrets.SCAN_REGISTRY_PASSWORD_V5 }}
-
-      - name: Copy image to RedHat Container Registry
-        run: |
-          copy_image()
-          {
-            local source_tag=$1
-            local destination_tag=$2
-
-            # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
-            skopeo copy \
-              --override-os linux \
-              --override-arch amd64 \
-              docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${source_tag} \
-              docker://quay.io/redhat-isv-containers/${{ secrets.RHEL_PROJECT_ID_V5 }}:${destination_tag}
-          }
-
-          copy_image 5.4.3-jdk21 5.4.3-jdk21
-
-          # Add date as a dummy tag (e.g. 5.4.1-jdk17-20250909130347)
-          copy_image 5.4.3-jdk21 5.4.3-jdk21-$(date +"%Y%m%d%H%M%S")
-
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
         with:
