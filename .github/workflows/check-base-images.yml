@@ -9,10 +9,7 @@ on:
       ENVIRONMENT:
         description: 'Environment to use'
         required: true
-        type: choice
-        options:
-          - sandbox
-          - live
+        type: environment
   schedule:
     - cron: '0 6 * * *'
 
