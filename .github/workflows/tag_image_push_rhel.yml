@@ -127,7 +127,7 @@ jobs:
           # Get the first tag
           PRIMARY_TAG=${TAGS_TO_PUSH%% *}
           # Keep a reference to _a_ tag to get the image later on
-          echo "PRIMARY_TAG=${tag}" >> ${GITHUB_ENV}
+          echo "PRIMARY_TAG=${PRIMARY_TAG}" >> ${GITHUB_ENV}
 
           # Add date as a dummy tag (e.g. 5.4.1-jdk17-20250909130347)
           copy_image ${PRIMARY_TAG} ${PRIMARY_TAG}-$(date +"%Y%m%d%H%M%S")
