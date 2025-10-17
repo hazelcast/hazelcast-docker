@@ -79,6 +79,7 @@ jobs:
       distribution-types: ${{ steps.distribution-type-matrix.outputs.matrix }}
       HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
       jdks: ${{ steps.jdks.outputs.jdks }}
+      default-jdk: ${{ steps.jdks.outputs.default-jdk }}
       should-build-ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
     steps:
       - name: Checkout Code
@@ -216,13 +217,6 @@ jobs:
           hz_version: ${{ env.HZ_VERSION }}
           is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
-      - name: Get default JDK
-        id: default-jdk
-        run: |
-          . .github/scripts/docker.functions.sh
-
-          echo "default_jdk=$(get_default_jdk ${{ matrix.distribution-type.docker-dir }})" >> ${GITHUB_OUTPUT}
-
       - name: Calculate tags
         id: tags
         run: |
@@ -237,7 +231,7 @@ jobs:
                 VERSIONS+=(latest-snapshot)
             fi
             
-            TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${{ steps.default-jdk.outputs.default_jdk }}")
+            TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${{ jobs.prepare.outputs.default-jdk }}")
           else
             case "${{ matrix.distribution-type.label }}" in
                 "oss")
@@ -252,7 +246,7 @@ jobs:
                 ;;
             esac
 
-            TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${{ steps.default-jdk.outputs.default_jdk }}" "${IS_LATEST_LTS}")
+            TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${{ jobs.prepare.outputs.default-jdk }}" "${IS_LATEST_LTS}")
           fi
 
           # Keep a reference to _a_ tag to get the image later on
