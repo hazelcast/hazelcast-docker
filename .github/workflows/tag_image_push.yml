@@ -319,19 +319,33 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            JFROG,JFROG/WRITE_DEV_ACCOUNT
+          parse-json-secrets: true
+
       - name: Login to JFrog
         if: inputs.DRY_RUN != 'true'
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.JFROG_REGISTRY }}
-          username: ${{ secrets.JFROG_USERNAME }}
-          password: ${{ secrets.JFROG_PASSWORD }}
+          registry: ${{ env.JFROG_URL }}
+          username: ${{ env.JFROG_USERNAME }}
+          password: ${{ env.JFROG_PASSWORD }}
 
       - name: Push image to remote registry
         if: inputs.DRY_RUN != 'true'
         run: |
           if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-            remote_registry=${{ secrets.JFROG_REGISTRY }}/docker/hazelcast
+            remote_registry=${{ env.JFROG_URL }}/docker/hazelcast
           else
             remote_registry=hazelcast
           fi
@@ -395,8 +409,22 @@ jobs:
       - readme
       - create-release
     steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            SLACK_WEBHOOK,SLACK/WEBHOOK_HAZELCAST_DOCKER_NOTIFICATIONS
+          parse-json-secrets: true
+
       - name: Slack notification
         uses: hazelcast/docker-actions/slack-notification@master
         with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          slack-webhook-url: ${{ env.SLACK_WEBHOOK }}
           status: failure
