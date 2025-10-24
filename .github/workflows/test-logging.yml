@@ -7,5 +7,7 @@ jobs:
       - run: |
           source /dev/stdin <<< "$(curl --silent https://raw.githubusercontent.com/hazelcast/hazelcast-docker/master/.github/scripts/logging.functions.sh)"
 
+          echo "Just a regular echo message"
+          echodebug "Checking credentials registered with flux capacitor..."
           echonotice "No explicit authentication credentials registered, assuming default"
           echoerr "Unable to extract artifact"
