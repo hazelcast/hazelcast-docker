@@ -8,4 +8,4 @@ jobs:
           source /dev/stdin <<< "$(curl --silent https://raw.githubusercontent.com/hazelcast/hazelcast-docker/master/.github/scripts/logging.functions.sh)"
 
           echonotice "No explicit authentication credentials registered, assuming default"
-          echoerror "Unable to extract artifact"
+          echoerr "Unable to extract artifact"
