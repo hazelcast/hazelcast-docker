@@ -87,7 +87,7 @@ jobs:
     outputs:
       rebuild-ee-matrix: ${{ steps.set-matrix.outputs.rebuild_ee_matrix }}
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
       - id: set-matrix
         run: |
           # Invert matrix
