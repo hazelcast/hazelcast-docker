@@ -120,7 +120,7 @@ jobs:
           LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${{ secrets.NLC_IMAGE_NAME }}
           echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
 
-          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${HZ_VERSION}" "" "${{ matrix.jdk }}" "${{ jobs.prepare.outputs.default-jdk }}")
+          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${HZ_VERSION}" "" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}")
 
           # Keep a reference to _a_ tag to get the image later on
           echo "PRIMARY_TAG=${TAGS_TO_PUSH%% *}" >> ${GITHUB_ENV}
@@ -176,13 +176,28 @@ jobs:
           name: docker-logs-tag-image-push-nlc-${{ env.HZ_VERSION }}-jdk${{ matrix.jdk }}
           path: docker-*.log
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            NLC/IMAGE_REGISTRY
+            SLACK_WEBHOOK,SLACK/WEBHOOK_HAZELCAST_DOCKER_NOTIFICATIONS
+          parse-json-secrets: true
+
       - name: Login to NLC registry
         if: inputs.DRY_RUN != 'true'
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.NLC_REPOSITORY }}
-          username: ${{ secrets.NLC_REPO_USERNAME }}
-          password: ${{ secrets.NLC_REPO_TOKEN }}
+          registry: ${{ env.NLC_IMAGE_REGISTRY_URL }}
+          username: ${{ env.NLC_IMAGE_REGISTRY_USERNAME }}
+          password: ${{ env.NLC_IMAGE_REGISTRY_TOKEN }}
 
       - name: Push image to remote registry
         if: inputs.DRY_RUN != 'true'
@@ -204,4 +219,4 @@ jobs:
         uses: hazelcast/docker-actions/slack-notification@master
         if: failure() && github.triggering_actor == 'devOpsHazelcast'
         with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          slack-webhook-url: ${{ env.SLACK_WEBHOOK }}
