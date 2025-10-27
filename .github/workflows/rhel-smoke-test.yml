@@ -127,7 +127,7 @@ jobs:
 
       - name: Store OpenShift logs as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: openshift-logs
           path: '*.log'
