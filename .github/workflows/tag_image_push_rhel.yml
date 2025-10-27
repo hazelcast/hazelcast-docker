@@ -45,7 +45,6 @@ jobs:
   build:
     env:
       SCAN_REGISTRY: "quay.io"
-      TIMEOUT_IN_MINS: 240
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     strategy:
