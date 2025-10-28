@@ -96,39 +96,37 @@ jobs:
           username: ${{ steps.scan_registry_secrets.outputs.USERNAME }}
           password: ${{ steps.scan_registry_secrets.outputs.PASSWORD }}
 
-      - name: Copy image to RedHat Container Registry
+      - name: Get tags to push
+        id: get-tags-to-push
         run: |
-          . .github/scripts/get-tags-to-push.sh 
-
-          copy_image()
-          {
-            local source_tag=$1
-            local destination_tag=$2
-
-            # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
-            skopeo copy \
-              --override-os linux \
-              --override-arch amd64 \
-              docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${source_tag} \
-              docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${destination_tag}
-          }
+          . .github/scripts/get-tags-to-push.sh
 
           TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
-          echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
+          echo "all_destination_tags=${TAGS_TO_PUSH}" >> ${GITHUB_OUTPUT}
 
-          for tag in ${TAGS_TO_PUSH[@]}
-          do
-            copy_image ${tag} ${tag}
-          done
+          # We need to add a new, unique tag for each image to workaround RedHat bug - https://github.com/hazelcast/hazelcast-docker/pull/1088
+          #
+          # When an new image re-using an _existing_ tag (implicitly unpublished) is pushed to the registry, the _existing_ image is immediately replaced.
+          # This means until the new image is published, the tag existing tag appears not to work for users
+          #
+          # We can leverage this new, unique tag to validate, push and publish the _new_ image without affecting the _existing_ image
+          # First we push the _new, unique_ tag, then after validation we can add the _existing_ tags
 
-          # Add a "unique" tag to workaround RedHat bug
-          # Get the first tag
-          PRIMARY_TAG=${TAGS_TO_PUSH%% *}
-          # Keep a reference to _a_ tag to get the image later on
-          echo "PRIMARY_TAG=${PRIMARY_TAG}" >> ${GITHUB_ENV}
+          # Pick an (arbitrary) tag to pull from
+          SOURCE_TAG=${TAGS_TO_PUSH%% *}
+          echo "source_tag=${SOURCE_TAG}" >> ${GITHUB_OUTPUT}
 
-          # Add date as a dummy tag (e.g. 5.4.1-jdk17-20250909130347)
-          copy_image ${PRIMARY_TAG} ${PRIMARY_TAG}-$(date +"%Y%m%d%H%M%S")
+          # Add date suffix to create unique output tag (e.g. 5.4.1-jdk17-20250909130347)
+          echo "unique_destination_tag=${SOURCE_TAG}-$(date +"%Y%m%d%H%M%S")" >> ${GITHUB_OUTPUT}
+
+      - name: Copy new unique tag to RedHat Container Registry
+        run: |
+          # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
+          skopeo copy \
+            --override-os linux \
+            --override-arch amd64 \
+            docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.source_tag }} \
+            docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.get-tags-to-push.outputs.unique_destination_tag }}
 
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
@@ -153,10 +151,21 @@ jobs:
    
       - name: Run preflight scan
         run: |
-          preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${PRIMARY_TAG}" \
+          preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.get-tags-to-push.outputs.unique_destination_tag }}" \
             --submit --pyxis-api-token=${REDHAT_ROBOT_RHEL_API_KEY} \
             --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
             --docker-config ~/.docker/config.json
+
+      - name: Copy remaining tags to RedHat Container Registry
+        run: |
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+            skopeo copy \
+              docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.get-tags-to-push.outputs.unique_destination_tag }} \
+              docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${tag}
+          done
+        env:
+          TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all_destination_tags }}
 
       - name: Check RedHat service status
         if: failure()
