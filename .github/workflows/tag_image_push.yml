@@ -145,7 +145,6 @@ jobs:
       TEST_CONTAINER_NAME: hazelcast-test
     outputs:
       is_latest_lts: ${{ steps.is_latest_lts.outputs.is_latest_lts }}
-      default_jdk: ${{ steps.default-jdk.outputs.default_jdk }}
     services:
       registry:
         image: registry:latest
@@ -395,7 +394,7 @@ jobs:
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       JDKS: ${{ needs.prepare.outputs.jdks }} 
       IS_LATEST_LTS: ${{ needs.push.outputs.is_latest_lts }}
-      DEFAULT_JDK: ${{ needs.push.outputs.default_jdk }}
+      DEFAULT_JDK: ${{ needs.prepare.outputs.default-jdk }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
 
