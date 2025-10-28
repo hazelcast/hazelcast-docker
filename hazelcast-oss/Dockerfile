@@ -55,7 +55,7 @@ RUN echo "Upgrading packages" \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && apk del libxml2-utils unzip \
     && rm -rf /var/cache/apk/* ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} ${HZ_HOME}/tmp \
-    # Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS
+    && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
     && chmod +x ${HZ_HOME}/bin/*
 
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
