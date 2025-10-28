@@ -209,7 +209,7 @@ jobs:
             --src docker \
             --dest docker \
             ${LOCAL_IMAGE_NAME} \
-            ${{ secrets.NLC_REPOSITORY }}/${{ vars.NLC_NAMESPACE }}
+            ${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}
 
       - name: Check RedHat service status
         if: failure()
