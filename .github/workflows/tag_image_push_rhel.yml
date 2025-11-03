@@ -135,7 +135,6 @@ jobs:
         with:
           preflight: "latest"
           source: github
-          skip_cache: true
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5

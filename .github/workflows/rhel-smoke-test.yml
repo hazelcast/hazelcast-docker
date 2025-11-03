@@ -65,7 +65,6 @@ jobs:
         with:
           oc: "latest"
           source: mirror
-          skip_cache: true
 
       - uses: redhat-actions/oc-login@v1
         with:
