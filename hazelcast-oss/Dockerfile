@@ -35,6 +35,8 @@ RUN echo "Installing new packages" \
            echo "Using local ${HAZELCAST_ZIP_FILE_NAME}"; \
     fi \
     && unzip -qq ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} 'hazelcast-*/**' -d ${HZ_HOME}/tmp/ \
+    # Distribution ZIP structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
+    # Move all the content up a level so that the path contains no version and is constant
     && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && apk del libxml2-utils unzip \
