@@ -11,7 +11,6 @@ ARG JDK_VERSION="21"
 
 FROM alpine:3 AS get-distribution
 
-ARG HZ_VERSION
 ARG HZ_HOME
 # Optional, defaults to latest released version
 ARG HAZELCAST_ZIP_URL=""
@@ -20,28 +19,30 @@ ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-enterprise-distribution.zip"
 ENV MAVEN_ARTIFACT_ID=hazelcast-enterprise-distribution \
     MAVEN_REPO=https://repository.hazelcast.com/release
 
-COPY hazelcast-*.zip maven.functions.sh ${HZ_HOME}/
+COPY hazelcast-*.zip /tmp
 
-RUN echo "Installing new packages" \
-    && apk add curl libxml2-utils unzip \
-    && if [[ ! -f ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} ]]; then \
+RUN --mount=type=bind,source=maven.functions.sh,target=maven.functions.sh \
+    echo "Installing new packages" \
+    && apk add --no-cache curl unzip \
+    && mkdir -p ${HZ_HOME} \
+    && if [[ ! -f /tmp/${HAZELCAST_ZIP_FILE_NAME} ]]; then \
        if [ -z ${HAZELCAST_ZIP_URL} ]; then \
-            source ${HZ_HOME}/maven.functions.sh; \
+            source maven.functions.sh; \
             HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast ${MAVEN_ARTIFACT_ID} ${MAVEN_REPO})".zip; \
        fi; \
        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
-       mkdir --parents ${HZ_HOME}; \
-       curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME}; \
+       curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output /tmp/${HAZELCAST_ZIP_FILE_NAME}; \
     else \
            echo "Using local ${HAZELCAST_ZIP_FILE_NAME}"; \
     fi \
-    && unzip -qq ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} 'hazelcast-*/**' -d ${HZ_HOME}/tmp/ \
+    && unzip -qq /tmp/${HAZELCAST_ZIP_FILE_NAME} -d /tmp/hz \
     # Distribution ZIP structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
     # Move all the content up a level so that the path contains no version and is constant
-    && mv ${HZ_HOME}/tmp/*/* ${HZ_HOME}/ \
+    && mv /tmp/hz/*/* ${HZ_HOME}/ \
     && echo "Removing unnecessary packages and redundant files/folders" \
-    && apk del libxml2-utils unzip \
-    && rm -rf /var/cache/apk/* ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} ${HZ_HOME}/tmp
+    && apk del curl unzip \
+    && rm -rf /tmp/*
+
 
 FROM redhat/ubi9-minimal:9.6
 
