@@ -76,7 +76,6 @@ EXPOSE 5701
 
 COPY licenses /licenses
 COPY --from=get-distribution ${HZ_HOME} ${HZ_HOME}/
-COPY *.jar ${HZ_HOME}
 
 # Install
 RUN echo "Upgrading packages" \
