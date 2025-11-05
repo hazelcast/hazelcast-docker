@@ -45,7 +45,6 @@ jobs:
   build:
     env:
       SCAN_REGISTRY: "quay.io"
-      TIMEOUT_IN_MINS: 240
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     strategy:
@@ -136,7 +135,6 @@ jobs:
         with:
           preflight: "latest"
           source: github
-          skip_cache: true
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
@@ -154,29 +152,10 @@ jobs:
    
       - name: Run preflight scan
         run: |
-          source .github/scripts/logging.functions.sh
-
-          PREFLIGHT_OUTPUT=$(preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${PRIMARY_TAG}" \
+          preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${PRIMARY_TAG}" \
             --submit --pyxis-api-token=${REDHAT_ROBOT_RHEL_API_KEY} \
             --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
-            --docker-config ~/.docker/config.json \
-            2>&1)
-
-          echodebug "${PREFLIGHT_OUTPUT}"
-
-          IMAGE_ID=$(grep --perl-regexp --only-matching "image id is: \K[a-f0-9]+" <<< "${PREFLIGHT_OUTPUT}" || true)
-
-          if [[ -n "${IMAGE_ID}" ]]; then
-            echo "IMAGE_ID=${IMAGE_ID}" >> $GITHUB_ENV
-          else
-            echoerr "Unable to extract image ID from preflight output:"
-            echoerr "${PREFLIGHT_OUTPUT}"
-            exit 1
-          fi
-
-      - name: Publish the Hazelcast Enterprise image
-        run: |
-          .github/scripts/publish-rhel.sh "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" "${IMAGE_ID}" "${REDHAT_ROBOT_RHEL_API_KEY}" "${TIMEOUT_IN_MINS}"
+            --docker-config ~/.docker/config.json
 
       - name: Check RedHat service status
         if: failure()

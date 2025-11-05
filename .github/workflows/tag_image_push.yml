@@ -206,7 +206,7 @@ jobs:
                 VERSIONS+=(latest-snapshot)
             fi
             
-            TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${{ jobs.prepare.outputs.default-jdk }}")
+            TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}")
           else
             case "${{ matrix.distribution-type.label }}" in
                 "oss")
@@ -221,7 +221,7 @@ jobs:
                 ;;
             esac
 
-            TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${{ jobs.prepare.outputs.default-jdk }}" "${IS_LATEST_LTS}")
+            TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}" "${IS_LATEST_LTS}")
           fi
 
           # Keep a reference to _a_ tag to get the image later on
@@ -282,7 +282,7 @@ jobs:
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docker-logs-tag-image-push-${{ matrix.distribution-type.label }}-${{ env.HZ_VERSION }}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}
           path: docker-*.log

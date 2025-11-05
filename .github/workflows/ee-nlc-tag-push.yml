@@ -120,7 +120,7 @@ jobs:
           LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${{ secrets.NLC_IMAGE_NAME }}
           echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
 
-          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${HZ_VERSION}" "" "${{ matrix.jdk }}" "${{ jobs.prepare.outputs.default-jdk }}")
+          TAGS_TO_PUSH=$(augment_with_suffixed_tags "${HZ_VERSION}" "" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}")
 
           # Keep a reference to _a_ tag to get the image later on
           echo "PRIMARY_TAG=${TAGS_TO_PUSH%% *}" >> ${GITHUB_ENV}
@@ -171,7 +171,7 @@ jobs:
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docker-logs-tag-image-push-nlc-${{ env.HZ_VERSION }}-jdk${{ matrix.jdk }}
           path: docker-*.log
@@ -209,7 +209,7 @@ jobs:
             --src docker \
             --dest docker \
             ${LOCAL_IMAGE_NAME} \
-            ${{ secrets.NLC_REPOSITORY }}/${{ vars.NLC_NAMESPACE }}
+            ${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}
 
       - name: Check RedHat service status
         if: failure()
