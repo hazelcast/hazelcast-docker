@@ -116,10 +116,10 @@ jobs:
           entries=()
 
           if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
-            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","artifact-id":"hazelcast-distribution"}')
+            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","distribution":"hazelcast"}')
           fi
           if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "yes" ]; then
-            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","artifact-id":"hazelcast-enterprise-distribution"}')
+            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","distribution":"hazelcast-enterprise"}')
           fi
 
           json="[$(IFS=,; echo "${entries[*]}")]"
@@ -174,40 +174,15 @@ jobs:
                 "password": "${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}"
             }]
 
-      - name: Get dist ZIP
-        run: |
-          case "${{ matrix.distribution-type.label }}" in
-              "oss")
-                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-                    repo="${{ vars.MAVEN_OSS_SNAPSHOT_REPO }}"
-                else
-                    repo="${{ vars.MAVEN_OSS_RELEASE_REPO }}"
-                fi
-              ;;
-              "ee")
-                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-                    repo="${{ vars.MAVEN_EE_SNAPSHOT_REPO }}"
-                else
-                    repo="${{ vars.MAVEN_EE_RELEASE_REPO }}"
-                fi
-              ;;
-              *)
-              echoerr "Unsupported repository behaviour for ${{ matrix.distribution-type.label }}" ; return 1
-              ;;
-          esac
-
-          mvn \
-            dependency:2.10:get \
-            -DremoteRepositories="${repo}" \
-            -DgroupId="com.hazelcast" \
-            -DartifactId="${{ matrix.distribution-type.artifact-id }}" \
-            -Dversion="${HZ_VERSION}" \
-            -Dclassifier="${{ matrix.variant.classifier }}" \
-            -Dpackaging=zip \
-            -Dtransitive=false \
-            -Ddest="${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.artifact-id }}.zip" \
-            --batch-mode \
-            --no-transfer-progress
+      - name: Download the distribution file
+        uses: hazelcast/docker-actions/download-hz-dist@master
+        with:
+          repo-vars-as-json: ${{ toJSON(vars) }}
+          distribution: ${{ matrix.distribution-type.distribution }}
+          hz_version: ${{ env.HZ_VERSION }}
+          classifier: ${{ matrix.variant.classifier }}
+          packaging: "zip"
+          output_file: "${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
 
       - name: Check if latest EE LTS release
         if: matrix.distribution-type.label == 'ee'
