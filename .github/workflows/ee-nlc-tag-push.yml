@@ -158,7 +158,7 @@ jobs:
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docker-logs-tag-image-push-nlc-${{ env.HZ_VERSION }}-jdk${{ matrix.jdk }}
           path: docker-*.log
@@ -194,7 +194,7 @@ jobs:
             --src docker \
             --dest docker \
             ${LOCAL_IMAGE_NAME} \
-            ${{ secrets.NLC_REPOSITORY }}/${{ vars.NLC_NAMESPACE }}
+            ${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}
 
       - name: Check RedHat service status
         if: failure()
