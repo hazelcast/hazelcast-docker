@@ -116,10 +116,10 @@ jobs:
           entries=()
 
           if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
-            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","artifact-id":"hazelcast-distribution"}')
+            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","distribution":"hazelcast"}')
           fi
           if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "yes" ]; then
-            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","artifact-id":"hazelcast-enterprise-distribution"}')
+            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","distribution":"hazelcast-enterprise"}')
           fi
 
           json="[$(IFS=,; echo "${entries[*]}")]"
@@ -178,11 +178,11 @@ jobs:
         uses: hazelcast/docker-actions/download-hz-dist@master
         with:
           repo-vars-as-json: ${{ toJSON(vars) }}
-          distribution: ${{ matrix.distribution-type.label }}
+          distribution: ${{ matrix.distribution-type.distribution }}
           hz_version: ${{ env.HZ_VERSION }}
           classifier: ${{ matrix.variant.classifier }}
           packaging: "zip"
-          output_file: "${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.artifact-id }}.zip"
+          output_file: "${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
 
       - name: Check if latest EE LTS release
         if: matrix.distribution-type.label == 'ee'
