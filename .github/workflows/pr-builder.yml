@@ -1,0 +1,50 @@
+name: Test PR Builder
+
+on:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert output
+        run: |
+          source /dev/stdin <<< "$(curl --silent https://raw.githubusercontent.com/{$GITHUB_REPOSITORY}/${GITHUB_REF#refs/heads/}/.github/scripts/logging.functions.sh)"
+          source /dev/stdin <<< "$(curl --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)"
+
+          TESTS_RESULT=0
+
+          assert_equals() {
+            local name=$1
+            local expected=$2
+            local actual=$3
+            local msg="$name should be equal to $expected"
+            assert_eq "$expected" "$actual" "$msg" && log_success "$msg" || TESTS_RESULT=$?
+          }
+
+          assert_equals "echoerr" "::error::ERROR - a b c" "$(echoerr "a b c" 2>&1)"
+          assert_equals "echowarning" "::warning::a b c" "$(echowarning "a b c" 2>&1)"
+          assert_equals "echonotice" "::notice::a b c" "$(echonotice "a b c" 2>&1)"
+          assert_equals "echodebug" "::debug::a b c" "$(echodebug "a b c" 2>&1)"
+          assert_equals "echo_group" "::group::a b c" "$(echo_group "a b c" 2>&1)"
+          assert_equals "echo_group_end" "::endgroup::" "$(echo_group_end "a b c" 2>&1)"
+
+          assert_eq 0 "${TESTS_RESULT}" "All tests should pass"    
+
+      - name: Demo output
+        run: |
+          source /dev/stdin <<< "$(curl --silent https://raw.githubusercontent.com/{$GITHUB_REPOSITORY}/${GITHUB_REF#refs/heads/}/.github/scripts//logging.functions.sh)"
+
+          echo "Just a regular echo message"
+
+          echoerr "Printing with echoerr"
+          echowarning "Printing with echowarning"
+          echonotice "Printing with echonotice"
+          echodebug "Printing with echodebug"
+
+          echo_group "Printing with echo_group"
+          echoerr "echo_group contents"
+          echo_group_end
+
+          echoerr "Printing a 
+          multiline
+          echoerr"
