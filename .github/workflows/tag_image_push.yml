@@ -175,7 +175,7 @@ jobs:
             }]
 
       - name: Download the distribution file
-        uses: hazelcast/docker-actions/download-hz-dist@share-distribution-download
+        uses: hazelcast/docker-actions/download-hz-dist@master
         with:
           repo-vars-as-json: ${{ toJSON(vars) }}
           distribution: ${{ matrix.distribution-type.label }}
