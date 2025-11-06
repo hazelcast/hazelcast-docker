@@ -276,20 +276,7 @@ Now you can connect with your remote debugger using the address: `localhost:5005
 
 ### Building Your Hazelcast Image
 
-You may want to build your own Hazelcast Docker image with some custom JARs. For example, if you want to test if your change in the Hazelcast Root repository works fine in the Kubernetes environment or you just need to use an entry processor JAR. To do it, place your JARs into the current directory, build the image, and push it into the Docker registry.
-
-Taking our first example, imagine you did some change in the Hazelcast Root repository and would like to test it on Kubernetes. You need to build `hazelcast-SNAPSHOT.jar` and then do the following.
-
-```
-$ cd hazelcast-oss
-$ cp <path-to-hazelcast-jar> ./
-$ docker build -t <username>/hazelcast:test .
-$ docker push <username>/hazelcast:test
-```
-
-Then, use the image `<username>/hazelcast:test` in your Kubernetes environment to test your change.
-
-Additional documentation can be found [here](https://hazelcast.atlassian.net/wiki/spaces/DI/pages/5110693890/How+to+build+local+Hazelcast+Docker+image+from+hazelcast-mono).
+You may want to build your own Hazelcast Docker image with some custom JARs. For example, if you want to test if your change in the Hazelcast Root repository works fine in the Kubernetes environment. Documentation on building a custom image can be found [here](https://hazelcast.atlassian.net/wiki/spaces/DI/pages/5110693890/How+to+build+local+Hazelcast+Docker+image+from+hazelcast-mono).
 
 ## Docker Images Usages
 
