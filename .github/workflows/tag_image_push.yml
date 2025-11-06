@@ -24,14 +24,6 @@ on:
           - ''
           - 'false'
           - 'true'
-      DRY_RUN:
-        description: 'Skip pushing the images to remote registry'
-        required: false
-        default: 'false'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
         required: false
@@ -54,11 +46,6 @@ on:
         description: 'Override is LTS release'
         required: false
         default: ''
-        type: string
-      DRY_RUN:
-        description: 'Skip pushing the images to remote registry'
-        required: false
-        default: 'false'
         type: string
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
@@ -116,10 +103,10 @@ jobs:
           entries=()
 
           if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
-            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","artifact-id":"hazelcast-distribution"}')
+            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","distribution":"hazelcast"}')
           fi
           if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "yes" ]; then
-            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","artifact-id":"hazelcast-enterprise-distribution"}')
+            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","distribution":"hazelcast-enterprise"}')
           fi
 
           json="[$(IFS=,; echo "${entries[*]}")]"
@@ -145,7 +132,6 @@ jobs:
       TEST_CONTAINER_NAME: hazelcast-test
     outputs:
       is_latest_lts: ${{ steps.is_latest_lts.outputs.is_latest_lts }}
-      default_jdk: ${{ steps.default-jdk.outputs.default_jdk }}
     services:
       registry:
         image: registry:latest
@@ -174,40 +160,15 @@ jobs:
                 "password": "${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}"
             }]
 
-      - name: Get dist ZIP
-        run: |
-          case "${{ matrix.distribution-type.label }}" in
-              "oss")
-                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-                    repo="${{ vars.MAVEN_OSS_SNAPSHOT_REPO }}"
-                else
-                    repo="${{ vars.MAVEN_OSS_RELEASE_REPO }}"
-                fi
-              ;;
-              "ee")
-                if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-                    repo="${{ vars.MAVEN_EE_SNAPSHOT_REPO }}"
-                else
-                    repo="${{ vars.MAVEN_EE_RELEASE_REPO }}"
-                fi
-              ;;
-              *)
-              echoerr "Unsupported repository behaviour for ${{ matrix.distribution-type.label }}" ; return 1
-              ;;
-          esac
-
-          mvn \
-            dependency:2.10:get \
-            -DremoteRepositories="${repo}" \
-            -DgroupId="com.hazelcast" \
-            -DartifactId="${{ matrix.distribution-type.artifact-id }}" \
-            -Dversion="${HZ_VERSION}" \
-            -Dclassifier="${{ matrix.variant.classifier }}" \
-            -Dpackaging=zip \
-            -Dtransitive=false \
-            -Ddest="${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.artifact-id }}.zip" \
-            --batch-mode \
-            --no-transfer-progress
+      - name: Download the distribution file
+        uses: hazelcast/docker-actions/download-hz-dist@master
+        with:
+          repo-vars-as-json: ${{ toJSON(vars) }}
+          distribution: ${{ matrix.distribution-type.distribution }}
+          hz_version: ${{ env.HZ_VERSION }}
+          classifier: ${{ matrix.variant.classifier }}
+          packaging: "zip"
+          output_file: "${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
 
       - name: Check if latest EE LTS release
         if: matrix.distribution-type.label == 'ee'
@@ -307,13 +268,12 @@ jobs:
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docker-logs-tag-image-push-${{ matrix.distribution-type.label }}-${{ env.HZ_VERSION }}${{ matrix.variant.suffix }}-jdk${{ matrix.jdk }}
           path: docker-*.log
 
       - name: Login to Docker Hub
-        if: inputs.DRY_RUN != 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -334,7 +294,6 @@ jobs:
           parse-json-secrets: true
 
       - name: Login to JFrog
-        if: inputs.DRY_RUN != 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.JFROG_URL }}
@@ -342,7 +301,6 @@ jobs:
           password: ${{ env.JFROG_PASSWORD }}
 
       - name: Push image to remote registry
-        if: inputs.DRY_RUN != 'true'
         run: |
           if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             remote_registry=${{ env.JFROG_URL }}/docker/hazelcast
@@ -363,11 +321,10 @@ jobs:
     needs:
       - prepare
       - push
-    if: inputs.DRY_RUN != 'true' && !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT')
+    if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') }}
     runs-on: ubuntu-latest
     steps:
       - name: Create release
-        if: inputs.DRY_RUN != 'true'
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -378,7 +335,7 @@ jobs:
     needs:
       - prepare
       - push
-    if: inputs.DRY_RUN != 'true' && !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT')
+    if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') }}
     uses: ./.github/workflows/update_readme.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
@@ -389,13 +346,14 @@ jobs:
     needs:
       - prepare
       - push
-    if: inputs.DRY_RUN != 'true' && needs.prepare.outputs.should-build-ee && !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT')
+    # Restrict to non-SNAPSHOT for `live` environment only
+    if: needs.prepare.outputs.should-build-ee && !(inputs.ENVIRONMENT == 'live' && contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT'))
     uses: ./.github/workflows/tag_image_push_rhel.yml
     with:
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       JDKS: ${{ needs.prepare.outputs.jdks }} 
       IS_LATEST_LTS: ${{ needs.push.outputs.is_latest_lts }}
-      DEFAULT_JDK: ${{ needs.push.outputs.default_jdk }}
+      DEFAULT_JDK: ${{ needs.prepare.outputs.default-jdk }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
 

@@ -6,14 +6,6 @@ on:
       SOURCE_REF:
         description: 'The hazelcast-docker branch to build the image from'
         required: true
-      DRY_RUN:
-        description: 'Skip pushing the images to remote registry'
-        required: false
-        default: 'false'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
         required: false
@@ -26,11 +18,6 @@ on:
       SOURCE_REF:
         description: 'The hazelcast-docker branch to build the image from'
         required: true
-        type: string
-      DRY_RUN:
-        description: 'Skip pushing the images to remote registry'
-        required: false
-        default: 'false'
         type: string
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
@@ -171,7 +158,7 @@ jobs:
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docker-logs-tag-image-push-nlc-${{ env.HZ_VERSION }}-jdk${{ matrix.jdk }}
           path: docker-*.log
@@ -192,7 +179,6 @@ jobs:
           parse-json-secrets: true
 
       - name: Login to NLC registry
-        if: inputs.DRY_RUN != 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.NLC_IMAGE_REGISTRY_URL }}
@@ -200,7 +186,6 @@ jobs:
           password: ${{ env.NLC_IMAGE_REGISTRY_TOKEN }}
 
       - name: Push image to remote registry
-        if: inputs.DRY_RUN != 'true'
         run: |
           # Skopeo expects HTTPS registry but local is HTTP
           skopeo sync \
@@ -209,7 +194,7 @@ jobs:
             --src docker \
             --dest docker \
             ${LOCAL_IMAGE_NAME} \
-            ${{ secrets.NLC_REPOSITORY }}/${{ vars.NLC_NAMESPACE }}
+            ${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}
 
       - name: Check RedHat service status
         if: failure()

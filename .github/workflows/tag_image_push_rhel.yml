@@ -101,7 +101,12 @@ jobs:
         run: |
           . .github/scripts/get-tags-to-push.sh
 
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
+          if [[ "${{ inputs.HZ_VERSION }}" =~ SNAPSHOT ]]; then
+            TAGS_TO_PUSH=$(augment_with_suffixed_tags "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}")
+          else
+            TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
+          fi
+
           echo "all_destination_tags=${TAGS_TO_PUSH}" >> ${GITHUB_OUTPUT}
 
           # We need to add a new, unique tag for each image to workaround RedHat bug - https://github.com/hazelcast/hazelcast-docker/pull/1088
@@ -133,7 +138,6 @@ jobs:
         with:
           preflight: "latest"
           source: github
-          skip_cache: true
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5

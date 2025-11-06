@@ -25,22 +25,18 @@ jobs:
           .github/scripts/test_scripts.sh
 
   test-push:
-    name: Test pushing image (dry run)
+    name: Test pushing image
     uses: ./.github/workflows/tag_image_push.yml
     with:
       SOURCE_REF: ${{ github.ref }}
       RELEASE_TYPE: ALL
-      DRY_RUN: true
-      # DI-635 - Should Docker PR builder push to sandbox?
-      ENVIRONMENT: live
+      ENVIRONMENT: test
     secrets: inherit
 
   test-push-nlc:
-    name: Test pushing image (dry run)
+    name: Test pushing image
     uses: ./.github/workflows/ee-nlc-tag-push.yml
     with:
       SOURCE_REF: ${{ github.ref }}
-      DRY_RUN: true
-      # DI-635 - Should Docker PR builder push to sandbox?
-      ENVIRONMENT: live
+      ENVIRONMENT: test
     secrets: inherit
