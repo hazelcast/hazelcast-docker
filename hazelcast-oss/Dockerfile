@@ -66,7 +66,6 @@ ENV HZ_HOME="${HZ_HOME}" \
 EXPOSE 5701
 
 COPY --from=get-distribution ${HZ_HOME} ${HZ_HOME}/
-COPY *.jar ${HZ_HOME}
 
 # Install
 RUN echo "Upgrading packages" \
