@@ -113,7 +113,12 @@ jobs:
               docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${destination_tag}
           }
 
-          TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
+          if [[ "${{ inputs.HZ_VERSION }}" =~ SNAPSHOT ]]; then
+            TAGS_TO_PUSH=$(augment_with_suffixed_tags "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}")
+          else
+            TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
+          fi
+
           echo "TAGS_TO_PUSH=$TAGS_TO_PUSH"
 
           for tag in ${TAGS_TO_PUSH[@]}
