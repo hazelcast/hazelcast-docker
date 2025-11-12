@@ -347,7 +347,7 @@ jobs:
       - prepare
       - push
     # Restrict to non-SNAPSHOT for `live` environment only
-    if: needs.prepare.outputs.should-build-ee && !(inputs.ENVIRONMENT == 'live' && contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT'))
+    if: needs.prepare.outputs.should-build-ee == 'true' && !(inputs.ENVIRONMENT == 'live' && contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT'))
     uses: ./.github/workflows/tag_image_push_rhel.yml
     with:
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
