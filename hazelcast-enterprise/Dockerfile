@@ -43,7 +43,7 @@ RUN echo "Installing new packages" \
     && apk del libxml2-utils unzip \
     && rm -rf /var/cache/apk/* ${HZ_HOME}/maven.functions.sh ${HZ_HOME}/${HAZELCAST_ZIP_FILE_NAME} ${HZ_HOME}/tmp
 
-FROM redhat/ubi9-minimal:9.6
+FROM redhat/ubi9-minimal:9.7
 
 ARG HZ_VERSION
 ARG HZ_HOME
