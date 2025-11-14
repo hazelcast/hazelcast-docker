@@ -103,10 +103,10 @@ jobs:
           entries=()
 
           if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
-            entries+=('{"label":"oss","docker-dir":"source_path/hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","distribution":"hazelcast"}')
+            entries+=('{"label":"oss","docker-dir":"hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","distribution":"hazelcast"}')
           fi
           if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "yes" ]; then
-            entries+=('{"label":"ee","docker-dir":"source_path/hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","distribution":"hazelcast-enterprise"}')
+            entries+=('{"label":"ee","docker-dir":"hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","distribution":"hazelcast-enterprise"}')
           fi
 
           json="[$(IFS=,; echo "${entries[*]}")]"
@@ -146,6 +146,7 @@ jobs:
         with:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path
+          sparse-checkout: ${{ matrix.distribution-type.docker-dir }}
 
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
@@ -162,13 +163,14 @@ jobs:
 
       - name: Download the distribution file
         uses: hazelcast/docker-actions/download-hz-dist@master
+        id: download-hz-dist
         with:
           repo-vars-as-json: ${{ toJSON(vars) }}
           distribution: ${{ matrix.distribution-type.distribution }}
           hz_version: ${{ env.HZ_VERSION }}
           classifier: ${{ matrix.variant.classifier }}
           packaging: "zip"
-          output_file: "${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
+          output_file: "source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
 
       - name: Check if latest EE LTS release
         if: matrix.distribution-type.label == 'ee'
@@ -246,13 +248,19 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.distribution-type.docker-dir }}
+          context: source_path/${{ matrix.distribution-type.docker-dir }}
           labels: ${{ steps.labels.outputs.label }}
           platforms: ${{ steps.platforms.outputs.platforms }}
           push: true
           tags: ${{ steps.tags.outputs.TAGS }}
           build-args: |
             JDK_VERSION=${{ matrix.jdk }}
+
+      - name: Delete the distribution file
+        run: |
+          # GitHub Actions have limited disk capacity
+          # The distribution is large and no longer required now the image has been built
+          rm "${{ steps.download-hz-dist.outputs.output_file }}"
 
       - name: Run smoke test against image
         timeout-minutes: 2

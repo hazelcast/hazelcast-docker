@@ -62,7 +62,7 @@ jobs:
     env:
       LOCAL_REGISTRY: localhost:5000
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      DOCKER_DIR: source_path/hazelcast-enterprise
+      DOCKER_DIR: hazelcast-enterprise
       TEST_CONTAINER_NAME: hazelcast-test
     services:
       registry:
@@ -76,6 +76,7 @@ jobs:
         with:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path
+          sparse-checkout: hazelcast-enterprise
 
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
@@ -87,7 +88,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
 
-      - name: Get dist ZIP
+      - name: Download the distribution file
+        id: download-hz-dist
         run: |
           if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]
           then  
@@ -97,7 +99,11 @@ jobs:
           fi
 
           S3_NLC_ZIP_URL=${{ secrets.S3_NLC_URL }}${subdir}/hazelcast-enterprise-${HZ_VERSION}-nlc.zip
-          aws s3 cp "${S3_NLC_ZIP_URL}" ${DOCKER_DIR}/hazelcast-enterprise-distribution.zip
+          OUTPUT_FILE=source_path/${DOCKER_DIR}/hazelcast-enterprise-distribution.zip
+
+          aws s3 cp "${S3_NLC_ZIP_URL}" "${OUTPUT_FILE}" --no-progress
+
+          echo "output_file=${OUTPUT_FILE}" >> "${GITHUB_OUTPUT}"
 
       - name: Calculate tags
         id: tags
@@ -136,13 +142,19 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
-          context: ${{ env.DOCKER_DIR }}
+          context: source_path/${{ env.DOCKER_DIR }}
           labels: ${{ steps.labels.outputs.label }}
           platforms: ${{ steps.platforms.outputs.platforms }}
           push: true
           tags: ${{ steps.tags.outputs.TAGS }}
           build-args: |
             JDK_VERSION=${{ matrix.jdk }}
+
+      - name: Delete the distribution file
+        run: |
+          # GitHub Actions have limited disk capacity
+          # The distribution is large and no longer required now the image has been built
+          rm "${{ steps.download-hz-dist.outputs.output_file }}"
 
       - name: Run smoke test against image
         timeout-minutes: 2
