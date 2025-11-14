@@ -6,6 +6,13 @@ inputs:
 runs:
   using: "composite"
   steps:
+    # Default GitHub runners have very little free disk space causing build failures
+    - name: Free Disk Space
+      # https://github.com/jlumbroso/free-disk-space/releases/tag/v1.3.1
+      uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+      with:
+        docker-images: false
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
       with:
