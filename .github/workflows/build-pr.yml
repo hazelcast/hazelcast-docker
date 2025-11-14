@@ -13,13 +13,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Forbid .github/release_type file
-        run: |
-          if [ -f ".github/release_type" ]; then
-            echo "Error: .github/release_type file is not allowed in the PRs. It's used only during release creation"
-            exit 1
-          fi
-
       - name: Test scripts
         run: |
           .github/scripts/test_scripts.sh
