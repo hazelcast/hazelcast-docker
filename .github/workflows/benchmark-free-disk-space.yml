@@ -1,0 +1,46 @@
+name: Benchmark free disk space
+
+on:
+  pull_request:
+
+jobs:
+  default:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          docker-images: false
+
+  keep-dev-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          docker-images: false
+          android: false
+          dotnet: false
+          haskell: false
+
+  keep-large-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          docker-images: false
+          large-packages: false
+
+  keep-swap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          docker-images: false
+          swap-storage: false
+
+  tool-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          docker-images: false
+          tool-cache: false
