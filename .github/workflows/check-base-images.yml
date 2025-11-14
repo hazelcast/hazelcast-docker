@@ -10,6 +10,11 @@ on:
         description: 'Environment to use'
         required: true
         type: environment
+      FORCE_REBUILD:
+        description: 'Force a rebuild, regardless of if outdated - useful if different tags (e.g. JDK17/JDK21) are out-of-sync'
+        required: true
+        default: false
+        type: boolean
   schedule:
     - cron: '0 6 * * *'
 
@@ -61,6 +66,7 @@ jobs:
       matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
     steps:
       - id: check-base-images
+        if: inputs.FORCE_REBUILD == false
         uses: hazelcast/docker-actions/check-base-images@master
         with:
           ref: v${{ matrix.version }}
@@ -68,7 +74,7 @@ jobs:
           dockerfile-path: "hazelcast-enterprise/Dockerfile"
 
       - name: Check if ${{ matrix.version }} base images updated
-        if: steps.check-base-images.outputs.outdated == 'true'
+        if: inputs.FORCE_REBUILD == true || steps.check-base-images.outputs.outdated == 'true'
         run: |
           echo "${{ matrix.version }}" >> rebuild-EE-${{ matrix.version }}
         # GitHub doesn't support outputs of matrix jobs - https://github.com/orgs/community/discussions/26639
