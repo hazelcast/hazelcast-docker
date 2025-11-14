@@ -4,43 +4,118 @@ on:
   pull_request:
 
 jobs:
-  default:
+  remove-tool-cache:
     runs-on: ubuntu-latest
     steps:
       - uses: jlumbroso/free-disk-space@main
         with:
-          docker-images: false
-
-  keep-dev-tools:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: jlumbroso/free-disk-space@main
-        with:
-          docker-images: false
+          tool-cache: true
           android: false
           dotnet: false
           haskell: false
-
-  keep-large-packages:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: jlumbroso/free-disk-space@main
-        with:
-          docker-images: false
           large-packages: false
-
-  keep-swap:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: jlumbroso/free-disk-space@main
-        with:
           docker-images: false
           swap-storage: false
 
-  tool-cache:
+  remove-android:
     runs-on: ubuntu-latest
     steps:
       - uses: jlumbroso/free-disk-space@main
         with:
-          docker-images: false
           tool-cache: false
+          android: true
+          dotnet: false
+          haskell: false
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
+  remove-dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false
+          dotnet: true
+          haskell: false
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
+  remove-haskell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false
+          dotnet: false
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
+  remove-large-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false
+          dotnet: false
+          haskell: false
+          large-packages: true
+          docker-images: false
+          swap-storage: false
+
+  remove-docker-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false
+          dotnet: false
+          haskell: false
+          large-packages: false
+          docker-images: true
+          swap-storage: false
+
+  remove-swap-storage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false
+          dotnet: false
+          haskell: false
+          large-packages: false
+          docker-images: false
+          swap-storage: true
+
+  remove-nothing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false
+          dotnet: false
+          haskell: false
+          large-packages: false
+          docker-images: false
+
+  remove-everything:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
