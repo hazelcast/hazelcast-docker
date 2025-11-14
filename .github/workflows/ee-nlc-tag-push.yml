@@ -53,7 +53,8 @@ jobs:
 
   push:
     environment: ${{ inputs.ENVIRONMENT }}
-    runs-on: ubuntu-latest
+    # Default GitHub runners have very little free disk space causing build failures, Ubicloud is more generous
+    runs-on: ubicloud-standard-2
     needs: prepare
     strategy:
       fail-fast: false

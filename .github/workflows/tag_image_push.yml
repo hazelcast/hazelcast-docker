@@ -117,7 +117,7 @@ jobs:
 
   push:
     environment: ${{ inputs.ENVIRONMENT }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     needs:
       - prepare
       - distribution-variants
