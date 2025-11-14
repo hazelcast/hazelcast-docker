@@ -22,25 +22,25 @@ ENV MAVEN_ARTIFACT_ID=hazelcast-distribution \
 COPY hazelcast-*.zip /tmp
 
 RUN --mount=type=bind,source=maven.functions.sh,target=maven.functions.sh \
-    echo "Installing new packages" \
-    && apk add --no-cache curl unzip \
-    && mkdir -p ${HZ_HOME} \
+    mkdir -p ${HZ_HOME} \
     && if [[ ! -f /tmp/${HAZELCAST_ZIP_FILE_NAME} ]]; then \
+       apk add --no-cache curl; \
        if [ -z ${HAZELCAST_ZIP_URL} ]; then \
             source maven.functions.sh; \
             HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast ${MAVEN_ARTIFACT_ID} ${MAVEN_REPO})".zip; \
        fi; \
        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
        curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output /tmp/${HAZELCAST_ZIP_FILE_NAME}; \
+       apk del curl unzip \
     else \
            echo "Using local ${HAZELCAST_ZIP_FILE_NAME}"; \
     fi \
+    && apk add --no-cache unzip \
     && unzip -qq /tmp/${HAZELCAST_ZIP_FILE_NAME} -d /tmp/hz \
     # Distribution ZIP structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
     # Move all the content up a level so that the path contains no version and is constant
     && mv /tmp/hz/*/* ${HZ_HOME}/ \
-    && echo "Removing unnecessary packages and redundant files/folders" \
-    && apk del curl unzip \
+    && apk del unzip \
     && rm -rf /tmp/*
 
 
