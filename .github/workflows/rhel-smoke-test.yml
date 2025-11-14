@@ -29,9 +29,6 @@ jobs:
         with:
           version: ${{ env.HZ_VERSION }}
 
-      - name: Setup Docker
-        uses: ./.github/actions/setup-docker
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
