@@ -12,8 +12,7 @@ on:
         type: environment
       FORCE_REBUILD:
         description: 'Force a rebuild, regardless of if outdated - useful if different tags (e.g. JDK17/JDK21) are out-of-sync'
-        required: true
-        default: false
+        required: false
         type: boolean
   schedule:
     - cron: '0 6 * * *'
@@ -66,7 +65,7 @@ jobs:
       matrix: ${{ fromJSON(needs.get-latest-patch-versions.outputs.matrix) }}
     steps:
       - id: check-base-images
-        if: inputs.FORCE_REBUILD == false
+        if: ${{ !inputs.FORCE_REBUILD }}
         uses: hazelcast/docker-actions/check-base-images@master
         with:
           ref: v${{ matrix.version }}
@@ -74,7 +73,7 @@ jobs:
           dockerfile-path: "hazelcast-enterprise/Dockerfile"
 
       - name: Check if ${{ matrix.version }} base images updated
-        if: inputs.FORCE_REBUILD == true || steps.check-base-images.outputs.outdated == 'true'
+        if: inputs.FORCE_REBUILD || steps.check-base-images.outputs.outdated == 'true'
         run: |
           echo "${{ matrix.version }}" >> rebuild-EE-${{ matrix.version }}
         # GitHub doesn't support outputs of matrix jobs - https://github.com/orgs/community/discussions/26639
@@ -94,10 +93,12 @@ jobs:
       rebuild-ee-matrix: ${{ steps.set-matrix.outputs.rebuild_ee_matrix }}
     steps:
       - uses: actions/download-artifact@v6
+        with:
+          merge-multiple: true
       - id: set-matrix
         run: |
           # Invert matrix
-          rebuild_ee_matrix=$((cat **/rebuild-EE-* 2>/dev/null || true) | jq --raw-input --slurp --compact-output 'split("\n")[:-1]')
+          rebuild_ee_matrix=$((cat rebuild-EE-* 2>/dev/null || true) | jq --raw-input --slurp --compact-output 'split("\n")[:-1]')
           echo "rebuild_ee_matrix=${rebuild_ee_matrix}" >> ${GITHUB_OUTPUT}
 
   rebuild-ee:
