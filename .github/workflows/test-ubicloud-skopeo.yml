@@ -1,0 +1,16 @@
+name: Test Ubicloud Skopeo
+on:
+  pull_request:
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-latest
+          - ubicloud-standard-2
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - run: |
+          skopeo --version
+          skopeo inspect docker://ubuntu:latest
