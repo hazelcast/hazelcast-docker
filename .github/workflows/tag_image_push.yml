@@ -147,8 +147,27 @@ jobs:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path
 
+      - name: Calculate platforms
+        id: platforms
+        run: |
+          . .github/scripts/docker.functions.sh
+
+          case "${{ matrix.distribution-type.label }}" in
+              "oss")
+              echo "platforms=$(get_alpine_supported_platforms ${{ matrix.jdk }})" >> ${GITHUB_OUTPUT}
+              ;;
+              "ee")
+              echo "platforms=$(get_ubi_supported_platforms ${{ matrix.jdk }})" >> ${GITHUB_OUTPUT}
+              ;;
+              *)
+              echoerr "Unsupported platform behaviour for ${{ matrix.distribution-type.label }}" ; return 1
+              ;;
+          esac
+
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
+        with:
+          platforms: ${{ steps.platforms.outputs.platforms }}
 
       # https://github.com/s4u/maven-settings-action/releases/tag/v4.0.0
       - uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788
@@ -219,23 +238,6 @@ jobs:
             done
             echo 'EOF'
           } >> "${GITHUB_OUTPUT}"
-
-      - name: Calculate platforms
-        id: platforms
-        run: |
-          . .github/scripts/docker.functions.sh
-
-          case "${{ matrix.distribution-type.label }}" in
-              "oss")
-              echo "platforms=$(get_alpine_supported_platforms ${{ matrix.jdk }})" >> ${GITHUB_OUTPUT}
-              ;;
-              "ee")
-              echo "platforms=$(get_ubi_supported_platforms ${{ matrix.jdk }})" >> ${GITHUB_OUTPUT}
-              ;;
-              *)
-              echoerr "Unsupported platform behaviour for ${{ matrix.distribution-type.label }}" ; return 1
-              ;;
-          esac
 
       - name: Determine labels
         id: labels
