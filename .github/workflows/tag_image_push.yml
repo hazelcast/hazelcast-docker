@@ -95,10 +95,10 @@ jobs:
           # We expect at least _one_ output distribution type, otherwise will produce an empty array that will break GitHub matrixes
           entries=()
 
-          if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
+          if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "true" ]; then
             entries+=('{"label":"oss","docker-dir":"hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","distribution":"hazelcast"}')
           fi
-          if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "yes" ]; then
+          if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "true" ]; then
             entries+=('{"label":"ee","docker-dir":"hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","distribution":"hazelcast-enterprise"}')
           fi
 
