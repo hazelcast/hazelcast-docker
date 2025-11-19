@@ -74,17 +74,10 @@ jobs:
         with:
           ref: ${{ inputs.SOURCE_REF }}
 
-      - name: Read release type from the file
-        run: |
-          RELEASE_TYPE_FILE=.github/release_type
-          if [ -f $RELEASE_TYPE_FILE ]; then
-              echo "RELEASE_TYPE=$(cat $RELEASE_TYPE_FILE)" >> $GITHUB_ENV
-          fi
-
       - id: resolve-editions
         uses: hazelcast/docker-actions/resolve-editions@master
         with:
-          release-type: ${{ env.RELEASE_TYPE }}
+          release-type: ${{ inputs.RELEASE_TYPE }}
 
       - name: Get HZ versions
         id: get_hz_versions
@@ -102,10 +95,10 @@ jobs:
           # We expect at least _one_ output distribution type, otherwise will produce an empty array that will break GitHub matrixes
           entries=()
 
-          if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "yes" ]; then
+          if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "true" ]; then
             entries+=('{"label":"oss","docker-dir":"hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","distribution":"hazelcast"}')
           fi
-          if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "yes" ]; then
+          if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "true" ]; then
             entries+=('{"label":"ee","docker-dir":"hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","distribution":"hazelcast-enterprise"}')
           fi
 
