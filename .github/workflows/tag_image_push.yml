@@ -324,7 +324,7 @@ jobs:
     needs:
       - prepare
       - push
-    if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') }}
+    if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') && github.event_name != 'workflow_call' }}
     runs-on: ubuntu-latest
     steps:
       - name: Create release
@@ -338,7 +338,7 @@ jobs:
     needs:
       - prepare
       - push
-    if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') }}
+    if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') && github.event_name != 'workflow_call' }}
     uses: ./.github/workflows/update_readme.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
