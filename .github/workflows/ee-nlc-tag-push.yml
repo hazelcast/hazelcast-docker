@@ -166,14 +166,14 @@ jobs:
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          docker logs "${TEST_CONTAINER_NAME}" > "docker-${TEST_CONTAINER_NAME}-jdk${{ matrix.jdk }}.log" || true
+          docker logs "${TEST_CONTAINER_NAME}" > "docker.log" || true
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v5
         with:
-          name: docker-logs-tag-image-push-nlc-${{ env.HZ_VERSION }}-jdk${{ matrix.jdk }}
-          path: docker-*.log
+          name: docker-logs-tag-image-push-nlc-${{ env.PRIMARY_TAG }}
+          path: docker.log
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
