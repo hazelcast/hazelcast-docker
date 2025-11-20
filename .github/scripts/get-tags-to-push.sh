@@ -80,9 +80,9 @@ function augment_with_classifier_tags() {
     for tag in ${INITIAL_TAGS[@]}
     do
       if [[ "$CURRENT_JDK" == "$DEFAULT_JDK" ]]; then
-          TAGS_TO_PUSH+=(${tag}${CLASSIFIER:+-$CLASSIFIER})
+          TAGS_TO_PUSH+=("${tag}${CLASSIFIER:+-${CLASSIFIER}}")
       fi
-      TAGS_TO_PUSH+=(${tag}${CLASSIFIER:+-$CLASSIFIER}-jdk${CURRENT_JDK})
+      TAGS_TO_PUSH+=("${tag}${CLASSIFIER:+-${CLASSIFIER}}-jdk${CURRENT_JDK}")
     done
 
   __sort_tags "${TAGS_TO_PUSH[@]}"
