@@ -70,7 +70,7 @@ jobs:
       should-build-ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.SOURCE_REF }}
 
@@ -131,11 +131,11 @@ jobs:
         ports:
           - 5000:5000
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path
