@@ -102,7 +102,7 @@ jobs:
           . .github/scripts/get-tags-to-push.sh
 
           if [[ "${{ inputs.HZ_VERSION }}" =~ SNAPSHOT ]]; then
-            TAGS_TO_PUSH=$(augment_with_suffixed_tags "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}")
+            TAGS_TO_PUSH=$(augment_with_classifier_tags "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}")
           else
             TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
           fi
