@@ -324,6 +324,7 @@ jobs:
     needs:
       - prepare
       - push
+    # Only for new, released images - not SNAPSHOTs or rebuilds
     if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') && github.event_name != 'workflow_call' }}
     runs-on: ubuntu-latest
     steps:
@@ -338,6 +339,7 @@ jobs:
     needs:
       - prepare
       - push
+    # Only for new, released images - not SNAPSHOTs or rebuilds
     if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') && github.event_name != 'workflow_call' }}
     uses: ./.github/workflows/update_readme.yml
     with:
