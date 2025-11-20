@@ -141,22 +141,13 @@ jobs:
           path: source_path
           sparse-checkout: ${{ matrix.distribution-type.docker-dir }}
 
-      - name: Calculate platforms
+      - name: Get supported platforms
         id: platforms
-        run: |
-          . .github/scripts/docker.functions.sh
+        uses: hazelcast/docker-actions/get-supported-platforms@master
+        with:
+          dockerfile: ${{ matrix.distribution-type.docker-dir }}/Dockerfile
+          jdk: ${{ matrix.jdk }}
 
-          case "${{ matrix.distribution-type.label }}" in
-              "oss")
-              echo "platforms=$(get_alpine_supported_platforms ${{ matrix.jdk }})" >> ${GITHUB_OUTPUT}
-              ;;
-              "ee")
-              echo "platforms=$(get_ubi_supported_platforms ${{ matrix.jdk }})" >> ${GITHUB_OUTPUT}
-              ;;
-              *)
-              echoerr "Unsupported platform behaviour for ${{ matrix.distribution-type.label }}" ; return 1
-              ;;
-          esac
 
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
