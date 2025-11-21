@@ -22,7 +22,7 @@ jobs:
           echo "HZ_VERSION=${GITHUB_REF:11}" >> $GITHUB_ENV
 
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - uses: madhead/semver-utils@latest
         id: version

@@ -37,7 +37,7 @@ jobs:
       default-jdk: ${{ steps.jdks.outputs.default-jdk }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.SOURCE_REF }}
 
@@ -70,9 +70,9 @@ jobs:
         ports:
           - 5000:5000
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path
