@@ -40,7 +40,11 @@ RUN mkdir -p ${HZ_HOME} \
     # Move all the content up a level so that the path contains no version and is constant
     && mv /tmp/hz/*/* ${HZ_HOME}/ \
     && apk del unzip \
-    && rm -rf /tmp/*
+    && rm -rf /tmp/* \
+    && echo "Setting Pardot ID to 'docker'" \
+    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties"
+
+COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 
 FROM redhat/ubi9-minimal:9.7
@@ -83,16 +87,12 @@ RUN echo "Upgrading packages" \
     && echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
         --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless tar tzdata-java util-linux \
-    && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && microdnf -y clean all \
     && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
     && chmod +x ${HZ_HOME}/bin/*
-
-COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 WORKDIR ${HZ_HOME}
 

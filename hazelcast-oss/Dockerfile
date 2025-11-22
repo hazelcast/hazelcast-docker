@@ -40,7 +40,11 @@ RUN mkdir -p ${HZ_HOME} \
     # Move all the content up a level so that the path contains no version and is constant
     && mv /tmp/hz/*/* ${HZ_HOME}/ \
     && apk del unzip \
-    && rm -rf /tmp/*
+    && rm -rf /tmp/* \
+    && echo "Setting Pardot ID to 'docker'" \
+    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties"
+
+COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 
 FROM alpine:3
@@ -72,16 +76,12 @@ RUN echo "Upgrading packages" \
     && apk upgrade --no-cache \
     && echo "Installing new packages" \
     && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl \
-    && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && rm -rf /var/cache/apk/* \
     && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
     && chmod +x ${HZ_HOME}/bin/*
-
-COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 WORKDIR ${HZ_HOME}
 
