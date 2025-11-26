@@ -22,7 +22,7 @@ runs:
     - name: Check if EE LTS release
       shell: bash
       run: |
-        if [ -n "${{inputs.is_lts_override}}" ]; then
+        if [ "${{inputs.is_lts_override}}" == "true" ]; then
             echo "IS_LTS overridden to '${{inputs.is_lts_override}}'"
             echo "IS_LTS=${{inputs.is_lts_override}}" >> $GITHUB_ENV
         elif [ -f $IS_LTS_FILE ]; then
