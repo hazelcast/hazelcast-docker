@@ -84,6 +84,7 @@ RUN echo "Upgrading packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
         --disableplugin=subscription-manager install \
         java-${JDK_VERSION}-openjdk-headless \
+        procps \
         shadow-utils \
         tar \
         tzdata-java \
