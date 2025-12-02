@@ -173,7 +173,7 @@ jobs:
       - name: Check if latest EE LTS release
         if: matrix.distribution-type.label == 'ee'
         id: is_latest_lts
-        uses: JackPGreen/docker-actions/check-if-latest-lts-release@migrate-check-if-latest-lts-release-action
+        uses: hazelcast/docker-actions/check-if-latest-lts-release@migrate-check-if-latest-lts-release-action
         with:
           github_token: ${{ github.token }}
           github_repository_to_query: ${{ github.repository }}
