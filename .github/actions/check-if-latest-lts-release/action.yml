@@ -1,0 +1,46 @@
+name: Check if latest EE LTS release
+description: Check if latest EE LTS release
+inputs:
+  hz_version:
+    description: Version to be released
+    required: true
+  is_lts_override:
+    description: Override is LTS release or not
+    required: true
+outputs:
+  is_latest_lts:
+    value: ${{ steps.is_latest_lts.outputs.is_latest_lts }}
+    description: Returns 'true' if the release if the latest LTS
+runs:
+  using: "composite"
+  steps:
+    - name: Set Environment Variables
+      shell: bash
+      run: |
+        echo "IS_LTS_FILE=.github/lts" >> $GITHUB_ENV
+
+    - name: Check if EE LTS release
+      shell: bash
+      run: |
+        if [ -n "${{inputs.is_lts_override}}" ]; then
+            echo "IS_LTS overridden to '${{inputs.is_lts_override}}'"
+            echo "IS_LTS=${{inputs.is_lts_override}}" >> $GITHUB_ENV
+        elif [ -f $IS_LTS_FILE ]; then
+            echo "IS_LTS=true" >> $GITHUB_ENV
+            echo "File '$IS_LTS_FILE' exists. Assuming LTS release"
+        else
+            echo "File '$IS_LTS_FILE' does not exist. Assuming non-LTS release"
+        fi
+
+    - name: Check if latest EE LTS release
+      if: env.IS_LTS == 'true'
+      id: is_latest_lts
+      shell: bash
+      run: |
+        . .github/scripts/version.functions.sh
+        CURRENT_LATEST_LTS_VERSION=$(get_last_version_with_file "$IS_LTS_FILE")
+        if version_less_or_equal "$CURRENT_LATEST_LTS_VERSION" "${{ inputs.hz_version }}"; then
+           echo "is_latest_lts=true" >> $GITHUB_OUTPUT
+        else 
+           echo "is_latest_lts=false" >> $GITHUB_OUTPUT
+        fi

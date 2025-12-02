@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# shellcheck source=../.github/scripts/version.functions.sh
+# shellcheck source=../.github/scripts/versions.functions.sh
 . .github/scripts/version.functions.sh
 
 # Returns tags, ordered by specificality 
