@@ -163,8 +163,7 @@ jobs:
         with:
           platforms: ${{ steps.platforms.outputs.platforms }}
 
-      # https://github.com/s4u/maven-settings-action/releases/tag/v4.0.0
-      - uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788
+      - uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788 # v4.0.0
         with:
           servers: |
             [{
@@ -328,7 +327,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
