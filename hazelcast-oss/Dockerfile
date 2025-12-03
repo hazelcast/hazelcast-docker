@@ -75,7 +75,10 @@ COPY --from=get-distribution ${HZ_HOME} ${HZ_HOME}/
 RUN echo "Upgrading packages" \
     && apk upgrade --no-cache \
     && echo "Installing new packages" \
-    && apk add --no-cache openjdk${JDK_VERSION}-jre-headless bash curl \
+    && apk add --no-cache \
+        bash \
+        curl \
+        openjdk${JDK_VERSION}-jre-headless \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Removing unnecessary packages and redundant files/folders" \
