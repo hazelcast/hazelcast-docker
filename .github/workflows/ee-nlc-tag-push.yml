@@ -76,7 +76,7 @@ jobs:
         with:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path
-          sparse-checkout: hazelcast-enterprise
+          sparse-checkout: ${{ env.DOCKER_DIR }}
 
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
@@ -126,12 +126,12 @@ jobs:
             echo 'EOF'
           } >> "${GITHUB_OUTPUT}"
 
-      - name: Calculate platforms
+      - name: Get supported platforms
         id: platforms
-        run: |
-          . .github/scripts/docker.functions.sh
-
-          echo "platforms=$(get_ubi_supported_platforms ${{ matrix.jdk }})" >> ${GITHUB_OUTPUT}
+        uses: hazelcast/docker-actions/get-supported-platforms@master
+        with:
+          dockerfile: ${{ env.DOCKER_DIR }}/Dockerfile
+          jdk: ${{ matrix.jdk }}
 
       - name: Determine labels
         id: labels
