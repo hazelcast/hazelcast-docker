@@ -28,6 +28,20 @@ env:
   CONTAINER_NAME: my-container
 
 jobs:
+  update-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add workflow inputs to summary
+        run: |
+          echo "### Workflow inputs" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Name | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| IMAGE_VERSION | ${{ inputs.IMAGE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| EXPECTED_HZ_VERSION | ${{ inputs.EXPECTED_HZ_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| DISTRIBUTION_TYPE | ${{ inputs.DISTRIBUTION_TYPE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| EXPECTED_DEFAULT_JAVA_VERSION | ${{ inputs.EXPECTED_DEFAULT_JAVA_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| OTHER_JDKS | ${{ inputs.OTHER_JDKS }} |" >> $GITHUB_STEP_SUMMARY
   set-matrix:
     runs-on: ubuntu-latest
     outputs:
@@ -35,7 +49,7 @@ jobs:
       jdk-image-variants-matrix: ${{ steps.set-matrix.outputs.jdk-image-variants-matrix }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Parse input into matrix
         id: set-matrix
         run: |
@@ -82,7 +96,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - uses: madhead/semver-utils@latest
         id: image-version

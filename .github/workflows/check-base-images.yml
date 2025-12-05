@@ -34,7 +34,7 @@ jobs:
       MINIMAL_SUPPORTED_VERSION: ${{ inputs.MINIMAL_SUPPORTED_VERSION }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - id: get-maintenance-versions
@@ -108,6 +108,8 @@ jobs:
       - convert-rebuilds-to-matrix
     if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
     strategy:
+      # Workaround for RedHat
+      max-parallel: 1
       matrix:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
     uses: ./.github/workflows/tag_image_push.yml

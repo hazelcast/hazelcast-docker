@@ -19,14 +19,13 @@ ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-enterprise-distribution.zip"
 ENV MAVEN_ARTIFACT_ID=hazelcast-enterprise-distribution \
     MAVEN_REPO=https://repository.hazelcast.com/release
 
-COPY hazelcast-*.zip /tmp
+COPY hazelcast-*.zip maven.functions.sh /tmp/
 
-RUN --mount=type=bind,source=maven.functions.sh,target=maven.functions.sh \
-    mkdir -p ${HZ_HOME} \
+RUN mkdir -p ${HZ_HOME} \
     && if [[ ! -f /tmp/${HAZELCAST_ZIP_FILE_NAME} ]]; then \
        apk add --no-cache curl; \
        if [ -z ${HAZELCAST_ZIP_URL} ]; then \
-            source maven.functions.sh; \
+            source tmp/maven.functions.sh; \
             HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast ${MAVEN_ARTIFACT_ID} ${MAVEN_REPO})".zip; \
        fi; \
        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
@@ -41,7 +40,11 @@ RUN --mount=type=bind,source=maven.functions.sh,target=maven.functions.sh \
     # Move all the content up a level so that the path contains no version and is constant
     && mv /tmp/hz/*/* ${HZ_HOME}/ \
     && apk del unzip \
-    && rm -rf /tmp/*
+    && rm -rf /tmp/* \
+    && echo "Setting Pardot ID to 'docker'" \
+    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties"
+
+COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 
 FROM redhat/ubi9-minimal:9.7
@@ -83,17 +86,18 @@ RUN echo "Upgrading packages" \
     && microdnf -y update --nodocs \
     && echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
-        --disableplugin=subscription-manager install shadow-utils java-${JDK_VERSION}-openjdk-headless tar tzdata-java util-linux \
-    && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
+        --disableplugin=subscription-manager install \
+        java-${JDK_VERSION}-openjdk-headless \
+        shadow-utils \
+        tar \
+        tzdata-java \
+        util-linux \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && microdnf -y clean all \
     && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
     && chmod +x ${HZ_HOME}/bin/*
-
-COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 WORKDIR ${HZ_HOME}
 

@@ -37,7 +37,7 @@ jobs:
       default-jdk: ${{ steps.jdks.outputs.default-jdk }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.SOURCE_REF }}
 
@@ -70,9 +70,9 @@ jobs:
         ports:
           - 5000:5000
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path
@@ -166,14 +166,14 @@ jobs:
       - name: Get docker logs
         if: ${{ always() }}
         run: |
-          docker logs "${TEST_CONTAINER_NAME}" > "docker-${TEST_CONTAINER_NAME}-jdk${{ matrix.jdk }}.log" || true
+          docker logs "${TEST_CONTAINER_NAME}" > "docker.log" || true
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@v5
         with:
-          name: docker-logs-tag-image-push-nlc-${{ env.HZ_VERSION }}-jdk${{ matrix.jdk }}
-          path: docker-*.log
+          name: docker-logs-tag-image-push-nlc-${{ env.PRIMARY_TAG }}
+          path: docker.log
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
