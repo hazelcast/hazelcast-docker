@@ -49,40 +49,40 @@ function __get_version_only_tags_to_push() {
 function get_tags_to_push() {
 
   if [ "$#" -ne 5 ]; then
-    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} VERSION_TO_RELEASE SUFFIX CURRENT_JDK DEFAULT_JDK IS_LATEST_LTS"
+    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} VERSION_TO_RELEASE CLASSIFIER CURRENT_JDK DEFAULT_JDK IS_LATEST_LTS"
     exit 1;
   fi
 
   local VERSION_TO_RELEASE=$1
-  local SUFFIX=$2
+  local CLASSIFIER=$2
   local CURRENT_JDK=$3
   local DEFAULT_JDK=$4
   local IS_LATEST_LTS=$5
 
   local tags
   tags=$(__get_version_only_tags_to_push "$VERSION_TO_RELEASE" "$IS_LATEST_LTS")
-  tags=$(augment_with_suffixed_tags "${tags[*]}" "$SUFFIX" "$CURRENT_JDK" "$DEFAULT_JDK")
+  tags=$(augment_with_classifier_tags "${tags[*]}" "$CLASSIFIER" "$CURRENT_JDK" "$DEFAULT_JDK")
 
   __sort_tags "${tags}"
 }
 
-function augment_with_suffixed_tags() {
+function augment_with_classifier_tags() {
   if [ "$#" -ne 4 ]; then
-    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} INITIAL_TAGS SUFFIX CURRENT_JDK DEFAULT_JDK"
+    echo "Error: Incorrect number of arguments. Usage: ${FUNCNAME[0]} INITIAL_TAGS CLASSIFIER CURRENT_JDK DEFAULT_JDK"
     exit 1;
   fi
 
   local INITIAL_TAGS=$1
-  local SUFFIX=$2
+  local CLASSIFIER=$2
   local CURRENT_JDK=$3
   local DEFAULT_JDK=$4
 
     for tag in ${INITIAL_TAGS[@]}
     do
       if [[ "$CURRENT_JDK" == "$DEFAULT_JDK" ]]; then
-          TAGS_TO_PUSH+=(${tag}$SUFFIX)
+          TAGS_TO_PUSH+=("${tag}${CLASSIFIER:+-${CLASSIFIER}}")
       fi
-      TAGS_TO_PUSH+=(${tag}${SUFFIX}-jdk${CURRENT_JDK})
+      TAGS_TO_PUSH+=("${tag}${CLASSIFIER:+-${CLASSIFIER}}-jdk${CURRENT_JDK}")
     done
 
   __sort_tags "${TAGS_TO_PUSH[@]}"

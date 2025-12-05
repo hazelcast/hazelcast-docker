@@ -54,6 +54,7 @@ jobs:
       jdks: ${{ steps.jdks.outputs.jdks }}
       default-jdk: ${{ steps.jdks.outputs.default-jdk }}
       should-build-ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
+      distribution-classifiers: ${{ steps.distribution-classifiers.outputs.classifiers }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -91,19 +92,18 @@ jobs:
           json="[$(IFS=,; echo "${entries[*]}")]"
           echo "matrix=$json" >> "${GITHUB_OUTPUT}"
 
-  distribution-variants:
-    uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@master
+      - id: distribution-classifiers
+        uses: hazelcast/docker-actions/get-distribution-classifiers@master
 
   push:
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     needs:
       - prepare
-      - distribution-variants
     strategy:
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
-        variant: ${{ fromJSON(needs.distribution-variants.outputs.variants) }}
+        classifier: ${{ fromJSON(needs.prepare.outputs.distribution-classifiers) }}
         distribution-type: ${{ fromJSON(needs.prepare.outputs.distribution-types) }}
     env:
       LOCAL_REGISTRY: localhost:5000
@@ -156,7 +156,7 @@ jobs:
           repo-vars-as-json: ${{ toJSON(vars) }}
           distribution: ${{ matrix.distribution-type.distribution }}
           hz_version: ${{ env.HZ_VERSION }}
-          classifier: ${{ matrix.variant.classifier }}
+          classifier: ${{ matrix.classifier }}
           packaging: "zip"
           output_file: "source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
 
@@ -181,7 +181,7 @@ jobs:
                 VERSIONS+=(latest-snapshot)
             fi
             
-            TAGS_TO_PUSH=$(augment_with_suffixed_tags "${VERSIONS[*]}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}")
+            TAGS_TO_PUSH=$(augment_with_classifier_tags "${VERSIONS[*]}" "${{ matrix.classifier }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}")
           else
             case "${{ matrix.distribution-type.label }}" in
                 "oss")
@@ -196,7 +196,7 @@ jobs:
                 ;;
             esac
 
-            TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.variant.suffix }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}" "${IS_LATEST_LTS}")
+            TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.classifier }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}" "${IS_LATEST_LTS}")
           fi
 
           # Keep a reference to _a_ tag to get the image later on

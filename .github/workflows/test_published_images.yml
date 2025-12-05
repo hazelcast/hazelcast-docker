@@ -47,6 +47,7 @@ jobs:
     outputs:
       distribution-type-matrix: ${{ steps.set-matrix.outputs.distribution-type-matrix }}
       jdk-image-variants-matrix: ${{ steps.set-matrix.outputs.jdk-image-variants-matrix }}
+      distribution-classifiers: ${{ steps.distribution-classifiers.outputs.classifiers }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -78,19 +79,18 @@ jobs:
           matrix=$(echo '"${{ inputs.OTHER_JDKS }}"' | jq --compact-output 'split(",") + [""] | map(gsub("^\\s+|\\s+$"; ""))' )
           echo "jdk-image-variants-matrix=${matrix}" >> $GITHUB_OUTPUT
 
-  distribution-variants:
-    uses: hazelcast/hazelcast-docker/.github/workflows/get-distribution-variants.yaml@master
+      - id: distribution-classifiers
+        uses: hazelcast/docker-actions/get-distribution-classifiers@master
 
   test:
     environment: live
     runs-on: ubuntu-latest
     needs:
       - set-matrix
-      - distribution-variants
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.distribution-variants.outputs.variants) }}
+        classifier: ${{ fromJSON(needs.set-matrix.outputs.distribution-classifiers) }}
         distribution-type: ${{ fromJson(needs.set-matrix.outputs.distribution-type-matrix) }}
         jdk-image-variant: ${{ fromJson(needs.set-matrix.outputs.jdk-image-variants-matrix) }}
 
@@ -190,8 +190,8 @@ jobs:
           # To allow computing the required tag, store the elements in an array
           tag_elements=("${{ inputs.IMAGE_VERSION }}")
 
-          if [[ -n "${{ matrix.variant.classifier }}" ]]; then
-            tag_elements+=("${{ matrix.variant.classifier }}")
+          if [[ -n "${{ matrix.classifier }}" ]]; then
+            tag_elements+=("${{ matrix.classifier }}")
           fi
 
           if [[ -n "${{ matrix.jdk-image-variant }}" ]]; then
@@ -203,7 +203,7 @@ jobs:
 
           # Check additional EE repos
           # Only populated for default variant, not "slim"
-          if [[ "${{ matrix.distribution-type }}" == "ee" && -z "${{ matrix.variant.classifier }}" ]]; then
+          if [[ "${{ matrix.distribution-type }}" == "ee" && -z "${{ matrix.classifier }}" ]]; then
             # NLC repo only populated for absolute versions - not "latest", "latest-lts" etc tags
             # Identify absolute version based on earlier parsing of version number
             if [[ -n "${{ steps.image-version.outputs.major }}" ]]; then
