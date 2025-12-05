@@ -34,7 +34,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         if: ${{ env.SKIP != 'true' }}
         with:
           ref: ${{ env.BRANCH_NAME }}

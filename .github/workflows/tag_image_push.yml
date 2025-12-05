@@ -71,7 +71,7 @@ jobs:
       distribution-classifiers: ${{ steps.distribution-classifiers.outputs.classifiers }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.SOURCE_REF }}
 
@@ -131,11 +131,11 @@ jobs:
         ports:
           - 5000:5000
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path
@@ -163,8 +163,7 @@ jobs:
         with:
           platforms: ${{ steps.platforms.outputs.platforms }}
 
-      # https://github.com/s4u/maven-settings-action/releases/tag/v4.0.0
-      - uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788
+      - uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788 # v4.0.0
         with:
           servers: |
             [{
@@ -273,7 +272,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v5
         with:
-          name: docker-logs-tag-image-push-${{ matrix.distribution-type.label }}-${{ env.HZ_VERSION }}${{ matrix.classifier && format('-{0}', matrix.classifier) }}-jdk${{ matrix.jdk }}
+          name: docker-logs-tag-image-push-${{ matrix.distribution-type.image-name }}-${{ env.PRIMARY_TAG }}
           path: docker.log
 
       - name: Login to Docker Hub
@@ -328,7 +327,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true

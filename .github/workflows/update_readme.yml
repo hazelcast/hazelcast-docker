@@ -39,7 +39,7 @@ jobs:
       matrix: ${{ fromJSON(needs.get-repositories.outputs.matrix) }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Generate Docker Hub Description
         run: |
