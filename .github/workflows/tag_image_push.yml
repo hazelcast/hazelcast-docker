@@ -15,15 +15,6 @@ on:
           - ALL
           - OSS
           - EE
-      IS_LTS_OVERRIDE:
-        description: 'Override is LTS release'
-        required: false
-        default: ''
-        type: choice
-        options:
-          - ''
-          - 'false'
-          - 'true'
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
         required: false
@@ -41,11 +32,6 @@ on:
         description: 'What should be built'
         required: false
         default: 'EE'
-        type: string
-      IS_LTS_OVERRIDE:
-        description: 'Override is LTS release'
-        required: false
-        default: ''
         type: string
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
@@ -186,10 +172,9 @@ jobs:
       - name: Check if latest EE LTS release
         if: matrix.distribution-type.label == 'ee'
         id: is_latest_lts
-        uses: ./.github/actions/check-if-latest-lts-release
+        uses: hazelcast/docker-actions/check-if-latest-lts-release@master
         with:
           hz_version: ${{ env.HZ_VERSION }}
-          is_lts_override: ${{ inputs.IS_LTS_OVERRIDE }}
 
       - name: Calculate tags
         id: tags
