@@ -63,7 +63,7 @@ function get_tags_to_push() {
   tags=$(__get_version_only_tags_to_push "$VERSION_TO_RELEASE" "$IS_LATEST_LTS")
   tags=$(augment_with_classifier_tags "${tags[*]}" "$CLASSIFIER" "$CURRENT_JDK" "$DEFAULT_JDK")
 
-  __sort_tags "${tags}"
+  echo "${tags[@]}"
 }
 
 function augment_with_classifier_tags() {
