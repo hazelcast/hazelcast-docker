@@ -11,6 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - uses: SonarSource/sonarqube-scan-action@v6
         with:
