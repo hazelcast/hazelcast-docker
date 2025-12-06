@@ -161,6 +161,7 @@ jobs:
           output_file: "source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
 
       - name: Check if latest EE LTS release
+        # OSS has no LTS releases
         if: matrix.distribution-type.label == 'ee'
         id: is_latest_lts
         uses: hazelcast/docker-actions/check-if-latest-lts-release@master
@@ -183,20 +184,7 @@ jobs:
             
             TAGS_TO_PUSH=$(augment_with_classifier_tags "${VERSIONS[*]}" "${{ matrix.classifier }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}")
           else
-            case "${{ matrix.distribution-type.label }}" in
-                "oss")
-                # OSS has no LTS releases
-                IS_LATEST_LTS=false
-                ;;
-                "ee")
-                IS_LATEST_LTS="${{ steps.is_latest_lts.outputs.is_latest_lts }}"
-                ;;
-                *)
-                echoerr "Unsupported LTS behaviour for ${{ matrix.distribution-type.label }}" ; return 1
-                ;;
-            esac
-
-            TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.classifier }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}" "${IS_LATEST_LTS}")
+            TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.classifier }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}" "${{ steps.is_latest_lts.outputs.is_latest_lts || 'false' }}")
           fi
 
           # Keep a reference to _a_ tag to get the image later on
