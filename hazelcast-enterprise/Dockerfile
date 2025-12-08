@@ -42,7 +42,11 @@ RUN mkdir -p ${HZ_HOME} \
     && apk del unzip \
     && rm -rf /tmp/* \
     && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties"
+    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
+    && echo "Granting read permission to ${HZ_HOME}" \
+    && chmod -R +r ${HZ_HOME} \
+    && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
+    && chmod +x ${HZ_HOME}/bin/*
 
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
@@ -92,12 +96,8 @@ RUN echo "Upgrading packages" \
         tar \
         tzdata-java \
         util-linux \
-    && echo "Granting read permission to ${HZ_HOME}" \
-    && chmod -R +r ${HZ_HOME} \
     && echo "Removing unnecessary packages and redundant files/folders" \
-    && microdnf -y clean all \
-    && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
-    && chmod +x ${HZ_HOME}/bin/*
+    && microdnf -y clean all
 
 WORKDIR ${HZ_HOME}
 
