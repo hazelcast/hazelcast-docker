@@ -14,16 +14,10 @@ FROM alpine:3 AS get-distribution
 ARG HZ_HOME
 ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-enterprise-distribution.zip"
 
-ENV MAVEN_ARTIFACT_ID=hazelcast-enterprise-distribution \
-    MAVEN_REPO=https://repository.hazelcast.com/release
-
-COPY hazelcast-*.zip /tmp/
+# Expects distribution ZIP to be on the local filesystem within the build context
+COPY ${HAZELCAST_ZIP_FILE_NAME} /tmp/
 
 RUN mkdir -p ${HZ_HOME} \
-    && if [[ ! -f /tmp/${HAZELCAST_ZIP_FILE_NAME} ]]; then \
-           echo "Failed to find local ${HAZELCAST_ZIP_FILE_NAME}"; \
-           exit 1; \
-    fi \
     && apk add --no-cache unzip \
     && unzip -qq /tmp/${HAZELCAST_ZIP_FILE_NAME} -d /tmp/hz \
     # Distribution ZIP structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
