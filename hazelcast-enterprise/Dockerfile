@@ -12,27 +12,17 @@ ARG JDK_VERSION="21"
 FROM alpine:3 AS get-distribution
 
 ARG HZ_HOME
-# Optional, defaults to latest released version
-ARG HAZELCAST_ZIP_URL=""
 ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-enterprise-distribution.zip"
 
 ENV MAVEN_ARTIFACT_ID=hazelcast-enterprise-distribution \
     MAVEN_REPO=https://repository.hazelcast.com/release
 
-COPY hazelcast-*.zip maven.functions.sh /tmp/
+COPY hazelcast-*.zip /tmp/
 
 RUN mkdir -p ${HZ_HOME} \
     && if [[ ! -f /tmp/${HAZELCAST_ZIP_FILE_NAME} ]]; then \
-       apk add --no-cache curl; \
-       if [ -z ${HAZELCAST_ZIP_URL} ]; then \
-            source tmp/maven.functions.sh; \
-            HAZELCAST_ZIP_URL="$(get_latest_url_without_extension com.hazelcast ${MAVEN_ARTIFACT_ID} ${MAVEN_REPO})".zip; \
-       fi; \
-       echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
-       curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output /tmp/${HAZELCAST_ZIP_FILE_NAME}; \
-       apk del curl \
-    else \
-           echo "Using local ${HAZELCAST_ZIP_FILE_NAME}"; \
+           echo "Failed to find local ${HAZELCAST_ZIP_FILE_NAME}"; \
+           exit 1; \
     fi \
     && apk add --no-cache unzip \
     && unzip -qq /tmp/${HAZELCAST_ZIP_FILE_NAME} -d /tmp/hz \
