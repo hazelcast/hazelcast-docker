@@ -227,6 +227,10 @@ jobs:
         env:
           HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HAZELCAST_ENTERPRISE_KEY || '' }}
 
+      - uses: hazelcast/docker-actions/test-image-size@master
+        with:
+          image: ${{ env.LOCAL_IMAGE_NAME}}:${{ env.PRIMARY_TAG }}
+
       - name: Get docker logs
         if: ${{ always() }}
         run: |
