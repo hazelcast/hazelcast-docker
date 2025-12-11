@@ -30,7 +30,7 @@ RUN mkdir -p ${HZ_HOME} \
        fi; \
        echo "Downloading Hazelcast distribution zip from ${HAZELCAST_ZIP_URL}..."; \
        curl --fail --silent --show-error --location ${HAZELCAST_ZIP_URL} --output /tmp/${HAZELCAST_ZIP_FILE_NAME}; \
-       apk del curl \
+       apk del curl; \
     else \
            echo "Using local ${HAZELCAST_ZIP_FILE_NAME}"; \
     fi \
