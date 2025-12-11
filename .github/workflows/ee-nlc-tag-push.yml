@@ -163,7 +163,7 @@ jobs:
         env:
           HZ_INSTANCETRACKING_FILENAME: instance-tracking.txt
 
-      - uses: hazelcast/docker-actions/test-image-size@master
+      - uses: hazelcast/docker-actions/assert-image-size@master
         with:
           image: ${{ env.LOCAL_IMAGE_NAME}}:${{ env.PRIMARY_TAG }}
 
