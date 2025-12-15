@@ -234,7 +234,7 @@ jobs:
 
       - name: Store docker logs as artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: docker-logs-tag-image-push-${{ matrix.distribution-type.image-name }}-${{ env.PRIMARY_TAG }}
           path: docker.log
