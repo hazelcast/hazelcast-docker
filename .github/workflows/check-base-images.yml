@@ -92,7 +92,7 @@ jobs:
     outputs:
       rebuild-ee-matrix: ${{ steps.set-matrix.outputs.rebuild_ee_matrix }}
     steps:
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           merge-multiple: true
       - id: set-matrix
