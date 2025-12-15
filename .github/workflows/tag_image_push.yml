@@ -178,7 +178,7 @@ jobs:
 
           if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             VERSIONS=("$HZ_VERSION")
-            if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            if [[ "${GITHUB_REF}" == "refs/heads/master" ]]; then
                 VERSIONS+=(latest-snapshot)
             fi
             
