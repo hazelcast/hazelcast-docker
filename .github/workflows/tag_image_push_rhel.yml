@@ -48,8 +48,6 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     strategy:
-      # Workaround for RedHat
-      max-parallel: 1
       fail-fast: false
       matrix:
         jdk: ${{ fromJSON(inputs.JDKS) }}
