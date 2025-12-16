@@ -42,6 +42,9 @@ on:
         required: true
         type: string
 
+permissions:
+  id-token: write
+
 jobs:
   prepare:
     environment: ${{ inputs.ENVIRONMENT }}
@@ -140,13 +143,34 @@ jobs:
         with:
           platforms: ${{ steps.platforms.outputs.platforms }}
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            JFROG,JFROG/READONLY_DEV_ACCOUNT
+          parse-json-secrets: true
+
+      - id: authenticate-jfrog-snapshot-internal
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://${{ env.JFROG_URL }}
+        with:
+          oidc-provider-name: ${{ github.repository_owner }}-snapshot-internal
+
       - uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788 # v4.0.0
         with:
           servers: |
             [{
                 "id": "snapshot-internal",
-                "username": "${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}",
-                "password": "${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}"
+                "username": "${{ steps.authenticate-jfrog-snapshot-internal.outputs.oidc-user }}",
+                "password": "${{ steps.authenticate-jfrog-snapshot-internal.outputs.oidc-token }}"
             }]
 
       - name: Download the distribution file
@@ -249,26 +273,19 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
+      - id: authenticate-jfrog-write-dev-account
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://${{ env.JFROG_URL }}
         with:
-          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
-          aws-region: 'us-east-1'
-
-      - name: Get Secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            JFROG,JFROG/WRITE_DEV_ACCOUNT
-          parse-json-secrets: true
+          oidc-provider-name: ${{ github.repository_owner }}-write-dev-account
 
       - name: Login to JFrog
         uses: docker/login-action@v3
         with:
           registry: ${{ env.JFROG_URL }}
-          username: ${{ env.JFROG_USERNAME }}
-          password: ${{ env.JFROG_PASSWORD }}
+          username: ${{ steps.authenticate-jfrog-write-dev-account.outputs.oidc-user }}
+          password: ${{ steps.authenticate-jfrog-write-dev-account.outputs.oidc-token }}
 
       - name: Push image to remote registry
         run: |
