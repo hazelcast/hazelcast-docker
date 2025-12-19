@@ -95,7 +95,7 @@ jobs:
       - id: distribution-classifiers
         uses: hazelcast/docker-actions/get-distribution-classifiers@master
 
-  push:
+  build:
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     needs:
