@@ -73,7 +73,7 @@ COPY --from=get-distribution ${HZ_HOME} ${HZ_HOME}/
 RUN echo "Upgrading packages" \
     && microdnf -y update --nodocs \
     && echo "Installing new packages" \
-    && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
+    && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-10-appstream-rpms --enablerepo=ubi-10-baseos-rpms \
         --disableplugin=subscription-manager install \
         java-${JDK_VERSION}-openjdk-headless \
         shadow-utils \
