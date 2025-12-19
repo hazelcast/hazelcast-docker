@@ -154,11 +154,45 @@ jobs:
           parse-json-secrets: true
    
       - name: Run preflight scan
+        id: preflight
         run: |
-          preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.get-tags-to-push.outputs.unique_destination_tag }}" \
+          source .github/scripts/logging.functions.sh
+
+          PREFLIGHT_OUTPUT=$(preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.get-tags-to-push.outputs.unique_destination_tag }}" \
             --submit --pyxis-api-token=${REDHAT_ROBOT_RHEL_API_KEY} \
             --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
-            --docker-config ~/.docker/config.json
+            --docker-config ~/.docker/config.json \
+            2>&1)
+
+          echodebug "${PREFLIGHT_OUTPUT}"
+
+          # Multi-arch images will have multiple image IDs
+          IMAGE_IDS=$(grep --perl-regexp --only-matching "image id is: \K[a-f0-9]+" <<< "${PREFLIGHT_OUTPUT}" || true)
+
+          if [[ -n "${IMAGE_IDS}" ]]; then
+            IMAGE_IDS_JSON=$(jq --raw-input --slurp --compact-output 'split("\n")[:-1]' <<< "${IMAGE_IDS}")
+            echo "IMAGE_IDS=${IMAGE_IDS_JSON}" >> ${GITHUB_OUTPUT}
+          else
+            echoerr "Unable to extract image ID from preflight output:"
+            echoerr "${PREFLIGHT_OUTPUT}"
+            exit 1
+          fi
+
+      - name: Await publishing
+        timeout-minutes: 240
+        run: |
+          . .github/scripts/rhel.functions.sh
+
+          # Although we use autopublish, this simply triggers an asynchronous process on the server side
+          # To _try_ to attain republish atomicity, we want to await the successful publishing of the new, unique tag _before_ we push (and implicitly replace) the existing tags
+          # Otherwise we'd replace a published image with an unpublished one
+
+          jq --raw-output '.[]' <<< '${{ steps.preflight.outputs.IMAGE_IDS }}' | while read IMAGE_ID; do
+            await_image_publish \
+              "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" \
+              "${IMAGE_ID}" \
+              "${REDHAT_ROBOT_RHEL_API_KEY}"
+          done
 
       - name: Copy remaining tags to RedHat Container Registry
         run: |
