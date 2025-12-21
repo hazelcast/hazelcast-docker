@@ -290,7 +290,7 @@ jobs:
   create-release:
     needs:
       - prepare
-      - push
+      - build
     if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') }}
     runs-on: ubuntu-latest
     steps:
@@ -304,7 +304,7 @@ jobs:
   readme:
     needs:
       - prepare
-      - push
+      - build
     if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') }}
     uses: ./.github/workflows/update_readme.yml
     with:
@@ -315,7 +315,7 @@ jobs:
     name: Push RHEL image
     needs:
       - prepare
-      - push
+      - build
     # Restrict to non-SNAPSHOT for `live` environment only
     if: needs.prepare.outputs.should-build-ee == 'true' && !(inputs.ENVIRONMENT == 'live' && contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT'))
     uses: ./.github/workflows/tag_image_push_rhel.yml
@@ -332,7 +332,7 @@ jobs:
     name: Failure notification
     if: failure() && github.triggering_actor == 'devOpsHazelcast'
     needs:
-      - push
+      - build
       - push-rhel
       - readme
       - create-release
