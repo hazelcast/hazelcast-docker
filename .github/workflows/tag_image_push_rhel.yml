@@ -42,7 +42,7 @@ on:
         required: true
         type: string
 jobs:
-  build:
+  push-rhel:
     env:
       SCAN_REGISTRY: "quay.io"
     environment: ${{ inputs.ENVIRONMENT }}

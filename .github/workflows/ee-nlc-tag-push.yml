@@ -51,7 +51,7 @@ jobs:
         with:
           HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
 
-  push:
+  build:
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     needs: prepare
