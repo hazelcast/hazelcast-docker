@@ -1,7 +1,3 @@
-#!/bin/bash
-
-set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
-
 # shellcheck source=../.github/scripts/logging.functions.sh
 . .github/scripts/logging.functions.sh
 
