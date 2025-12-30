@@ -85,6 +85,8 @@ jobs:
   test:
     environment: live
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     needs:
       - set-matrix
     strategy:
@@ -117,8 +119,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_ROLE }}
           aws-region: 'us-east-1'
 
       - name: Get Secrets
