@@ -106,6 +106,8 @@ jobs:
   build:
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     needs:
       - prepare
     strategy:
