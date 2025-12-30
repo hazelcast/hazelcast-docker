@@ -55,11 +55,13 @@ jobs:
       default-jdk: ${{ steps.jdks.outputs.default-jdk }}
       should-build-ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
       distribution-classifiers: ${{ steps.distribution-classifiers.outputs.classifiers }}
+      is-latest-lts: ${{ steps.is-latest-lts.outputs.is_latest_lts }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.SOURCE_REF }}
+          fetch-depth: 0
 
       - id: resolve-editions
         uses: hazelcast/docker-actions/resolve-editions@master
@@ -75,6 +77,12 @@ jobs:
         uses: hazelcast/docker-actions/get-supported-jdks@master
         with:
           HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
+
+      - name: Check if latest EE LTS release
+        id: is-latest-lts
+        uses: hazelcast/docker-actions/check-if-latest-lts-release@master
+        with:
+          hz_version: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
 
       - name: Compute distribution type matrix
         id: distribution-type-matrix
@@ -95,7 +103,7 @@ jobs:
       - id: distribution-classifiers
         uses: hazelcast/docker-actions/get-distribution-classifiers@master
 
-  push:
+  build:
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     needs:
@@ -109,10 +117,6 @@ jobs:
       LOCAL_REGISTRY: localhost:5000
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       TEST_CONTAINER_NAME: hazelcast-test
-    outputs:
-      is_latest_lts: ${{ steps.is_latest_lts.outputs.is_latest_lts }}
-    permissions:
-      id-token: write
     services:
       registry:
         image: registry:latest
@@ -183,14 +187,6 @@ jobs:
           packaging: "zip"
           output_file: "source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
 
-      - name: Check if latest EE LTS release
-        # OSS has no LTS releases
-        if: matrix.distribution-type.label == 'ee'
-        id: is_latest_lts
-        uses: hazelcast/docker-actions/check-if-latest-lts-release@master
-        with:
-          hz_version: ${{ env.HZ_VERSION }}
-
       - name: Calculate tags
         id: tags
         run: |
@@ -205,9 +201,21 @@ jobs:
                 VERSIONS+=(latest-snapshot)
             fi
             
-            TAGS_TO_PUSH=$(augment_with_classifier_tags "${VERSIONS[*]}" "${{ matrix.classifier }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}")
+            TAGS_TO_PUSH=$(augment_with_classifier_tags \
+              "${VERSIONS[*]}" \
+              "${{ matrix.classifier }}" \
+              "${{ matrix.jdk }}" \
+              "${{ needs.prepare.outputs.default-jdk }}" \
+            )
           else
-            TAGS_TO_PUSH=$(get_tags_to_push "${HZ_VERSION}" "${{ matrix.classifier }}" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}" "${{ steps.is_latest_lts.outputs.is_latest_lts || 'false' }}")
+            # LTS is implicitly EE only
+            TAGS_TO_PUSH=$(get_tags_to_push \
+              "${HZ_VERSION}" \
+              "${{ matrix.classifier }}" \
+              "${{ matrix.jdk }}" \
+              "${{ needs.prepare.outputs.default-jdk }}" \
+              "${{ matrix.distribution-type.label == 'ee' && needs.prepare.outputs.is-latest-lts == 'true' }}" \
+            )
           fi
 
           # Keep a reference to _a_ tag to get the image later on
@@ -306,7 +314,7 @@ jobs:
   create-release:
     needs:
       - prepare
-      - push
+      - build
     if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') }}
     runs-on: ubuntu-latest
     steps:
@@ -320,7 +328,7 @@ jobs:
   readme:
     needs:
       - prepare
-      - push
+      - build
     if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') }}
     uses: ./.github/workflows/update_readme.yml
     with:
@@ -331,14 +339,14 @@ jobs:
     name: Push RHEL image
     needs:
       - prepare
-      - push
+      - build
     # Restrict to non-SNAPSHOT for `live` environment only
     if: needs.prepare.outputs.should-build-ee == 'true' && !(inputs.ENVIRONMENT == 'live' && contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT'))
     uses: ./.github/workflows/tag_image_push_rhel.yml
     with:
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
-      JDKS: ${{ needs.prepare.outputs.jdks }} 
-      IS_LATEST_LTS: ${{ needs.push.outputs.is_latest_lts }}
+      JDKS: ${{ needs.prepare.outputs.jdks }}
+      IS_LATEST_LTS: ${{ needs.prepare.outputs.is-latest-lts }}
       DEFAULT_JDK: ${{ needs.prepare.outputs.default-jdk }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
@@ -348,7 +356,7 @@ jobs:
     name: Failure notification
     if: failure() && github.triggering_actor == 'devOpsHazelcast'
     needs:
-      - push
+      - build
       - push-rhel
       - readme
       - create-release
