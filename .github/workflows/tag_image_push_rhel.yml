@@ -181,6 +181,8 @@ jobs:
       - name: Await publishing
         timeout-minutes: 240
         run: |
+          set -o errexit ${RUNNER_DEBUG:+-x}
+
           . .github/scripts/rhel.functions.sh
 
           # Although we use autopublish, this simply triggers an asynchronous process on the server side
