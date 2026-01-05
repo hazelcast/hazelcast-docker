@@ -264,7 +264,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_ROLE }}
+          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: 'us-east-1'
 
       - name: Get Secrets
@@ -353,7 +353,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_ROLE }}
+          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: 'us-east-1'
 
       - name: Get Secrets
