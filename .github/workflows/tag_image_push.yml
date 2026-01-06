@@ -114,7 +114,7 @@ jobs:
         classifier: ${{ fromJSON(needs.prepare.outputs.distribution-classifiers) }}
         distribution-type: ${{ fromJSON(needs.prepare.outputs.distribution-types) }}
     env:
-      LOCAL_REGISTRY: localhost:5000
+      LOCAL_IMAGE_NAME: localhost:5000/${{ matrix.distribution-type.image-name }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       TEST_CONTAINER_NAME: hazelcast-test
     services:
@@ -170,9 +170,6 @@ jobs:
         id: tags
         run: |
           . .github/scripts/get-tags-to-push.sh
-
-          LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${{ matrix.distribution-type.image-name }}
-          echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
 
           if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             VERSIONS=("$HZ_VERSION")
