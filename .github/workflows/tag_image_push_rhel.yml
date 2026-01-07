@@ -158,13 +158,14 @@ jobs:
         run: |
           source .github/scripts/logging.functions.sh
 
-          PREFLIGHT_OUTPUT=$(preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.get-tags-to-push.outputs.unique_destination_tag }}" \
-            --submit --pyxis-api-token=${REDHAT_ROBOT_RHEL_API_KEY} \
-            --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
-            --docker-config ~/.docker/config.json \
-            2>&1)
-
-          echodebug "${PREFLIGHT_OUTPUT}"
+          # Print output to console _and_ variable - https://unix.stackexchange.com/a/724034
+          exec 3>&1
+            PREFLIGHT_OUTPUT=$(preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.get-tags-to-push.outputs.unique_destination_tag }}" \
+              --submit --pyxis-api-token=${REDHAT_ROBOT_RHEL_API_KEY} \
+              --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
+              --docker-config ~/.docker/config.json \
+              3>&- | tee /dev/fd/3)
+          exec 3>&-
 
           # Multi-arch images will have multiple image IDs
           IMAGE_IDS=$(grep --perl-regexp --only-matching "image id is: \K[a-f0-9]+" <<< "${PREFLIGHT_OUTPUT}" || true)
