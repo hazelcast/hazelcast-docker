@@ -1,0 +1,60 @@
+# TODO This should be in `docker-actions`, but it's not properly encapsulated to support that
+# Specifically, this only wraps the regular "push" tagging logic - NLC is different and not incorporated
+
+name: Get tags to push
+
+inputs:
+  hz-version:
+    required: true
+  jdk:
+    required: true
+  default-jdk:
+    required: true
+  classifier:
+    required: true
+  is-latest-lts:
+    required: true
+outputs:
+  primary-tag:
+    value: ${{ steps.get-tags-to-push.outputs.primary-tag }}
+  all-destination-tags:
+    value: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
+runs:
+  using: "composite"
+  steps:
+    - name: Calculate tags
+      id: get-tags-to-push
+      shell: bash
+      run: |
+        . .github/scripts/get-tags-to-push.sh
+
+        if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
+          VERSIONS=("${HZ_VERSION}")
+          if [[ "${GITHUB_REF}" == "refs/heads/master" ]]; then
+              VERSIONS+=(latest-snapshot)
+          fi
+
+          TAGS_TO_PUSH=$(augment_with_classifier_tags \
+            "${VERSIONS[*]}" \
+            "${CLASSIFIER}" \
+            "${JDK}" \
+            "${DEFAULT_JDK}" \
+          )
+        else
+          TAGS_TO_PUSH=$(get_tags_to_push \
+            "${HZ_VERSION}" \
+            "${CLASSIFIER}" \
+            "${JDK}" \
+            "${DEFAULT_JDK}" \
+            "${IS_LATEST_LTS}" \
+          )
+        fi
+
+        echo "primary-tag=${TAGS_TO_PUSH%% *}" >> ${GITHUB_OUTPUT}
+        echo "all-destination-tags=${TAGS_TO_PUSH}" >> ${GITHUB_OUTPUT}
+      env:
+        HZ_VERSION: ${{ inputs.hz-version }}
+        JDK: ${{ inputs.jdk }}
+        DEFAULT_JDK: ${{ inputs.default-jdk }}
+        CLASSIFIER: ${{ inputs.classifier }}
+        IS_LATEST_LTS: ${{ inputs.is-latest-lts }}
