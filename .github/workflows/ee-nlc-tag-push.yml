@@ -30,26 +30,10 @@ on:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
-    outputs:
-      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
-      jdks: ${{ steps.jdks.outputs.jdks }}
-      default-jdk: ${{ steps.jdks.outputs.default-jdk }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.SOURCE_REF }}
-
-      - name: Get HZ versions
-        id: get_hz_versions
-        uses: hazelcast/docker-actions/get-hz-versions@master
-
-      - name: Get supported JDKs
-        id: jdks
-        uses: hazelcast/docker-actions/get-supported-jdks@master
-        with:
-          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
+    uses: ./.github/workflows/tag_image_prepare.yml
+    with:
+      SOURCE_REF: ${{ inputs.SOURCE_REF }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
   build:
     environment: ${{ inputs.ENVIRONMENT }}
@@ -61,7 +45,7 @@ jobs:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     env:
       LOCAL_REGISTRY: localhost:5000
-      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
       DOCKER_DIR: hazelcast-enterprise
       TEST_CONTAINER_NAME: hazelcast-test
     services:
