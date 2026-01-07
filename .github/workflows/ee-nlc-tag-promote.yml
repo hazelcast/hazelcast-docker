@@ -1,0 +1,121 @@
+name: Promote EE NLC image
+
+on:
+  workflow_dispatch:
+    inputs:
+      VERSION:
+        description: 'The version to promote'
+        required: true
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: false
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: environment
+  workflow_call:
+    inputs:
+      VERSION:
+        description: 'The version to promote'
+        required: true
+        type: string
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: false
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
+
+jobs:
+  prepare:
+    uses: ./.github/workflows/tag_image_prepare.yml
+    with:
+      SOURCE_REF: ${{ inputs.VERSION }}
+      RELEASE_TYPE: EE
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+
+  promote-nlc:
+    environment: ${{ inputs.ENVIRONMENT }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
+    env:
+      LOCAL_IMAGE_NAME: localhost:5000/${{ secrets.NLC_IMAGE_NAME }}
+    services:
+      registry:
+        image: registry:latest
+        ports:
+          - 5000:5000
+    steps:
+      - uses: actions/checkout@v6
+
+      - id: get-tags-to-push
+        uses: ./.github/actions/get-tags-to-push-nlc
+        with:
+          hz-version: ${{ needs.prepare.outputs.hz-version }}
+          jdk: ${{ matrix.jdk }}
+          default-jdk: ${{ needs.prepare.outputs.default-jdk }}
+
+      - uses: hazelcast/docker-actions/get-jfrog-credentials@master
+        id: authenticate-jfrog-snapshot-internal
+        with:
+          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          jfrog-oidc-provider-name: ${{ github.repository_owner }}-snapshot-internal
+
+      - name: Login to JFrog
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.url }}
+          username: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.user }}
+          password: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.token }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: 'us-east-1'
+
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            NLC/IMAGE_REGISTRY
+          parse-json-secrets: true
+
+      - name: Login to NLC registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.NLC_IMAGE_REGISTRY_URL }}
+          username: ${{ env.NLC_IMAGE_REGISTRY_USERNAME }}
+          password: ${{ env.NLC_IMAGE_REGISTRY_TOKEN }}
+
+      - name: Push image to remote registry
+        run: |
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+            skopeo copy \
+              --all \
+              docker://${{ steps.authenticate-jfrog-snapshot-internal.outputs.url }}/${{ vars.PREPROD_REGISTRY }}/${NLC_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+              docker://${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}/${NLC_IMAGE_NAME}:${tag}
+          done
+        env:
+          TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
+          NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
+
+      - name: Check RedHat service status
+        if: failure()
+        uses: hazelcast/docker-actions/check-redhat-service-status@master
+
+  failure-notifications:
+    name: Failure notification
+    if: failure() && github.triggering_actor == 'devOpsHazelcast'
+    needs: promote-nlc
+    uses: ./.github/workflows/slack-notification.yml
+    secrets: inherit
