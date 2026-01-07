@@ -60,7 +60,7 @@ jobs:
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     env:
-      LOCAL_REGISTRY: localhost:5000
+      LOCAL_IMAGE_NAME: localhost:5000/${{ secrets.NLC_IMAGE_NAME }}
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       DOCKER_DIR: hazelcast-enterprise
       TEST_CONTAINER_NAME: hazelcast-test
@@ -109,9 +109,6 @@ jobs:
         id: tags
         run: |
           . .github/scripts/get-tags-to-push.sh
-
-          LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${{ secrets.NLC_IMAGE_NAME }}
-          echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
 
           TAGS_TO_PUSH=$(augment_with_classifier_tags "${HZ_VERSION}" "" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}")
 
