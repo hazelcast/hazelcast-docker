@@ -191,7 +191,6 @@ jobs:
         with:
           secret-ids: |
             NLC/IMAGE_REGISTRY
-            SLACK_WEBHOOK,SLACK/WEBHOOK_HAZELCAST_DOCKER_NOTIFICATIONS
           parse-json-secrets: true
 
       - name: Login to NLC registry
@@ -216,8 +215,9 @@ jobs:
         if: failure()
         uses: hazelcast/docker-actions/check-redhat-service-status@master
 
-      - name: Slack notification
-        uses: hazelcast/docker-actions/slack-notification@master
-        if: failure() && github.triggering_actor == 'devOpsHazelcast'
-        with:
-          slack-webhook-url: ${{ env.SLACK_WEBHOOK }}
+  failure-notifications:
+    name: Failure notification
+    if: failure() && github.triggering_actor == 'devOpsHazelcast'
+    needs: build
+    uses: ./.github/workflows/slack-notification.yml
+    secrets: inherit
