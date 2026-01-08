@@ -1,0 +1,123 @@
+name: Promote EE NLC image
+
+on:
+  workflow_dispatch:
+    inputs:
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to build the image from'
+        required: true
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: false
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: environment
+  workflow_call:
+    inputs:
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to build the image from'
+        required: true
+        type: string
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: false
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
+
+jobs:
+  prepare:
+    uses: ./.github/workflows/tag_image_prepare.yml
+    with:
+      SOURCE_REF: ${{ inputs.SOURCE_REF }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+
+  promote-nlc:
+    environment: ${{ inputs.ENVIRONMENT }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
+    env:
+      LOCAL_IMAGE_NAME: localhost:5000/${{ secrets.NLC_IMAGE_NAME }}
+    services:
+      registry:
+        image: registry:latest
+        ports:
+          - 5000:5000
+    steps:
+      - uses: actions/checkout@v6
+
+      - id: get-tags-to-push
+        uses: ./.github/actions/get-tags-to-push-nlc
+        with:
+          hz-version: ${{ needs.prepare.outputs.hz-version }}
+          jdk: ${{ matrix.jdk }}
+          default-jdk: ${{ needs.prepare.outputs.default-jdk }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            NLC/IMAGE_REGISTRY
+            JFROG,JFROG/READONLY_DEV_ACCOUNT
+            SLACK_WEBHOOK,SLACK/WEBHOOK_HAZELCAST_DOCKER_NOTIFICATIONS
+          parse-json-secrets: true
+
+      - id: authenticate-jfrog-snapshot-internal
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://${{ env.JFROG_URL }}
+        with:
+          oidc-provider-name: ${{ github.repository_owner }}-snapshot-internal
+
+      - name: Login to JFrog
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.JFROG_URL }}
+          username: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.oidc-user }}
+          password: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.oidc-token }}
+
+      - name: Login to NLC registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.NLC_IMAGE_REGISTRY_URL }}
+          username: ${{ env.NLC_IMAGE_REGISTRY_USERNAME }}
+          password: ${{ env.NLC_IMAGE_REGISTRY_TOKEN }}
+
+      - name: Push image to remote registry
+        run: |
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+            skopeo copy \
+              --all \
+              docker://${JFROG_URL}/${{ vars.PREPROD_REGISTRY }}/${NLC_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+              docker://${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}/${NLC_IMAGE_NAME}:${tag}
+          done
+        env:
+          TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
+          NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
+
+      - name: Check RedHat service status
+        if: failure()
+        uses: hazelcast/docker-actions/check-redhat-service-status@master
+
+      - name: Slack notification
+        uses: hazelcast/docker-actions/slack-notification@master
+        if: failure() && github.triggering_actor == 'devOpsHazelcast'
+        with:
+          slack-webhook-url: ${{ env.SLACK_WEBHOOK }}
