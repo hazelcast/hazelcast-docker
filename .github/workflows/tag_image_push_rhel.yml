@@ -64,24 +64,13 @@ jobs:
       - name: Set scan registry secrets
         id: scan_registry_secrets
         run: |
+          echo "PROJECT_ID=${RHEL_PROJECT_ID}" >> ${GITHUB_OUTPUT}
+          echo "SCAN_REPOSITORY=${SCAN_REPOSITORY}${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}" >> ${GITHUB_OUTPUT}
+        env:
           # Some repositories have a separate projects for each (major) version
           # First see if a version-specific secret exists, falling back to default
-
-          PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}
-          if [[ -z "${PROJECT_ID}" ]]; then
-            PROJECT_ID=${{ secrets.RHEL_PROJECT_ID }}
-          fi
-          echo "PROJECT_ID=${PROJECT_ID}" >> ${GITHUB_OUTPUT}
-
-          echo "USERNAME=redhat-isv-containers+${PROJECT_ID}-robot" >> ${GITHUB_OUTPUT}
-
-          PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}
-          if [[ -z "${PASSWORD}" ]]; then
-            PASSWORD=${{ secrets.SCAN_REGISTRY_PASSWORD }}
-          fi
-          echo "PASSWORD=${PASSWORD}" >> ${GITHUB_OUTPUT}
-
-          echo "SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${PROJECT_ID}" >> ${GITHUB_OUTPUT}
+          RHEL_PROJECT_ID: ${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] || secrets.RHEL_PROJECT_ID }}
+          SCAN_REPOSITORY: ${{ secrets[format('SCAN_REPOSITORY_V{0}', steps.version.outputs.major)] || secrets.SCAN_REPOSITORY }}
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -93,8 +82,10 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.SCAN_REGISTRY }}
-          username: ${{ steps.scan_registry_secrets.outputs.USERNAME }}
-          password: ${{ steps.scan_registry_secrets.outputs.PASSWORD }}
+          # Some repositories have a separate projects for each (major) version
+          # First see if a version-specific secret exists, falling back to default
+          username: redhat-isv-containers+${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}-robot
+          password: ${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] || secrets.SCAN_REGISTRY_PASSWORD }}
 
       - name: Get tags to push
         id: get-tags-to-push
