@@ -1,0 +1,93 @@
+on:
+  workflow_call:
+    inputs:
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to build the image from'
+        required: true
+        type: string
+      RELEASE_TYPE:
+        description: 'What should be built'
+        required: false
+        default: 'EE'
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
+    outputs:
+      distribution-classifiers:
+        value: ${{ jobs.prepare.outputs.distribution-classifiers }}
+      distribution-types:
+        value: ${{ jobs.prepare.outputs.distribution-types }}
+      hz-version:
+        description: 'Hazelcast extracted from branch'
+        value: ${{ jobs.prepare.outputs.hz-version }}
+      is-latest-lts:
+        value: ${{ jobs.prepare.outputs.is-latest-lts }}
+      jdks:
+        value: ${{ jobs.prepare.outputs.jdks }}
+      default-jdk:
+        value: ${{ jobs.prepare.outputs.default-jdk }}
+      should-build-ee:
+        value: ${{ jobs.prepare.outputs.should-build-ee }}
+
+jobs:
+  prepare:
+    environment: ${{ inputs.ENVIRONMENT }}
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
+    outputs:
+      distribution-classifiers: ${{ steps.distribution-classifiers.outputs.classifiers }}
+      distribution-types: ${{ steps.distribution-type-matrix.outputs.matrix }}
+      hz-version: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
+      is-latest-lts: ${{ steps.is-latest-lts.outputs.is_latest_lts }}
+      jdks: ${{ steps.jdks.outputs.jdks }}
+      default-jdk: ${{ steps.jdks.outputs.default-jdk }}
+      should-build-ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.SOURCE_REF }}
+          fetch-depth: 0
+
+      - id: resolve-editions
+        uses: hazelcast/docker-actions/resolve-editions@master
+        with:
+          release-type: ${{ inputs.RELEASE_TYPE }}
+
+      - name: Get HZ versions
+        id: get_hz_versions
+        uses: hazelcast/docker-actions/get-hz-versions@master
+
+      - name: Get supported JDKs
+        id: jdks
+        uses: hazelcast/docker-actions/get-supported-jdks@master
+        with:
+          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
+
+      - name: Check if latest EE LTS release
+        id: is-latest-lts
+        uses: hazelcast/docker-actions/check-if-latest-lts-release@master
+        with:
+          hz_version: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
+
+      - name: Compute distribution type matrix
+        id: distribution-type-matrix
+        run: |
+          # We expect at least _one_ output distribution type, otherwise will produce an empty array that will break GitHub matrixes
+          entries=()
+
+          if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "true" ]; then
+            entries+=('{"label":"oss","docker-dir":"hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","distribution":"hazelcast"}')
+          fi
+          if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "true" ]; then
+            entries+=('{"label":"ee","docker-dir":"hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","distribution":"hazelcast-enterprise"}')
+          fi
+
+          json="[$(IFS=,; echo "${entries[*]}")]"
+          echo "matrix=$json" >> "${GITHUB_OUTPUT}"
+
+      - id: distribution-classifiers
+        uses: hazelcast/docker-actions/get-distribution-classifiers@master
