@@ -119,6 +119,7 @@ jobs:
       LOCAL_REGISTRY: localhost:5000
       HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       TEST_CONTAINER_NAME: hazelcast-test
+      JFROG_URL: repository.hazelcast.com
     services:
       registry:
         image: registry:latest
@@ -154,13 +155,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
-
-      - name: Get Secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            JFROG,JFROG/READONLY_DEV_ACCOUNT
-          parse-json-secrets: true
 
       - id: authenticate-jfrog-snapshot-internal
         uses: jfrog/setup-jfrog-cli@v4
