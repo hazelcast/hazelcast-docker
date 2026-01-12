@@ -191,7 +191,6 @@ jobs:
 
           jq --raw-output '.[]' <<< '${{ steps.preflight.outputs.IMAGE_IDS }}' | while read IMAGE_ID; do
             await_image_publish \
-              "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" \
               "${IMAGE_ID}" \
               "${REDHAT_ROBOT_RHEL_API_KEY}"
           done
