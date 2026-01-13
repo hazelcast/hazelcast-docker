@@ -32,17 +32,22 @@ await_image_publish()
     # Print request for status purposes
     jq <<< "${request}"
 
-    if jq --exit-status '.data[].status | select(. == "failed" or . == "aborted")' <<< "${request}"; then
-      echo_group "Image '${image_id}' failed to publish"
-      echoerr "$(jq <<< "${request}" || true)"
-      echo_group_end
-      return 1
-    elif jq --exit-status '.data[].status | select(. == "completed")' <<< "${request}"; then
-      echo "Image '${image_id}' is published, exiting."
-      return 0
-    else
-      echo "Image '${image_id}' is still not published, waiting..."
-      sleep 5
-    fi
+    # Check the published status of the most recent repository entry
+    case "$(jq -r '.data[-1].status' <<< "${request}")" in
+      "completed")
+        echo "Image '${image_id}' is published, exiting."
+        return 0
+        ;;
+      "aborted" | "failed")
+        echo_group "Image '${image_id}' failed to publish"
+        echoerr "$(jq <<< "${request}" || true)"
+        echo_group_end
+        return 1
+        ;;
+      *)
+        echo "Image '${image_id}' is still not published, waiting..."
+        sleep 5
+        ;;
+    esac
   done
 }
