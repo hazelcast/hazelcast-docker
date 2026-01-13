@@ -133,7 +133,6 @@ jobs:
 
   failure-notifications:
     name: Failure notification
-    runs-on: ubuntu-latest
     if: failure() && github.event_name != 'workflow_dispatch'
     needs:
       - rebuild-ee

@@ -354,7 +354,6 @@ jobs:
 
   failure-notifications:
     name: Failure notification
-    runs-on: ubuntu-latest
     if: failure() && github.triggering_actor == 'devOpsHazelcast'
     needs:
       - build
