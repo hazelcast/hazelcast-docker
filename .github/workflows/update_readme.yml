@@ -62,21 +62,9 @@ jobs:
           short-description: ${{ matrix.label }} Docker Image
           readme-filepath: ./README-docker.md
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
-          aws-region: 'us-east-1'
-
-      - name: Get Secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            SLACK_WEBHOOK,SLACK/WEBHOOK_HAZELCAST_DOCKER_NOTIFICATIONS
-          parse-json-secrets: true
-
-      - name: Slack notification
-        uses: hazelcast/docker-actions/slack-notification@master
-        if: failure() && github.event_name != 'workflow_dispatch'
-        with:
-          slack-webhook-url: ${{ env.SLACK_WEBHOOK }}
+  failure-notifications:
+    name: Failure notification
+    if: failure() && github.event_name != 'workflow_dispatch'
+    needs: update-readme
+    uses: ./.github/workflows/slack-notification.yml
+    secrets: inherit

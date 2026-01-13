@@ -363,22 +363,5 @@ jobs:
       - push-rhel
       - readme
       - create-release
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
-          aws-region: 'us-east-1'
-
-      - name: Get Secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            SLACK_WEBHOOK,SLACK/WEBHOOK_HAZELCAST_DOCKER_NOTIFICATIONS
-          parse-json-secrets: true
-
-      - name: Slack notification
-        uses: hazelcast/docker-actions/slack-notification@master
-        with:
-          slack-webhook-url: ${{ env.SLACK_WEBHOOK }}
-          status: failure
+    uses: ./.github/workflows/slack-notification.yml
+    secrets: inherit
