@@ -134,8 +134,6 @@ jobs:
   failure-notifications:
     name: Failure notification
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
     if: failure() && github.event_name != 'workflow_dispatch'
     needs:
       - rebuild-ee
