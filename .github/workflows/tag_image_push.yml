@@ -300,7 +300,7 @@ jobs:
           if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             remote_registry=${{ env.JFROG_URL }}/docker/hazelcast
           else
-            remote_registry=hazelcast
+            remote_registry=${{ vars.DOCKERHUB_NAMESPACE }}
           fi
 
           # Skopeo expects HTTPS registry but local is HTTP
