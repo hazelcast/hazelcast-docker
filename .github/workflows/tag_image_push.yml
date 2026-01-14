@@ -53,6 +53,8 @@ jobs:
   build:
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     needs:
       - prepare
     strategy:
@@ -61,8 +63,8 @@ jobs:
         classifier: ${{ fromJSON(needs.prepare.outputs.distribution-classifiers) }}
         distribution-type: ${{ fromJSON(needs.prepare.outputs.distribution-types) }}
     env:
-      LOCAL_REGISTRY: localhost:5000
-      HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
+      LOCAL_IMAGE_NAME: localhost:5000/${{ matrix.distribution-type.image-name }}
+      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
       TEST_CONTAINER_NAME: hazelcast-test
     services:
       registry:
@@ -93,13 +95,33 @@ jobs:
         with:
           platforms: ${{ steps.platforms.outputs.platforms }}
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: 'us-east-1'
+
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            JFROG,JFROG/READONLY_DEV_ACCOUNT
+          parse-json-secrets: true
+
+      - id: authenticate-jfrog-snapshot-internal
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://${{ env.JFROG_URL }}
+        with:
+          oidc-provider-name: ${{ github.repository_owner }}-snapshot-internal
+
       - uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788 # v4.0.0
         with:
           servers: |
             [{
                 "id": "snapshot-internal",
-                "username": "${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}",
-                "password": "${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}"
+                "username": "${{ steps.authenticate-jfrog-snapshot-internal.outputs.oidc-user }}",
+                "password": "${{ steps.authenticate-jfrog-snapshot-internal.outputs.oidc-token }}"
             }]
 
       - name: Download the distribution file
@@ -117,9 +139,6 @@ jobs:
         id: tags
         run: |
           . .github/scripts/get-tags-to-push.sh
-
-          LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${{ matrix.distribution-type.image-name }}
-          echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
 
           if [[ "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             VERSIONS=("$HZ_VERSION")
@@ -206,33 +225,26 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
+      - id: authenticate-jfrog-write-dev-account
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://${{ env.JFROG_URL }}
         with:
-          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
-          aws-region: 'us-east-1'
-
-      - name: Get Secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            JFROG,JFROG/WRITE_DEV_ACCOUNT
-          parse-json-secrets: true
+          oidc-provider-name: ${{ github.repository_owner }}-write-dev-account
 
       - name: Login to JFrog
         uses: docker/login-action@v3
         with:
           registry: ${{ env.JFROG_URL }}
-          username: ${{ env.JFROG_USERNAME }}
-          password: ${{ env.JFROG_PASSWORD }}
+          username: ${{ steps.authenticate-jfrog-write-dev-account.outputs.oidc-user }}
+          password: ${{ steps.authenticate-jfrog-write-dev-account.outputs.oidc-token }}
 
       - name: Push image to remote registry
         run: |
           if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             remote_registry=${{ env.JFROG_URL }}/docker/hazelcast
           else
-            remote_registry=hazelcast
+            remote_registry=${{ vars.DOCKERHUB_NAMESPACE }}
           fi
 
           # Skopeo expects HTTPS registry but local is HTTP
@@ -285,7 +297,6 @@ jobs:
     secrets: inherit
 
   failure-notifications:
-    runs-on: ubuntu-latest
     name: Failure notification
     if: failure() && github.triggering_actor == 'devOpsHazelcast'
     needs:
@@ -293,23 +304,5 @@ jobs:
       - push-rhel
       - readme
       - create-release
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
-          aws-region: 'us-east-1'
-
-      - name: Get Secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            SLACK_WEBHOOK,SLACK/WEBHOOK_HAZELCAST_DOCKER_NOTIFICATIONS
-          parse-json-secrets: true
-
-      - name: Slack notification
-        uses: hazelcast/docker-actions/slack-notification@master
-        with:
-          slack-webhook-url: ${{ env.SLACK_WEBHOOK }}
-          status: failure
+    uses: ./.github/workflows/slack-notification.yml
+    secrets: inherit
