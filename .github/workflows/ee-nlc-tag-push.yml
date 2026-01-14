@@ -47,7 +47,7 @@ jobs:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     env:
       LOCAL_IMAGE_NAME: localhost:5000/${{ secrets.NLC_IMAGE_NAME }}
-      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
       DOCKER_DIR: hazelcast-enterprise
       TEST_CONTAINER_NAME: hazelcast-test
     services:

@@ -64,7 +64,7 @@ jobs:
         distribution-type: ${{ fromJSON(needs.prepare.outputs.distribution-types) }}
     env:
       LOCAL_IMAGE_NAME: localhost:5000/${{ matrix.distribution-type.image-name }}
-      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
       TEST_CONTAINER_NAME: hazelcast-test
     services:
       registry:
