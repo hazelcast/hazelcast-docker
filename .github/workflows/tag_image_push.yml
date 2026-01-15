@@ -44,64 +44,11 @@ on:
 
 jobs:
   prepare:
-    environment: ${{ inputs.ENVIRONMENT }}
-    runs-on: ubuntu-latest
-    env:
+    uses: ./.github/workflows/tag_image_prepare.yml
+    with:
+      SOURCE_REF: ${{ inputs.SOURCE_REF }}
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
-    outputs:
-      distribution-types: ${{ steps.distribution-type-matrix.outputs.matrix }}
-      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
-      jdks: ${{ steps.jdks.outputs.jdks }}
-      default-jdk: ${{ steps.jdks.outputs.default-jdk }}
-      should-build-ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
-      distribution-classifiers: ${{ steps.distribution-classifiers.outputs.classifiers }}
-      is-latest-lts: ${{ steps.is-latest-lts.outputs.is_latest_lts }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.SOURCE_REF }}
-          fetch-depth: 0
-
-      - id: resolve-editions
-        uses: hazelcast/docker-actions/resolve-editions@master
-        with:
-          release-type: ${{ inputs.RELEASE_TYPE }}
-
-      - name: Get HZ versions
-        id: get_hz_versions
-        uses: hazelcast/docker-actions/get-hz-versions@master
-
-      - name: Get supported JDKs
-        id: jdks
-        uses: hazelcast/docker-actions/get-supported-jdks@master
-        with:
-          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
-
-      - name: Check if latest EE LTS release
-        id: is-latest-lts
-        uses: hazelcast/docker-actions/check-if-latest-lts-release@master
-        with:
-          hz_version: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
-
-      - name: Compute distribution type matrix
-        id: distribution-type-matrix
-        run: |
-          # We expect at least _one_ output distribution type, otherwise will produce an empty array that will break GitHub matrixes
-          entries=()
-
-          if [ "${{ steps.resolve-editions.outputs.should_build_oss }}" = "true" ]; then
-            entries+=('{"label":"oss","docker-dir":"hazelcast-oss","image-name":"${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}","distribution":"hazelcast"}')
-          fi
-          if [ "${{ steps.resolve-editions.outputs.should_build_ee }}" = "true" ]; then
-            entries+=('{"label":"ee","docker-dir":"hazelcast-enterprise","image-name":"${{ vars.DOCKERHUB_EE_IMAGE_NAME }}","distribution":"hazelcast-enterprise"}')
-          fi
-
-          json="[$(IFS=,; echo "${entries[*]}")]"
-          echo "matrix=$json" >> "${GITHUB_OUTPUT}"
-
-      - id: distribution-classifiers
-        uses: hazelcast/docker-actions/get-distribution-classifiers@master
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
   build:
     environment: ${{ inputs.ENVIRONMENT }}
@@ -117,7 +64,7 @@ jobs:
         distribution-type: ${{ fromJSON(needs.prepare.outputs.distribution-types) }}
     env:
       LOCAL_IMAGE_NAME: localhost:5000/${{ matrix.distribution-type.image-name }}
-      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
       TEST_CONTAINER_NAME: hazelcast-test
     services:
       registry:
@@ -313,7 +260,7 @@ jobs:
     needs:
       - prepare
       - build
-    if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') }}
+    if: ${{ !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
     runs-on: ubuntu-latest
     steps:
       - name: Create release
@@ -327,7 +274,7 @@ jobs:
     needs:
       - prepare
       - build
-    if: ${{ !contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT') }}
+    if: ${{ !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
     uses: ./.github/workflows/update_readme.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
@@ -339,10 +286,10 @@ jobs:
       - prepare
       - build
     # Restrict to non-SNAPSHOT for `live` environment only
-    if: needs.prepare.outputs.should-build-ee == 'true' && !(inputs.ENVIRONMENT == 'live' && contains(needs.prepare.outputs.HZ_VERSION, 'SNAPSHOT'))
+    if: needs.prepare.outputs.should-build-ee == 'true' && !(inputs.ENVIRONMENT == 'live' && contains(needs.prepare.outputs.hz-version, 'SNAPSHOT'))
     uses: ./.github/workflows/tag_image_push_rhel.yml
     with:
-      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
       JDKS: ${{ needs.prepare.outputs.jdks }}
       IS_LATEST_LTS: ${{ needs.prepare.outputs.is-latest-lts }}
       DEFAULT_JDK: ${{ needs.prepare.outputs.default-jdk }}
