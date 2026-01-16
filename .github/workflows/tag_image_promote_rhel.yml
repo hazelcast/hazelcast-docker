@@ -1,6 +1,7 @@
-name: Push EE RHEL image
+name: Promote RHEL image
 
 on:
+  # For debugging only
   workflow_dispatch:
     inputs:
       HZ_VERSION:
@@ -42,7 +43,7 @@ on:
         required: true
         type: string
 jobs:
-  push-rhel:
+  promote-rhel:
     env:
       SCAN_REGISTRY: "quay.io"
     environment: ${{ inputs.ENVIRONMENT }}
@@ -66,37 +67,50 @@ jobs:
       - name: Set scan registry secrets
         id: scan_registry_secrets
         run: |
+          echo "PROJECT_ID=${RHEL_PROJECT_ID}" >> ${GITHUB_OUTPUT}
+          echo "SCAN_REPOSITORY=${SCAN_REPOSITORY}${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}" >> ${GITHUB_OUTPUT}
+        env:
           # Some repositories have a separate projects for each (major) version
           # First see if a version-specific secret exists, falling back to default
+          RHEL_PROJECT_ID: ${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] || secrets.RHEL_PROJECT_ID }}
+          SCAN_REPOSITORY: ${{ secrets[format('SCAN_REPOSITORY_V{0}', steps.version.outputs.major)] || secrets.SCAN_REPOSITORY }}
 
-          PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}
-          if [[ -z "${PROJECT_ID}" ]]; then
-            PROJECT_ID=${{ secrets.RHEL_PROJECT_ID }}
-          fi
-          echo "PROJECT_ID=${PROJECT_ID}" >> ${GITHUB_OUTPUT}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: 'us-east-1'
 
-          echo "USERNAME=redhat-isv-containers+${PROJECT_ID}-robot" >> ${GITHUB_OUTPUT}
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            REDHAT_ROBOT,REDHAT/REDHAT_ISV_CONTAINERS_ROBOT
+            JFROG,JFROG/READONLY_DEV_ACCOUNT
+          parse-json-secrets: true
+   
+      - id: authenticate-jfrog-snapshot-internal
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://${{ env.JFROG_URL }}
+        with:
+          oidc-provider-name: ${{ github.repository_owner }}-snapshot-internal
 
-          PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}
-          if [[ -z "${PASSWORD}" ]]; then
-            PASSWORD=${{ secrets.SCAN_REGISTRY_PASSWORD }}
-          fi
-          echo "PASSWORD=${PASSWORD}" >> ${GITHUB_OUTPUT}
-
-          echo "SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${PROJECT_ID}" >> ${GITHUB_OUTPUT}
-
-      - name: Login to Docker Hub
+      - name: Login to JFrog
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          registry: ${{ env.JFROG_URL }}
+          username: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.oidc-user }}
+          password: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.oidc-token }}
 
       - name: Log in to Red Hat Scan Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.SCAN_REGISTRY }}
-          username: ${{ steps.scan_registry_secrets.outputs.USERNAME }}
-          password: ${{ steps.scan_registry_secrets.outputs.PASSWORD }}
+          # Some repositories have a separate projects for each (major) version
+          # First see if a version-specific secret exists, falling back to default
+          username: redhat-isv-containers+${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}-robot
+          password: ${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] || secrets.SCAN_REGISTRY_PASSWORD }}
 
       - id: get-tags-to-push
         uses: ./.github/actions/get-tags-to-push
@@ -126,7 +140,7 @@ jobs:
           skopeo copy \
             --override-os linux \
             --override-arch amd64 \
-            docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            docker://${JFROG_URL}/${{ vars.PREPROD_REGISTRY }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
             docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
 
       - name: Install `preflight` OpenShift tool from GitHub
@@ -135,29 +149,16 @@ jobs:
           preflight: "latest"
           source: github
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
-          aws-region: 'us-east-1'
-
-      - name: Get Secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            REDHAT_ROBOT,REDHAT/REDHAT_ISV_CONTAINERS_ROBOT
-          parse-json-secrets: true
-   
       - name: Run preflight scan
         id: preflight
         run: |
           source .github/scripts/logging.functions.sh
 
           PREFLIGHT_OUTPUT=$(preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}" \
-            --submit --pyxis-api-token=${REDHAT_ROBOT_RHEL_API_KEY} \
-            --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
-            --docker-config ~/.docker/config.json \
-            2>&1)
+          --submit --pyxis-api-token=${REDHAT_ROBOT_RHEL_API_KEY} \
+          --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
+          --docker-config ~/.docker/config.json \
+          2>&1)
 
           echodebug "${PREFLIGHT_OUTPUT}"
 
@@ -196,11 +197,12 @@ jobs:
           for tag in ${TAGS_TO_PUSH[@]}
           do
             skopeo copy \
+              --all \
               docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }} \
               docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${tag}
           done
         env:
-          TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
+          TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all_destination_tags }}
 
       - name: Check RedHat service status
         if: failure()
