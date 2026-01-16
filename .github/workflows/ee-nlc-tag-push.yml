@@ -33,6 +33,7 @@ jobs:
     uses: ./.github/workflows/tag_image_prepare.yml
     with:
       SOURCE_REF: ${{ inputs.SOURCE_REF }}
+      RELEASE_TYPE: EE
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
   build:

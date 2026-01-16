@@ -8,8 +8,7 @@ on:
         required: true
       RELEASE_TYPE:
         description: 'What should be built'
-        required: false
-        default: 'EE'
+        required: true
         type: choice
         options:
           - ALL
@@ -30,8 +29,7 @@ on:
         type: string
       RELEASE_TYPE:
         description: 'What should be built'
-        required: false
-        default: 'EE'
+        required: true
         type: string
       HZ_REVISION:
         description: 'Commit id of Hazelcast snapshot jar'
