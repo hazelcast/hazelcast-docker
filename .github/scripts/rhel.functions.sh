@@ -1,22 +1,20 @@
 # shellcheck source=../.github/scripts/logging.functions.sh
 . .github/scripts/logging.functions.sh
 
-get_image()
+get_certification_project_image_request()
 {
-  local project_id=$1
-  local image_id=$2
-  local api_key=$3
+  local image_id=$1
+  local api_key=$2
 
   local response
-  # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetImagesForCertProjectById.html
+  # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetImageRequestsByImageId.html
   response=$( \
     curl --fail \
       --silent \
       --show-error \
       --header "X-API-KEY: ${api_key}" \
-      "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${project_id}/images?filter=_id==${image_id}")
+      "https://catalog.redhat.com/api/containers/v1/images/id/${image_id}/requests?filter=operation==publish")
 
-  echodebug "${response}"
   echo "${response}"
   return 0
 }
@@ -24,21 +22,32 @@ get_image()
 # Blocks/waits until the specified image is marked as published
 await_image_publish()
 {
-  local project_id=$1
-  local image_id=$2
-  local api_key=$3
+  local image_id=$1
+  local api_key=$2
 
   while true; do
-    local image
-    image=$(get_image "${project_id}" "${image_id}" "${api_key}")
+    local request
+    request=$(get_certification_project_image_request "${image_id}" "${api_key}")
+    
+    # Print request for status purposes
+    jq <<< "${request}"
 
     # Check the published status of the most recent repository entry
-    if jq --exit-status '.data[].repositories[-1].published' <<< "${image}"; then
-      echo "Image '${image_id}' is published, exiting."
-      return 0
-    else
-      echo "Image '${image_id}' is still not published, waiting..."
-      sleep 5
-    fi
+    case "$(jq -r '.data[-1].status' <<< "${request}")" in
+      "completed")
+        echo "Image '${image_id}' is published, exiting."
+        return 0
+        ;;
+      "aborted" | "failed")
+        echo_group "Image '${image_id}' failed to publish"
+        echoerr "$(jq <<< "${request}" || true)"
+        echo_group_end
+        return 1
+        ;;
+      *)
+        echo "Image '${image_id}' is still not published, waiting..."
+        sleep 5
+        ;;
+    esac
   done
 }
