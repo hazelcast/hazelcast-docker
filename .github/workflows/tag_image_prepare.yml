@@ -7,8 +7,7 @@ on:
         type: string
       RELEASE_TYPE:
         description: 'What should be built'
-        required: false
-        default: 'EE'
+        required: true
         type: string
       ENVIRONMENT:
         description: 'Environment to use'
@@ -35,8 +34,6 @@ jobs:
   prepare:
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
-    env:
-      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
     outputs:
       distribution-classifiers: ${{ steps.distribution-classifiers.outputs.classifiers }}
       distribution-types: ${{ steps.distribution-type-matrix.outputs.matrix }}
