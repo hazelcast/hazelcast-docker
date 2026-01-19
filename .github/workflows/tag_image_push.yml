@@ -106,27 +106,12 @@ jobs:
             JFROG,JFROG/READONLY_DEV_ACCOUNT
           parse-json-secrets: true
 
-      - id: authenticate-jfrog-snapshot-internal
-        uses: jfrog/setup-jfrog-cli@v4
-        env:
-          JF_URL: https://${{ env.JFROG_URL }}
-        with:
-          oidc-provider-name: ${{ github.repository_owner }}-snapshot-internal
-
-      - uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788 # v4.0.0
-        with:
-          servers: |
-            [{
-                "id": "snapshot-internal",
-                "username": "${{ steps.authenticate-jfrog-snapshot-internal.outputs.oidc-user }}",
-                "password": "${{ steps.authenticate-jfrog-snapshot-internal.outputs.oidc-token }}"
-            }]
-
       - name: Download the distribution file
         uses: hazelcast/docker-actions/download-hz-dist@master
         id: download-hz-dist
         with:
           repo-vars-as-json: ${{ toJSON(vars) }}
+          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           distribution: ${{ matrix.distribution-type.distribution }}
           hz_version: ${{ env.HZ_VERSION }}
           classifier: ${{ matrix.classifier }}
