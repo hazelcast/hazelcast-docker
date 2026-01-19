@@ -89,6 +89,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
+      - name: Create release
+        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1
+        with:
+          allowUpdates: true
+          tag: ${{ needs.prepare.outputs.tag-name }}
+
   tag-image-push:
     uses: ./.github/workflows/tag_image_push.yml
     if: ${{ needs.prepare.outputs.skip != 'true' }}
@@ -109,5 +115,16 @@ jobs:
       - get-environment
     with:
       SOURCE_REF: ${{ needs.prepare.outputs.source-ref }}
+      ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
+    secrets: inherit
+
+  readme:
+    if: ${{ needs.prepare.outputs.skip != 'true' }}
+    needs:
+      - prepare
+      - tag-image-push
+      - get-environment
+    uses: ./.github/workflows/update_readme.yml
+    with:
       ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
     secrets: inherit

@@ -256,30 +256,6 @@ jobs:
             ${LOCAL_IMAGE_NAME} \
             ${remote_registry}
 
-  create-release:
-    needs:
-      - prepare
-      - build
-    if: ${{ !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create release
-        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          allowUpdates: true
-          tag: ${{ inputs.SOURCE_REF }}
-
-  readme:
-    needs:
-      - prepare
-      - build
-    if: ${{ !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
-    uses: ./.github/workflows/update_readme.yml
-    with:
-      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-    secrets: inherit
-
   push-rhel:
     name: Push RHEL image
     needs:
@@ -302,7 +278,5 @@ jobs:
     needs:
       - build
       - push-rhel
-      - readme
-      - create-release
     uses: ./.github/workflows/slack-notification.yml
     secrets: inherit
