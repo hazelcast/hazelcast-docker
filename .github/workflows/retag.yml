@@ -1,0 +1,54 @@
+name: Recreate tags on release branch change
+
+on:
+  push:
+    branches:
+      - '[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      BRANCH_NAME:
+        description: The branch to recreate the tag from
+        required: true
+
+jobs:
+  retag:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
+    steps:
+      - name: Set branch name
+        if: env.BRANCH_NAME == ''
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> ${GITHUB_ENV}
+
+      - name: Calculate tag name
+        run: |
+          echo "TAG_NAME=v${BRANCH_NAME}" >> ${GITHUB_ENV}
+
+      - name: Check `${{ env.TAG_NAME }}` tag exists
+        run: |
+          if ! gh release view --repo ${GITHUB_REPOSITORY} ${TAG_NAME}; then
+            echo "::notice::\"${TAG_NAME}\" tag not found to replace, skipping" 
+            echo "SKIP=true" >> ${GITHUB_ENV}
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Recreate `${{ env.TAG_NAME }}` tag
+        if: ${{ env.SKIP != 'true' }}
+        run: |
+          # Delete remote tag
+          gh api \
+              -X DELETE \
+              repos/${GITHUB_REPOSITORY}/git/refs/tags/${TAG_NAME}
+
+          SHA=$(gh api \
+            repos/${GITHUB_REPOSITORY}/git/ref/heads/${BRANCH_NAME} \
+            --jq .object.sha)
+
+          # Create remote tag
+          gh api \
+            -X POST \
+            repos/${GITHUB_REPOSITORY}/git/refs \
+            -f ref=refs/tags/${TAG_NAME} \
+            -f sha="${SHA}"

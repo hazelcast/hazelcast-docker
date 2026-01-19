@@ -1,10 +1,6 @@
 name: Do release
 
 on:
-  # For `push` events, will retag / build _only_ if this is retagging an _existing_ tag
-  push:
-    branches:
-      - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
     inputs:
       SOURCE_REF:
@@ -30,7 +26,6 @@ jobs:
     outputs:
       source-ref: ${{ steps.calculate-source-ref.outputs.REF }}
       tag-name: ${{ steps.calculate-tag-name.outputs.NAME }}
-      skip: ${{ steps.check-tag-exists.outputs.skip }}
     steps:
       - uses: actions/checkout@v6
 
@@ -46,24 +41,6 @@ jobs:
         run: |
           echo "NAME=v${{ steps.calculate-source-ref.outputs.REF }}" >> ${GITHUB_OUTPUT}
 
-      - name: Check `${{ steps.calculate-tag-name.outputs.NAME }}` tag exists
-        if: ${{ github.event_name == 'push' }}
-        id: check-tag-exists
-        run: |
-          source .github/scripts/logging.functions.sh
-
-          if gh release view --repo ${GITHUB_REPOSITORY} ${{ steps.calculate-tag-name.outputs.NAME }}; then
-            echodebug "\"${{ steps.calculate-tag-name.outputs.NAME }}\" tag already exists, removing to recreate"
-            gh api \
-              -X DELETE \
-              repos/${GITHUB_REPOSITORY}/git/refs/tags/${{ needs.prepare.outputs.tag-name }}
-          else
-            echonotice "\"${{ steps.calculate-tag-name.outputs.NAME }}\" tag not found to replace, skipping"
-            echo "skip=true" >> ${GITHUB_OUTPUT}
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
-
   get-environment:
     uses: ./.github/workflows/get-environment.yml
     with:
@@ -71,7 +48,6 @@ jobs:
 
   tag:
     runs-on: ubuntu-slim
-    if: ${{ needs.prepare.outputs.skip != 'true' }}
     needs: prepare
     steps:
       - name: Create `${{ needs.prepare.outputs.tag-name }}` tag
@@ -97,7 +73,6 @@ jobs:
 
   tag-image-push:
     uses: ./.github/workflows/tag_image_push.yml
-    if: ${{ needs.prepare.outputs.skip != 'true' }}
     needs:
       - prepare
       - get-environment
@@ -109,7 +84,6 @@ jobs:
 
   ee-nlc-tag-push:
     uses: ./.github/workflows/ee-nlc-tag-push.yml
-    if: ${{ needs.prepare.outputs.skip != 'true' }}
     needs:
       - prepare
       - get-environment
@@ -119,9 +93,7 @@ jobs:
     secrets: inherit
 
   readme:
-    if: ${{ needs.prepare.outputs.skip != 'true' }}
     needs:
-      - prepare
       - tag-image-push
       - get-environment
     uses: ./.github/workflows/update_readme.yml
