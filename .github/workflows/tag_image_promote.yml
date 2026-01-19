@@ -78,7 +78,8 @@ jobs:
     needs:
       - prepare
       - promote-docker-registry
-      - promote-rhel
+      # Can't check a conditional so for now will ignore
+      # - promote-rhel
     if: ${{ !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
     runs-on: ubuntu-latest
     steps:
@@ -93,7 +94,8 @@ jobs:
     needs:
       - prepare
       - promote-docker-registry
-      - promote-rhel
+      # Can't check a conditional so for now will ignore
+      # - promote-rhel
     if: ${{ !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
     uses: ./.github/workflows/update_readme.yml
     with:
@@ -105,7 +107,8 @@ jobs:
     if: failure() && github.triggering_actor == 'devOpsHazelcast'
     needs:
       - promote-docker-registry
-      - promote-rhel
+      # Can't check a conditional so for now will ignore
+      # - promote-rhel
       - readme
       - create-release
     uses: ./.github/workflows/slack-notification.yml
