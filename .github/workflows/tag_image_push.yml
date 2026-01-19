@@ -161,7 +161,9 @@ jobs:
         id: labels
         if: ${{ inputs.HZ_REVISION != '' }}
         run: |
-          echo "label=hazelcast.revision=${{ inputs.HZ_REVISION }}" >> "$GITHUB_OUTPUT"
+          echo "label=hazelcast.revision=${HZ_REVISION}" >> ${GITHUB_OUTPUT}
+        env:
+          HZ_REVISION: ${{ inputs.HZ_REVISION }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
