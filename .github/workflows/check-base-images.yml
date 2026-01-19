@@ -111,6 +111,7 @@ jobs:
     uses: ./.github/workflows/tag_image_push.yml
     with:
       SOURCE_REF: v${{ matrix.version }}
+      RELEASE_TYPE: EE
       ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
     secrets: inherit
 

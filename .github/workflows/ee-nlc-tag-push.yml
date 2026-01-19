@@ -33,6 +33,7 @@ jobs:
     uses: ./.github/workflows/tag_image_prepare.yml
     with:
       SOURCE_REF: ${{ inputs.SOURCE_REF }}
+      RELEASE_TYPE: EE
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
   build:
@@ -119,7 +120,9 @@ jobs:
         id: labels
         if: ${{ inputs.HZ_REVISION != '' }}
         run: |
-          echo "label=hazelcast.revision=${{ inputs.HZ_REVISION }}" >> "$GITHUB_OUTPUT"
+          echo "label=hazelcast.revision=${HZ_REVISION}" >> ${GITHUB_OUTPUT}
+        env:
+          HZ_REVISION: ${{ inputs.HZ_REVISION }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
