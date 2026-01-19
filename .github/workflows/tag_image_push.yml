@@ -107,7 +107,7 @@ jobs:
           parse-json-secrets: true
 
       - name: Download the distribution file
-        uses: hazelcast/docker-actions/download-hz-dist@authenticate-with-oidc
+        uses: hazelcast/docker-actions/download-hz-dist@master
         id: download-hz-dist
         with:
           repo-vars-as-json: ${{ toJSON(vars) }}
