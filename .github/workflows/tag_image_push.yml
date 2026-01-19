@@ -103,7 +103,7 @@ jobs:
         uses: aws-actions/aws-secretsmanager-get-secrets@v2
         with:
           secret-ids: |
-            JFROG,JFROG/WRITE_DEV_ACCOUNT
+            JFROG,JFROG/READONLY_DEV_ACCOUNT
           parse-json-secrets: true
 
       - name: Download the distribution file
