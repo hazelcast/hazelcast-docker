@@ -113,6 +113,7 @@ jobs:
     uses: ./.github/workflows/tag_image_push.yml
     with:
       SOURCE_REF: v${{ matrix.version }}
+      RELEASE_TYPE: EE
       ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
     secrets: inherit
 
@@ -132,29 +133,10 @@ jobs:
     secrets: inherit
 
   failure-notifications:
-    runs-on: ubuntu-latest
     name: Failure notification
     if: failure() && github.event_name != 'workflow_dispatch'
     needs:
       - rebuild-ee
       - rebuild-nlc
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
-          aws-region: 'us-east-1'
-
-      - name: Get Secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            SLACK_WEBHOOK,SLACK/WEBHOOK_HAZELCAST_DOCKER_NOTIFICATIONS
-          parse-json-secrets: true
-
-      - name: Slack notification
-        uses: hazelcast/docker-actions/slack-notification@master
-        with:
-          slack-webhook-url: ${{ env.SLACK_WEBHOOK }}
-          status: failure
+    uses: ./.github/workflows/slack-notification.yml
+    secrets: inherit

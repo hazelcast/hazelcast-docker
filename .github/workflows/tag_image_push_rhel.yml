@@ -47,6 +47,8 @@ jobs:
       SCAN_REGISTRY: "quay.io"
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -63,25 +65,14 @@ jobs:
 
       - name: Set scan registry secrets
         id: scan_registry_secrets
-        run: |
+        env:
           # Some repositories have a separate projects for each (major) version
           # First see if a version-specific secret exists, falling back to default
-
-          PROJECT_ID=${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] }}
-          if [[ -z "${PROJECT_ID}" ]]; then
-            PROJECT_ID=${{ secrets.RHEL_PROJECT_ID }}
-          fi
-          echo "PROJECT_ID=${PROJECT_ID}" >> ${GITHUB_OUTPUT}
-
-          echo "USERNAME=redhat-isv-containers+${PROJECT_ID}-robot" >> ${GITHUB_OUTPUT}
-
-          PASSWORD=${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] }}
-          if [[ -z "${PASSWORD}" ]]; then
-            PASSWORD=${{ secrets.SCAN_REGISTRY_PASSWORD }}
-          fi
-          echo "PASSWORD=${PASSWORD}" >> ${GITHUB_OUTPUT}
-
-          echo "SCAN_REPOSITORY=${SCAN_REGISTRY}/redhat-isv-containers/${PROJECT_ID}" >> ${GITHUB_OUTPUT}
+          RHEL_PROJECT_ID: ${{ secrets[format('RHEL_PROJECT_ID_V{0}', steps.version.outputs.major)] || secrets.RHEL_PROJECT_ID }}
+          SCAN_REPOSITORY: ${{ secrets[format('SCAN_REPOSITORY_V{0}', steps.version.outputs.major)] || secrets.SCAN_REPOSITORY }}
+        run: |
+          echo "PROJECT_ID=${RHEL_PROJECT_ID}" >> ${GITHUB_OUTPUT}
+          echo "SCAN_REPOSITORY=${SCAN_REPOSITORY}${SCAN_REGISTRY}/redhat-isv-containers/${RHEL_PROJECT_ID}" >> ${GITHUB_OUTPUT}
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -93,22 +84,22 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.SCAN_REGISTRY }}
-          username: ${{ steps.scan_registry_secrets.outputs.USERNAME }}
-          password: ${{ steps.scan_registry_secrets.outputs.PASSWORD }}
+          # Some repositories have a separate projects for each (major) version
+          # First see if a version-specific secret exists, falling back to default
+          username: redhat-isv-containers+${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}-robot
+          password: ${{ secrets[format('SCAN_REGISTRY_PASSWORD_V{0}', steps.version.outputs.major)] || secrets.SCAN_REGISTRY_PASSWORD }}
 
-      - name: Get tags to push
-        id: get-tags-to-push
+      - id: get-tags-to-push
+        uses: ./.github/actions/get-tags-to-push
+        with:
+          hz-version: ${{ inputs.HZ_VERSION }}
+          jdk: ${{ matrix.jdk }}
+          default-jdk: ${{ inputs.DEFAULT_JDK }}
+          classifier: ""
+          is-latest-lts: ${{ inputs.IS_LATEST_LTS }}
+
+      - id: unique-destination-tag
         run: |
-          . .github/scripts/get-tags-to-push.sh
-
-          if [[ "${{ inputs.HZ_VERSION }}" =~ SNAPSHOT ]]; then
-            TAGS_TO_PUSH=$(augment_with_classifier_tags "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}")
-          else
-            TAGS_TO_PUSH=$(get_tags_to_push "${{ inputs.HZ_VERSION }}" "" "${{ matrix.jdk }}" "${{ inputs.DEFAULT_JDK }}" "${{ inputs.IS_LATEST_LTS }}")
-          fi
-
-          echo "all_destination_tags=${TAGS_TO_PUSH}" >> ${GITHUB_OUTPUT}
-
           # We need to add a new, unique tag for each image to workaround RedHat bug - https://github.com/hazelcast/hazelcast-docker/pull/1088
           #
           # When an new image re-using an _existing_ tag (implicitly unpublished) is pushed to the registry, the _existing_ image is immediately replaced.
@@ -117,12 +108,8 @@ jobs:
           # We can leverage this new, unique tag to validate, push and publish the _new_ image without affecting the _existing_ image
           # First we push the _new, unique_ tag, then after validation we can add the _existing_ tags
 
-          # Pick an (arbitrary) tag to pull from
-          SOURCE_TAG=${TAGS_TO_PUSH%% *}
-          echo "source_tag=${SOURCE_TAG}" >> ${GITHUB_OUTPUT}
-
           # Add date suffix to create unique output tag (e.g. 5.4.1-jdk17-20250909130347)
-          echo "unique_destination_tag=${SOURCE_TAG}-$(date +"%Y%m%d%H%M%S")" >> ${GITHUB_OUTPUT}
+          echo "tag=${{ steps.get-tags-to-push.outputs.primary-tag }}-$(date +"%Y%m%d%H%M%S")" >> ${GITHUB_OUTPUT}
 
       - name: Copy new unique tag to RedHat Container Registry
         run: |
@@ -130,8 +117,8 @@ jobs:
           skopeo copy \
             --override-os linux \
             --override-arch amd64 \
-            docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.source_tag }} \
-            docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.get-tags-to-push.outputs.unique_destination_tag }}
+            docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
 
       - name: Install `preflight` OpenShift tool from GitHub
         uses: redhat-actions/openshift-tools-installer@v1
@@ -142,8 +129,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: 'us-east-1'
 
       - name: Get Secrets
@@ -158,7 +144,7 @@ jobs:
         run: |
           source .github/scripts/logging.functions.sh
 
-          PREFLIGHT_OUTPUT=$(preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.get-tags-to-push.outputs.unique_destination_tag }}" \
+          PREFLIGHT_OUTPUT=$(preflight check container "${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}" \
             --submit --pyxis-api-token=${REDHAT_ROBOT_RHEL_API_KEY} \
             --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
             --docker-config ~/.docker/config.json \
@@ -191,7 +177,6 @@ jobs:
 
           jq --raw-output '.[]' <<< '${{ steps.preflight.outputs.IMAGE_IDS }}' | while read IMAGE_ID; do
             await_image_publish \
-              "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" \
               "${IMAGE_ID}" \
               "${REDHAT_ROBOT_RHEL_API_KEY}"
           done
@@ -201,11 +186,11 @@ jobs:
           for tag in ${TAGS_TO_PUSH[@]}
           do
             skopeo copy \
-              docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.get-tags-to-push.outputs.unique_destination_tag }} \
+              docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }} \
               docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${tag}
           done
         env:
-          TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all_destination_tags }}
+          TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
 
       - name: Check RedHat service status
         if: failure()

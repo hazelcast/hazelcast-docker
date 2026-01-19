@@ -30,38 +30,25 @@ on:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
-    outputs:
-      HZ_VERSION: ${{ steps.get_hz_versions.outputs.HZ_VERSION }}
-      jdks: ${{ steps.jdks.outputs.jdks }}
-      default-jdk: ${{ steps.jdks.outputs.default-jdk }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.SOURCE_REF }}
-
-      - name: Get HZ versions
-        id: get_hz_versions
-        uses: hazelcast/docker-actions/get-hz-versions@master
-
-      - name: Get supported JDKs
-        id: jdks
-        uses: hazelcast/docker-actions/get-supported-jdks@master
-        with:
-          HZ_VERSION: '${{ steps.get_hz_versions.outputs.HZ_VERSION }}'
+    uses: ./.github/workflows/tag_image_prepare.yml
+    with:
+      SOURCE_REF: ${{ inputs.SOURCE_REF }}
+      RELEASE_TYPE: EE
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
   build:
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     needs: prepare
     strategy:
       fail-fast: false
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     env:
-      LOCAL_REGISTRY: localhost:5000
-      HZ_VERSION: ${{ needs.prepare.outputs.HZ_VERSION }}
+      LOCAL_IMAGE_NAME: localhost:5000/${{ secrets.NLC_IMAGE_NAME }}
+      HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
       DOCKER_DIR: hazelcast-enterprise
       TEST_CONTAINER_NAME: hazelcast-test
     services:
@@ -84,8 +71,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: 'us-east-1'
 
       - name: Download the distribution file
@@ -109,9 +95,6 @@ jobs:
         id: tags
         run: |
           . .github/scripts/get-tags-to-push.sh
-
-          LOCAL_IMAGE_NAME=${LOCAL_REGISTRY}/${{ secrets.NLC_IMAGE_NAME }}
-          echo "LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME}" >> ${GITHUB_ENV}
 
           TAGS_TO_PUSH=$(augment_with_classifier_tags "${HZ_VERSION}" "" "${{ matrix.jdk }}" "${{ needs.prepare.outputs.default-jdk }}")
 
@@ -137,7 +120,9 @@ jobs:
         id: labels
         if: ${{ inputs.HZ_REVISION != '' }}
         run: |
-          echo "label=hazelcast.revision=${{ inputs.HZ_REVISION }}" >> "$GITHUB_OUTPUT"
+          echo "label=hazelcast.revision=${HZ_REVISION}" >> ${GITHUB_OUTPUT}
+        env:
+          HZ_REVISION: ${{ inputs.HZ_REVISION }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
@@ -182,8 +167,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_DEV_INFRA_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_DEV_INFRA_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: 'us-east-1'
 
       - name: Get Secrets
@@ -191,7 +175,6 @@ jobs:
         with:
           secret-ids: |
             NLC/IMAGE_REGISTRY
-            SLACK_WEBHOOK,SLACK/WEBHOOK_HAZELCAST_DOCKER_NOTIFICATIONS
           parse-json-secrets: true
 
       - name: Login to NLC registry
@@ -216,8 +199,9 @@ jobs:
         if: failure()
         uses: hazelcast/docker-actions/check-redhat-service-status@master
 
-      - name: Slack notification
-        uses: hazelcast/docker-actions/slack-notification@master
-        if: failure() && github.triggering_actor == 'devOpsHazelcast'
-        with:
-          slack-webhook-url: ${{ env.SLACK_WEBHOOK }}
+  failure-notifications:
+    name: Failure notification
+    if: failure() && github.triggering_actor == 'devOpsHazelcast'
+    needs: build
+    uses: ./.github/workflows/slack-notification.yml
+    secrets: inherit
