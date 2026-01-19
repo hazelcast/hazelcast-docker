@@ -8,8 +8,7 @@ on:
         required: true
       RELEASE_TYPE:
         description: 'What should be built'
-        required: false
-        default: 'EE'
+        required: true
         type: choice
         options:
           - ALL
