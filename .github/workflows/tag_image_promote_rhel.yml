@@ -97,7 +97,7 @@ jobs:
 
       - uses: docker/login-action@v3
         with:
-          registry: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.jfrog_url }}
+          registry: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.jfrog-url }}
           username: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.user }}
           password: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.token }}
 

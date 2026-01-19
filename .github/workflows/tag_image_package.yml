@@ -170,7 +170,7 @@ jobs:
 
       - uses: docker/login-action@v3
         with:
-          registry: ${{ steps.authenticate-jfrog-write-dev-account.outputs.jfrog_url }}
+          registry: ${{ steps.authenticate-jfrog-write-dev-account.outputs.jfrog-url }}
           username: ${{ steps.authenticate-jfrog-write-dev-account.outputs.user }}
           password: ${{ steps.authenticate-jfrog-write-dev-account.outputs.token }}
 
