@@ -182,7 +182,7 @@ jobs:
             --src docker \
             --dest docker \
             ${LOCAL_IMAGE_NAME} \
-            ${JFROG_URL}/${{ vars.PREPROD_REGISTRY }}
+            ${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}/${{ vars.PREPROD_REGISTRY }}
 
   failure-notifications:
     name: Failure notification

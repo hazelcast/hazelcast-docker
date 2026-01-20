@@ -137,7 +137,7 @@ jobs:
           skopeo copy \
             --override-os linux \
             --override-arch amd64 \
-            docker://${JFROG_URL}/${{ vars.PREPROD_REGISTRY }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            docker://${{ steps.authenticate-jfrog-snapshot-internal.outputs.url }}/${{ vars.PREPROD_REGISTRY }}/${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
             docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
 
       - name: Install `preflight` OpenShift tool from GitHub

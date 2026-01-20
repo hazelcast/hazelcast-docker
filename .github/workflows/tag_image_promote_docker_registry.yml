@@ -100,7 +100,7 @@ jobs:
       - name: Push image to remote registry
         run: |
           if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-            remote_registry=${JFROG_URL}/docker/hazelcast
+            remote_registry=${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}/docker/hazelcast
           else
             remote_registry=${{ vars.DOCKERHUB_NAMESPACE }}
           fi
@@ -109,7 +109,7 @@ jobs:
           do
             skopeo copy \
               --all \
-              docker://${JFROG_URL}/${{ vars.PREPROD_REGISTRY }}/${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+              docker://${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}/${{ vars.PREPROD_REGISTRY }}/${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
               docker://${remote_registry}/${{ matrix.distribution-type.image-name }}:${tag}
           done
         env:
