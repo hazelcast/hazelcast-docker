@@ -64,7 +64,7 @@ jobs:
   promote-rhel:
     needs: prepare
     # Restrict to non-SNAPSHOT for `live` environment only
-    if: needs.prepare.outputs.should-build-ee == 'true' && !(inputs.ENVIRONMENT == 'live' && contains(needs.prepare.outputs.hz-version, 'SNAPSHOT'))
+    if: ${{ needs.prepare.outputs.should-build-ee == 'true' && !(inputs.ENVIRONMENT == 'live' && contains(needs.prepare.outputs.hz-version, 'SNAPSHOT')) }}
     uses: ./.github/workflows/tag_image_promote_rhel.yml
     with:
       HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
@@ -78,9 +78,9 @@ jobs:
     needs:
       - prepare
       - promote-docker-registry
-      # Can't check a conditional so for now will ignore
-      # - promote-rhel
-    if: ${{ !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
+      - promote-rhel
+    # Support fact some `needs` may be skipped and as such not completed successfully
+    if: ${{ !cancelled() && !failure() && !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
     runs-on: ubuntu-latest
     steps:
       - name: Create release
@@ -94,9 +94,9 @@ jobs:
     needs:
       - prepare
       - promote-docker-registry
-      # Can't check a conditional so for now will ignore
-      # - promote-rhel
-    if: ${{ !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
+      - promote-rhel
+    # Support fact some `needs` may be skipped and as such not completed successfully
+    if: ${{ !cancelled() && !failure() && !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
     uses: ./.github/workflows/update_readme.yml
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
@@ -104,11 +104,10 @@ jobs:
 
   failure-notifications:
     name: Failure notification
-    if: failure() && github.triggering_actor == 'devOpsHazelcast'
+    if: ${{ failure() && github.triggering_actor == 'devOpsHazelcast' }}
     needs:
       - promote-docker-registry
-      # Can't check a conditional so for now will ignore
-      # - promote-rhel
+      - promote-rhel
       - readme
       - create-release
     uses: ./.github/workflows/slack-notification.yml
