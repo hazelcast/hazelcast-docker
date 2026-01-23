@@ -3,9 +3,10 @@ name: Build OS and EE image
 on:
   workflow_dispatch:
     inputs:
-      SOURCE_REF:
+      SOURCE_REF: &INPUT_SOURCE_REF
         description: 'The hazelcast-docker branch to build the image from'
         required: true
+        type: string
       RELEASE_TYPE:
         description: 'What should be built'
         required: true
@@ -14,27 +15,22 @@ on:
           - ALL
           - OSS
           - EE
-      HZ_REVISION:
+      HZ_REVISION: &INPUT_HZ_REVISION
         description: 'Commit id of Hazelcast snapshot jar'
         required: false
+        type: string
       ENVIRONMENT:
         description: 'Environment to use'
         required: true
         type: environment
   workflow_call:
     inputs:
-      SOURCE_REF:
-        description: 'The hazelcast-docker branch to build the image from'
-        required: true
-        type: string
+      SOURCE_REF: *INPUT_SOURCE_REF
       RELEASE_TYPE:
         description: 'What should be built'
         required: true
         type: string
-      HZ_REVISION:
-        description: 'Commit id of Hazelcast snapshot jar'
-        required: false
-        type: string
+      HZ_REVISION: *INPUT_HZ_REVISION
       ENVIRONMENT:
         description: 'Environment to use'
         required: true
