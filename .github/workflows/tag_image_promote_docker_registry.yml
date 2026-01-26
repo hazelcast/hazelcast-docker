@@ -1,0 +1,117 @@
+name: Promote image to Docker registry
+
+on:
+  # For debugging only
+  workflow_dispatch:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
+        required: true
+      JDKS:
+        description: 'Supported JDKs - e.g. `[17, 21]`'
+        required: true
+      IS_LATEST_LTS:
+        description: 'Is Latest LTS? e.g. `false`'
+        required: true
+      DEFAULT_JDK:
+        description: 'The Java major version (e.g. `21`, `8`) used by default in the image'
+        required: true
+      DISTRIBUTION_CLASSIFIERS:
+        required: true
+      DISTRIBUTION_TYPES:
+        required: true
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: environment
+  workflow_call:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to build the image for, e.g. 5.1.1, 5.0.1'
+        required: true
+        type: string
+      JDKS:
+        description: 'Supported JDKs - e.g. `[17, 21]`'
+        required: true
+        type: string
+      IS_LATEST_LTS:
+        description: 'Is Latest LTS? e.g. `false`'
+        required: true
+        type: string
+      DEFAULT_JDK:
+        description: 'The Java major version (e.g. `21`, `8`) used by default in the image'
+        required: true
+        type: string
+      DISTRIBUTION_CLASSIFIERS:
+        required: true
+        type: string
+      DISTRIBUTION_TYPES:
+        required: true
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
+
+jobs:
+  promote-docker-registry:
+    environment: ${{ inputs.ENVIRONMENT }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    strategy:
+      matrix:
+        jdk: ${{ fromJSON(inputs.JDKS) }}
+        classifier: ${{ fromJSON(inputs.DISTRIBUTION_CLASSIFIERS) }}
+        distribution-type: ${{ fromJSON(inputs.DISTRIBUTION_TYPES) }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - id: get-tags-to-push
+        uses: ./.github/actions/get-tags-to-push
+        with:
+          hz-version: ${{ inputs.HZ_VERSION }}
+          jdk: ${{ matrix.jdk }}
+          default-jdk: ${{ inputs.DEFAULT_JDK }}
+          classifier: ${{ matrix.classifier }}
+          # LTS is implicitly EE only
+          is-latest-lts: ${{ matrix.distribution-type.label == 'ee' && inputs.IS_LATEST_LTS == 'true' }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - uses: hazelcast/docker-actions/get-jfrog-credentials@master
+        id: authenticate-jfrog-write-dev-account
+        with:
+          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          jfrog-oidc-provider-name: ${{ github.repository_owner }}-write-dev-account
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}
+          username: ${{ steps.authenticate-jfrog-write-dev-account.outputs.user }}
+          password: ${{ steps.authenticate-jfrog-write-dev-account.outputs.token }}
+
+      - name: Push image to remote registry
+        run: |
+          if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
+            remote_registry=${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}/docker/hazelcast
+          else
+            remote_registry=${{ vars.DOCKERHUB_NAMESPACE }}
+          fi
+
+          for tag in ${TAGS_TO_PUSH[@]}
+          do
+            skopeo copy \
+              --all \
+              docker://${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}/${{ vars.PREPROD_REGISTRY }}/${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+              docker://${remote_registry}/${{ matrix.distribution-type.image-name }}:${tag}
+          done
+        env:
+          HZ_VERSION: ${{ inputs.HZ_VERSION }}
+          TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
