@@ -37,22 +37,14 @@ jobs:
   prepare:
     runs-on: ubuntu-slim
     outputs:
-      source-ref: ${{ steps.calculate-source-ref.outputs.REF }}
       tag-name: ${{ steps.calculate-tag-name.outputs.NAME }}
     steps:
       - uses: actions/checkout@v6
 
-      - name: Calculate source ref
-        id: calculate-source-ref
-        run: |
-          echo "REF=${SOURCE_REF}" >> ${GITHUB_OUTPUT}
-        env:
-          SOURCE_REF: ${{ github.event.inputs.SOURCE_REF || github.ref_name }}
-
       - name: Calculate tag name
         id: calculate-tag-name
         run: |
-          echo "NAME=v${{ steps.calculate-source-ref.outputs.REF }}" >> ${GITHUB_OUTPUT}
+          echo "NAME=v${{ inputs.SOURCE_REF }}" >> ${GITHUB_OUTPUT}
 
   get-environment:
     uses: ./.github/workflows/get-environment.yml
@@ -66,7 +58,7 @@ jobs:
       - name: Create `${{ needs.prepare.outputs.tag-name }}` tag
         run: |
           SHA=$(gh api \
-            repos/${GITHUB_REPOSITORY}/git/ref/heads/${{ needs.prepare.outputs.source-ref }} \
+            repos/${GITHUB_REPOSITORY}/git/ref/heads/${{ inputs.SOURCE_REF }} \
             --jq .object.sha)
 
           # Create remote tag
@@ -90,7 +82,7 @@ jobs:
       - prepare
       - get-environment
     with:
-      SOURCE_REF: ${{ needs.prepare.outputs.source-ref }}
+      SOURCE_REF: ${{ inputs.SOURCE_REF }}
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
       ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
     secrets: inherit
@@ -101,7 +93,7 @@ jobs:
       - prepare
       - get-environment
     with:
-      SOURCE_REF: ${{ needs.prepare.outputs.source-ref }}
+      SOURCE_REF: ${{ inputs.SOURCE_REF }}
       ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
     secrets: inherit
 
