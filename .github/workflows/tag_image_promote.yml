@@ -7,7 +7,7 @@ on:
         description: 'The hazelcast-docker branch to build the image from'
         required: true
       RELEASE_TYPE:
-        description: 'What should be built'
+        description: 'What should be promoted'
         required: true
         type: choice
         options:
@@ -24,11 +24,11 @@ on:
   workflow_call:
     inputs:
       SOURCE_REF:
-        description: 'The hazelcast-docker branch to build the image from'
+        description: 'The hazelcast-docker branch to promote the image from'
         required: true
         type: string
       RELEASE_TYPE:
-        description: 'What should be built'
+        description: 'What should be promoted'
         required: true
         type: string
       HZ_REVISION:
