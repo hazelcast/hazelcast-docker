@@ -18,6 +18,20 @@ on:
         description: 'Environment to use'
         required: true
         type: environment
+  workflow_call:
+    inputs:
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to create the tag from'
+        required: true
+        type: string
+      RELEASE_TYPE:
+        description: 'What should be built'
+        required: true
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
 
 jobs:
   prepare:
