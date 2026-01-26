@@ -1,0 +1,39 @@
+# TODO This should be in `docker-actions`, but it's not properly encapsulated to support that
+# Specifically, this only wraps the NLC tagging logic - regular "push" is different and not incorporated
+
+name: Get tags to push NLC
+
+inputs:
+  hz-version:
+    required: true
+  jdk:
+    required: true
+  default-jdk:
+    required: true
+outputs:
+  primary-tag:
+    value: ${{ steps.get-tags-to-push.outputs.primary-tag }}
+  all-destination-tags:
+    value: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
+runs:
+  using: "composite"
+  steps:
+    - name: Calculate tags
+      id: get-tags-to-push
+      shell: bash
+      run: |
+        . .github/scripts/get-tags-to-push.sh
+
+        TAGS_TO_PUSH=$(augment_with_classifier_tags \
+          "${HZ_VERSION}" \
+          "" \
+          "${JDK}" \
+          "${DEFAULT_JDK}" \
+        )
+
+        echo "primary-tag=${TAGS_TO_PUSH%% *}" >> ${GITHUB_OUTPUT}
+        echo "all-destination-tags=${TAGS_TO_PUSH}" >> ${GITHUB_OUTPUT}
+      env:
+        HZ_VERSION: ${{ inputs.hz-version }}
+        JDK: ${{ inputs.jdk }}
+        DEFAULT_JDK: ${{ inputs.default-jdk }}
