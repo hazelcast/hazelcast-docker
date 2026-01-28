@@ -178,9 +178,15 @@ jobs:
           # Otherwise we'd replace a published image with an unpublished one
 
           jq --raw-output '.[]' <<< '${{ steps.preflight.outputs.IMAGE_IDS }}' | while read IMAGE_ID; do
-            await_image_publish \
+            await_image_operation \
               "${IMAGE_ID}" \
-              "${REDHAT_ROBOT_RHEL_API_KEY}"
+              "${REDHAT_ROBOT_RHEL_API_KEY}" \
+              "publish"
+
+            await_image_operation \
+              "${IMAGE_ID}" \
+              "${REDHAT_ROBOT_RHEL_API_KEY}" \
+              "sync-tags"
           done
 
       - name: Copy remaining tags to RedHat Container Registry
