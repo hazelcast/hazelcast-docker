@@ -49,24 +49,31 @@ jobs:
 
       - name: Create `${{ steps.tag-name.outputs.TAG_NAME }}` tag
         run: |
+          # Delete remote tag _if exists_
+          gh api \
+              -X DELETE \
+              repos/${GITHUB_REPOSITORY}/git/refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \\
+              || true
+
           SHA=$(gh api \
-            repos/${GITHUB_REPOSITORY}/git/ref/heads/${{ inputs.SOURCE_REF }} \
+            repos/${GITHUB_REPOSITORY}/git/ref/heads/${SOURCE_REF} \
             --jq .object.sha)
 
           # Create remote tag
           gh api \
             -X POST \
             repos/${GITHUB_REPOSITORY}/git/refs \
-            -f ref=refs/tags/${TAG_NAME} \
+            -f ref=refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \
             -f sha="${SHA}"
         env:
           GH_TOKEN: ${{ github.token }}
+          SOURCE_REF: ${{ inputs.SOURCE_REF }}
 
       - name: Create release
         uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1
         with:
           allowUpdates: true
-          tag: ${{ env.TAG_NAME }}
+          tag: ${{ steps.tag-name.outputs.TAG_NAME }}
 
   tag-image-push:
     uses: ./.github/workflows/tag_image_push.yml
