@@ -19,6 +19,26 @@ get_certification_project_image_request()
   return 0
 }
 
+sync_tags()
+{
+  local project_id=$1
+  local image_id=$2
+  local api_key=$3
+
+  local RESPONSE
+  # https://catalog.redhat.com/api/containers/docs/endpoints/RESTPostImageRequestByCertProjectId.html
+  RESPONSE=$( \
+      curl --fail \
+            --silent \
+            --show-error \
+            --header "X-API-KEY: ${api_key}" \
+            --header 'Content-Type: application/json' \
+            --data "{\"image_id\":\"${image_id}\" , \"operation\" : \"sync-tags\" }" \
+            "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${project_id}/requests/images")
+
+  echodebug "${RESPONSE}"
+}
+
 # Blocks/waits until the specified image is marked as published
 await_image_publish()
 {
