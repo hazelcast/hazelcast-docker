@@ -108,6 +108,8 @@ jobs:
       - convert-rebuilds-to-matrix
     if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
     strategy:
+      # Workaround for RedHat
+      max-parallel: 1
       matrix:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
     uses: ./.github/workflows/tag_image_push.yml

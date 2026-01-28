@@ -50,6 +50,8 @@ jobs:
     permissions:
       id-token: write
     strategy:
+      # Workaround for RedHat
+      max-parallel: 1
       fail-fast: false
       matrix:
         jdk: ${{ fromJSON(inputs.JDKS) }}
