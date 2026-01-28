@@ -34,18 +34,6 @@ on:
         type: string
 
 jobs:
-  prepare:
-    runs-on: ubuntu-slim
-    outputs:
-      tag-name: ${{ steps.calculate-tag-name.outputs.NAME }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Calculate tag name
-        id: calculate-tag-name
-        run: |
-          echo "NAME=v${{ inputs.SOURCE_REF }}" >> ${GITHUB_OUTPUT}
-
   get-environment:
     uses: ./.github/workflows/get-environment.yml
     with:
@@ -53,9 +41,10 @@ jobs:
 
   tag:
     runs-on: ubuntu-slim
-    needs: prepare
+    env:
+      TAG_NAME: v${{ inputs.SOURCE_REF }}
     steps:
-      - name: Create `${{ needs.prepare.outputs.tag-name }}` tag
+      - name: Create `${{ env.TAG_NAME }}` tag
         run: |
           SHA=$(gh api \
             repos/${GITHUB_REPOSITORY}/git/ref/heads/${{ inputs.SOURCE_REF }} \
@@ -65,7 +54,7 @@ jobs:
           gh api \
             -X POST \
             repos/${GITHUB_REPOSITORY}/git/refs \
-            -f ref=refs/tags/${{ needs.prepare.outputs.tag-name }} \
+            -f ref=refs/tags/${TAG_NAME} \
             -f sha="${SHA}"
         env:
           GH_TOKEN: ${{ github.token }}
@@ -74,13 +63,11 @@ jobs:
         uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1
         with:
           allowUpdates: true
-          tag: ${{ needs.prepare.outputs.tag-name }}
+          tag: ${{ env.TAG_NAME }}
 
   tag-image-push:
     uses: ./.github/workflows/tag_image_push.yml
-    needs:
-      - prepare
-      - get-environment
+    needs: get-environment
     with:
       SOURCE_REF: ${{ inputs.SOURCE_REF }}
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
@@ -89,9 +76,7 @@ jobs:
 
   ee-nlc-tag-push:
     uses: ./.github/workflows/ee-nlc-tag-push.yml
-    needs:
-      - prepare
-      - get-environment
+    needs: get-environment
     with:
       SOURCE_REF: ${{ inputs.SOURCE_REF }}
       ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
