@@ -21,26 +21,27 @@ jobs:
         run: |
           echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> ${GITHUB_ENV}
 
-      - name: Calculate tag name
-        run: |
-          echo "TAG_NAME=v${BRANCH_NAME}" >> ${GITHUB_ENV}
+      - uses: ./.github/actions/get-tag-name
+        id: tag-name
+        with:
+          SOURCE_REF: ${{ env.BRANCH_NAME }}
 
-      - name: Check `${{ env.TAG_NAME }}` tag exists
+      - name: Check `${{ steps.tag-name.outputs.TAG_NAME }}` tag exists
         run: |
-          if ! gh release view --repo ${GITHUB_REPOSITORY} ${TAG_NAME}; then
-            echo "::notice::\"${TAG_NAME}\" tag not found to replace, skipping" 
+          if ! gh release view --repo ${GITHUB_REPOSITORY} ${{ steps.tag-name.outputs.TAG_NAME }}; then
+            echo "::notice::\"${{ steps.tag-name.outputs.TAG_NAME }}\" tag not found to replace, skipping" 
             echo "SKIP=true" >> ${GITHUB_ENV}
           fi
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Recreate `${{ env.TAG_NAME }}` tag
+      - name: Recreate `${{ steps.tag-name.outputs.TAG_NAME }}` tag
         if: ${{ env.SKIP != 'true' }}
         run: |
           # Delete remote tag
           gh api \
               -X DELETE \
-              repos/${GITHUB_REPOSITORY}/git/refs/tags/${TAG_NAME}
+              repos/${GITHUB_REPOSITORY}/git/refs/tags/${{ steps.tag-name.outputs.TAG_NAME }}
 
           SHA=$(gh api \
             repos/${GITHUB_REPOSITORY}/git/ref/heads/${BRANCH_NAME} \
@@ -50,5 +51,5 @@ jobs:
           gh api \
             -X POST \
             repos/${GITHUB_REPOSITORY}/git/refs \
-            -f ref=refs/tags/${TAG_NAME} \
+            -f ref=refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \
             -f sha="${SHA}"

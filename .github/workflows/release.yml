@@ -41,10 +41,13 @@ jobs:
 
   tag:
     runs-on: ubuntu-slim
-    env:
-      TAG_NAME: v${{ inputs.SOURCE_REF }}
     steps:
-      - name: Create `${{ env.TAG_NAME }}` tag
+      - uses: ./.github/actions/get-tag-name
+        id: tag-name
+        with:
+          SOURCE_REF: ${{ inputs.SOURCE_REF }}
+
+      - name: Create `${{ steps.tag-name.outputs.TAG_NAME }}` tag
         run: |
           SHA=$(gh api \
             repos/${GITHUB_REPOSITORY}/git/ref/heads/${{ inputs.SOURCE_REF }} \
