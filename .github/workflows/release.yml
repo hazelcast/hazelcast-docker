@@ -34,11 +34,6 @@ on:
         type: string
 
 jobs:
-  get-environment:
-    uses: ./.github/workflows/get-environment.yml
-    with:
-      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-
   tag:
     runs-on: ubuntu-slim
     steps:
@@ -77,26 +72,22 @@ jobs:
 
   tag-image-push:
     uses: ./.github/workflows/tag_image_push.yml
-    needs: get-environment
     with:
       SOURCE_REF: ${{ inputs.SOURCE_REF }}
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
-      ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
 
   ee-nlc-tag-push:
     uses: ./.github/workflows/ee-nlc-tag-push.yml
-    needs: get-environment
     with:
       SOURCE_REF: ${{ inputs.SOURCE_REF }}
-      ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
 
   readme:
-    needs:
-      - tag-image-push
-      - get-environment
+    needs: tag-image-push
     uses: ./.github/workflows/update_readme.yml
     with:
-      ENVIRONMENT: ${{ needs.get-environment.outputs.environment }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit

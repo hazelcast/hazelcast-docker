@@ -19,9 +19,11 @@ on:
 
 jobs:
   get-environment:
-    uses: ./.github/workflows/get-environment.yml
-    with:
-      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ inputs.ENVIRONMENT || 'live' }}
+    steps:
+      - run: exit 0
 
   get-latest-patch-versions:
     runs-on: ubuntu-latest
