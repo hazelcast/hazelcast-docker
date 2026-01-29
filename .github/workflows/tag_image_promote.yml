@@ -1,0 +1,114 @@
+name: Promote image
+
+on:
+  workflow_dispatch:
+    inputs:
+      VERSION:
+        description: 'The version to promote'
+        required: true
+      RELEASE_TYPE:
+        description: 'What should be promoted'
+        required: true
+        type: choice
+        options:
+          - ALL
+          - OSS
+          - EE
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: false
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: environment
+  workflow_call:
+    inputs:
+      VERSION:
+        description: 'The version to promote'
+        required: true
+        type: string
+      RELEASE_TYPE:
+        description: 'What should be promoted'
+        required: true
+        type: string
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: false
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
+
+jobs:
+  prepare:
+    uses: ./.github/workflows/tag_image_prepare.yml
+    with:
+      SOURCE_REF: ${{ inputs.VERSION }}
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+
+  promote-docker-registry:
+    needs: prepare
+    uses: ./.github/workflows/tag_image_promote_docker_registry.yml
+    with:
+      HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
+      JDKS: ${{ needs.prepare.outputs.jdks }}
+      IS_LATEST_LTS: ${{ needs.prepare.outputs.is-latest-lts }}
+      DEFAULT_JDK: ${{ needs.prepare.outputs.default-jdk }}
+      DISTRIBUTION_CLASSIFIERS: ${{ needs.prepare.outputs.distribution-classifiers }}
+      DISTRIBUTION_TYPES: ${{ needs.prepare.outputs.distribution-types }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+    secrets: inherit
+
+  promote-rhel:
+    needs: prepare
+    # Restrict to non-SNAPSHOT for `live` environment only
+    if: ${{ needs.prepare.outputs.should-build-ee == 'true' && !(inputs.ENVIRONMENT == 'live' && contains(needs.prepare.outputs.hz-version, 'SNAPSHOT')) }}
+    uses: ./.github/workflows/tag_image_promote_rhel.yml
+    with:
+      HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
+      JDKS: ${{ needs.prepare.outputs.jdks }}
+      IS_LATEST_LTS: ${{ needs.prepare.outputs.is-latest-lts }}
+      DEFAULT_JDK: ${{ needs.prepare.outputs.default-jdk }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+    secrets: inherit
+
+  create-release:
+    needs:
+      - prepare
+      - promote-docker-registry
+      - promote-rhel
+    # Support fact some `needs` may be skipped and as such not completed successfully
+    if: ${{ !cancelled() && !failure() && !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release
+        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          tag: ${{ inputs.VERSION }}
+
+  readme:
+    needs:
+      - prepare
+      - promote-docker-registry
+      - promote-rhel
+    # Support fact some `needs` may be skipped and as such not completed successfully
+    if: ${{ !cancelled() && !failure() && !contains(needs.prepare.outputs.hz-version, 'SNAPSHOT') }}
+    uses: ./.github/workflows/update_readme.yml
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+    secrets: inherit
+
+  failure-notifications:
+    name: Failure notification
+    if: ${{ failure() && github.triggering_actor == 'devOpsHazelcast' }}
+    needs:
+      - promote-docker-registry
+      - promote-rhel
+      - readme
+      - create-release
+    uses: ./.github/workflows/slack-notification.yml
+    secrets: inherit
