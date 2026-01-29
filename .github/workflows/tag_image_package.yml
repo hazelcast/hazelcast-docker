@@ -1,0 +1,192 @@
+name: Package image
+
+on:
+  workflow_dispatch:
+    inputs:
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to build the image from'
+        required: true
+      RELEASE_TYPE:
+        description: 'What should be built'
+        required: true
+        type: choice
+        options:
+          - ALL
+          - OSS
+          - EE
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: false
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: environment
+  workflow_call:
+    inputs:
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to build the image from'
+        required: true
+        type: string
+      RELEASE_TYPE:
+        description: 'What should be built'
+        required: true
+        type: string
+      HZ_REVISION:
+        description: 'Commit id of Hazelcast snapshot jar'
+        required: false
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
+
+jobs:
+  prepare:
+    uses: ./.github/workflows/tag_image_prepare.yml
+    with:
+      SOURCE_REF: ${{ inputs.SOURCE_REF }}
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+
+  package:
+    environment: ${{ inputs.ENVIRONMENT }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    needs:
+      - prepare
+    strategy:
+      matrix:
+        jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
+        classifier: ${{ fromJSON(needs.prepare.outputs.distribution-classifiers) }}
+        distribution-type: ${{ fromJSON(needs.prepare.outputs.distribution-types) }}
+    env:
+      LOCAL_IMAGE_NAME: localhost:5000/${{ matrix.distribution-type.image-name }}
+      TEST_CONTAINER_NAME: hazelcast-test
+    services:
+      registry:
+        image: registry:latest
+        ports:
+          - 5000:5000
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.SOURCE_REF }}
+          path: source_path
+          sparse-checkout: ${{ matrix.distribution-type.docker-dir }}
+
+      - name: Get supported platforms
+        id: platforms
+        uses: hazelcast/docker-actions/get-supported-platforms@master
+        with:
+          dockerfile: ${{ matrix.distribution-type.docker-dir }}/Dockerfile
+          jdk: ${{ matrix.jdk }}
+
+      - name: Setup Docker
+        uses: ./.github/actions/setup-docker
+        with:
+          platforms: ${{ steps.platforms.outputs.platforms }}
+
+      - name: Download the distribution file
+        uses: hazelcast/docker-actions/download-hz-dist@master
+        id: download-hz-dist
+        with:
+          repo-vars-as-json: ${{ toJSON(vars) }}
+          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          distribution: ${{ matrix.distribution-type.distribution }}
+          hz_version: ${{ needs.prepare.outputs.hz-version }}
+          classifier: ${{ matrix.classifier }}
+          packaging: "zip"
+          output_file: "source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
+
+      - id: get-tags-to-push
+        uses: ./.github/actions/get-tags-to-push
+        with:
+          hz-version: ${{ needs.prepare.outputs.hz-version }}
+          jdk: ${{ matrix.jdk }}
+          default-jdk: ${{ needs.prepare.outputs.default-jdk }}
+          classifier: ${{ matrix.classifier }}
+          # LTS is implicitly EE only
+          is-latest-lts: ${{ matrix.distribution-type.label == 'ee' && needs.prepare.outputs.is-latest-lts == 'true' }}
+
+      - name: Determine labels
+        id: labels
+        if: ${{ inputs.HZ_REVISION != '' }}
+        run: |
+          echo "label=hazelcast.revision=${HZ_REVISION}" >> ${GITHUB_OUTPUT}
+        env:
+          HZ_REVISION: ${{ inputs.HZ_REVISION }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: source_path/${{ matrix.distribution-type.docker-dir }}
+          labels: ${{ steps.labels.outputs.label }}
+          platforms: ${{ steps.platforms.outputs.platforms }}
+          push: true
+          tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+          build-args: |
+            JDK_VERSION=${{ matrix.jdk }}
+
+      - name: Delete the distribution file
+        run: |
+          # GitHub Actions have limited disk capacity
+          # The distribution is large and no longer required now the image has been built
+          rm "${{ steps.download-hz-dist.outputs.output_file }}"
+
+      - name: Run smoke test against image
+        timeout-minutes: 2
+        run: |
+          .github/scripts/simple-smoke-test.sh ${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} "${TEST_CONTAINER_NAME}" ${{ matrix.distribution-type.label }} "${{ needs.prepare.outputs.hz-version }}" "${{ matrix.jdk }}"
+        env:
+          HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HAZELCAST_ENTERPRISE_KEY || '' }}
+
+      - uses: hazelcast/docker-actions/assert-image-size@master
+        with:
+          image: ${{ env.LOCAL_IMAGE_NAME}}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+
+      - name: Get docker logs
+        if: ${{ always() }}
+        run: |
+          docker logs "${TEST_CONTAINER_NAME}" > "docker.log" || true
+
+      - name: Store docker logs as artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: docker-logs-tag-image-push-${{ matrix.distribution-type.image-name }}-${{ steps.get-tags-to-push.outputs.primary-tag }}
+          path: docker.log
+
+      - uses: hazelcast/docker-actions/get-jfrog-credentials@master
+        id: authenticate-jfrog-write-dev-account
+        with:
+          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          jfrog-oidc-provider-name: ${{ github.repository_owner }}-write-dev-account
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}
+          username: ${{ steps.authenticate-jfrog-write-dev-account.outputs.user }}
+          password: ${{ steps.authenticate-jfrog-write-dev-account.outputs.token }}
+
+      - name: Push image to remote registry
+        run: |
+          # Skopeo expects HTTPS registry but local is HTTP
+          skopeo sync \
+            --all \
+            --src-tls-verify=false \
+            --src docker \
+            --dest docker \
+            ${LOCAL_IMAGE_NAME} \
+            ${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}/${{ vars.PREPROD_REGISTRY }}
+
+  failure-notifications:
+    name: Failure notification
+    if: failure() && github.triggering_actor == 'devOpsHazelcast'
+    needs: package
+    uses: ./.github/workflows/slack-notification.yml
+    secrets: inherit
