@@ -3,8 +3,8 @@ name: Promote image
 on:
   workflow_dispatch:
     inputs:
-      SOURCE_REF:
-        description: 'The hazelcast-docker branch to build the image from'
+      VERSION:
+        description: 'The version to promote'
         required: true
       RELEASE_TYPE:
         description: 'What should be promoted'
@@ -23,8 +23,8 @@ on:
         type: environment
   workflow_call:
     inputs:
-      SOURCE_REF:
-        description: 'The hazelcast-docker branch to promote the image from'
+      VERSION:
+        description: 'The version to promote'
         required: true
         type: string
       RELEASE_TYPE:
@@ -44,7 +44,7 @@ jobs:
   prepare:
     uses: ./.github/workflows/tag_image_prepare.yml
     with:
-      SOURCE_REF: ${{ inputs.SOURCE_REF }}
+      SOURCE_REF: ${{ inputs.VERSION }}
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
@@ -88,7 +88,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
-          tag: ${{ inputs.SOURCE_REF }}
+          tag: ${{ inputs.VERSION }}
 
   readme:
     needs:
