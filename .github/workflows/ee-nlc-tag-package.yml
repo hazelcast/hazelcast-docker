@@ -76,8 +76,7 @@ jobs:
       - name: Download the distribution file
         id: download-hz-dist
         run: |
-          if [[ "${{ needs.prepare.outputs.hz-version }}" =~ SNAPSHOT ]]
-          then  
+          if [[ "${{ needs.prepare.outputs.hz-version }}" =~ SNAPSHOT ]]; then
             subdir=/snapshot
           else
             subdir=
