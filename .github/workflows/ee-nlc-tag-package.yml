@@ -133,7 +133,12 @@ jobs:
       - name: Run smoke test against image
         timeout-minutes: 2
         run: |
-          .github/scripts/simple-smoke-test.sh ${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} "${TEST_CONTAINER_NAME}" ee "${{ needs.prepare.outputs.hz-version }}" "${{ matrix.jdk }}"
+          .github/scripts/simple-smoke-test.sh \
+            ${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            "${TEST_CONTAINER_NAME}" \
+            ee \
+            "${{ needs.prepare.outputs.hz-version }}" \
+            "${{ matrix.jdk }}"
         env:
           HZ_INSTANCETRACKING_FILENAME: instance-tracking.txt
 
