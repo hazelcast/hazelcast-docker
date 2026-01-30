@@ -105,7 +105,7 @@ jobs:
             remote_registry=${{ vars.DOCKERHUB_NAMESPACE }}
           fi
 
-          for tag in ${TAGS_TO_PUSH[@]}
+          for tag in ${TAGS_TO_PUSH}
           do
             skopeo copy \
               --all \
