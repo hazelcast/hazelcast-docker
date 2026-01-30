@@ -103,7 +103,7 @@ jobs:
           TAGS_ARG=""
           {
             echo 'tags<<EOF'
-            for tag in ${TAGS_TO_PUSH[@]}; do
+            for tag in ${TAGS_TO_PUSH}; do
               echo "${LOCAL_IMAGE_NAME}:${tag}"
             done
             echo 'EOF'
