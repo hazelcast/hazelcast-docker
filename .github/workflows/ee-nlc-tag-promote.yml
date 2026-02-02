@@ -63,19 +63,6 @@ jobs:
           jdk: ${{ matrix.jdk }}
           default-jdk: ${{ needs.prepare.outputs.default-jdk }}
 
-      - uses: hazelcast/docker-actions/get-jfrog-credentials@master
-        id: authenticate-jfrog-snapshot-internal
-        with:
-          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
-          jfrog-oidc-provider-name: ${{ github.repository_owner }}-snapshot-internal
-
-      - name: Login to JFrog
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.url }}
-          username: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.user }}
-          password: ${{ steps.authenticate-jfrog-snapshot-internal.outputs.token }}
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
@@ -102,7 +89,7 @@ jobs:
           do
             skopeo copy \
               --all \
-              docker://${{ steps.authenticate-jfrog-snapshot-internal.outputs.url }}/${{ vars.PREPROD_REGISTRY }}/${NLC_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+              docker://${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}/${NLC_IMAGE_NAME}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
               docker://${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}/${NLC_IMAGE_NAME}:${tag}
           done
         env:

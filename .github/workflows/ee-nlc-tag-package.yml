@@ -158,28 +158,36 @@ jobs:
           name: docker-logs-tag-image-push-nlc-${{ steps.get-tags-to-push.outputs.primary-tag }}
           path: docker.log
 
-      - uses: hazelcast/docker-actions/get-jfrog-credentials@master
-        id: authenticate-jfrog-write-dev-account
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
-          jfrog-oidc-provider-name: ${{ github.repository_owner }}-write-dev-account
+          role-to-assume: ${{ secrets.AWS_DEV_INFRA_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: 'us-east-1'
 
-      - uses: docker/login-action@v3
+      - name: Get Secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
         with:
-          registry: ${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}
-          username: ${{ steps.authenticate-jfrog-write-dev-account.outputs.user }}
-          password: ${{ steps.authenticate-jfrog-write-dev-account.outputs.token }}
+          secret-ids: |
+            NLC/IMAGE_REGISTRY
+          parse-json-secrets: true
+
+      - name: Login to NLC registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.NLC_IMAGE_REGISTRY_URL }}
+          username: ${{ env.NLC_IMAGE_REGISTRY_USERNAME }}
+          password: ${{ env.NLC_IMAGE_REGISTRY_TOKEN }}
 
       - name: Push image to remote registry
         run: |
           # Skopeo expects HTTPS registry but local is HTTP
-          skopeo sync \
+          skopeo copy \
             --all \
             --src-tls-verify=false \
-            --src docker \
-            --dest docker \
-            ${LOCAL_IMAGE_NAME} \
-            ${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}/${{ vars.PREPROD_REGISTRY }}
+            docker://${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            docker://${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}/${NLC_IMAGE_NAME}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+        env:
+          NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
 
   failure-notifications:
     name: Failure notification
