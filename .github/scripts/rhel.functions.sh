@@ -54,18 +54,32 @@ __sync_tags()
 }
 
 contains_all_expected_tags() {
-  local actual_tags=$1
-  local expected_tags=$2
+  local expected_tags=$1
+  local actual_tags=$2
 
   for expected_tag in ${expected_tags}
   do
-      for actual_tag in ${actual_tags}
-      do
-        if [[ "${expected_tag}" == "${actual_tag}" ]]; then
-          echodebug "${expected_tag} found in ${actual_tags}"
-          return 0
-        fi
-      done
+    if contains_expected_tag "${expected_tag}" "${actual_tags}"; then
+      echodebug "${expected_tag} found in ${actual_tags}"
+    else
+      return 1
+    fi
+  done
+
+  echo "${expected_tag} not found in ${actual_tags}"
+  return 0
+}
+
+contains_expected_tag() {
+  local expected_tag=$1
+  local actual_tags=$2
+
+  for actual_tag in ${actual_tags}
+  do
+    if [[ "${expected_tag}" == "${actual_tag}" ]]; then
+      echodebug "${expected_tag} found in ${actual_tags}"
+      return 0
+    fi
   done
 
   echo "${expected_tag} not found in ${actual_tags}"
@@ -125,7 +139,7 @@ check_image_tags()
 
     echodebug "Checking actual tags (${actual_tags}) contains all expected tags (${expected_tags})"
 
-    if contains_all_expected_tags "${actual_tags}" "${expected_tags}"; then
+    if contains_all_expected_tags "${expected_tags}" "${actual_tags}"; then
       return 0
     else 
       echo "Resyncing tags"
