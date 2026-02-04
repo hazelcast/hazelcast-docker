@@ -59,10 +59,13 @@ contains_all_expected_tags() {
 
   for expected_tag in ${expected_tags}
   do
-      if grep --fixed-strings --line-regexp --silent "${expected_tag}" <<< "${actual_tags}"; then
-        echodebug "${expected_tag} found in ${actual_tags}"
-        return 0
-      fi
+      for actual_tag in ${actual_tags}
+      do
+        if [[ "${expected_tag}" == "${actual_tag}" ]]; then
+          echodebug "${expected_tag} found in ${actual_tags}"
+          return 0
+        fi
+      done
   done
 
   echo "${expected_tag} not found in ${actual_tags}"
