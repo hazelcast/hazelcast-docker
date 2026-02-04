@@ -53,7 +53,7 @@ __sync_tags()
   return 0
 }
 
-__contains_all_expected_tags() {
+contains_all_expected_tags() {
   local actual_tags=$1
   local expected_tags=$2
 
@@ -61,13 +61,12 @@ __contains_all_expected_tags() {
   do
       if grep --fixed-strings --line-regexp --silent "${expected_tag}" <<< "${actual_tags}"; then
         echodebug "${expected_tag} found in ${actual_tags}"
-      else
-        echo "${expected_tag} not found in ${actual_tags}"
-        return 1
+        return 0
       fi
   done
 
-  return 0
+  echo "${expected_tag} not found in ${actual_tags}"
+  return 1
 }
 
 # Blocks/waits until the specified image operation is completed
@@ -123,7 +122,7 @@ check_image_tags()
 
     echodebug "Checking actual tags (${actual_tags}) contains all expected tags (${expected_tags})"
 
-    if __contains_all_expected_tags "${actual_tags}" "${expected_tags}"; then
+    if contains_all_expected_tags "${actual_tags}" "${expected_tags}"; then
       return 0
     else 
       echo "Resyncing tags"
