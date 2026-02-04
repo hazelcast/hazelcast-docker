@@ -21,41 +21,35 @@ jobs:
         run: |
           echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> ${GITHUB_ENV}
 
-      - name: Calculate tag name
-        run: |
-          echo "TAG_NAME=v${BRANCH_NAME}" >> ${GITHUB_ENV}
+      - uses: ./.github/actions/get-tag-name
+        id: tag-name
+        with:
+          SOURCE_REF: ${{ env.BRANCH_NAME }}
 
-      - name: Check `${{ env.TAG_NAME }}` tag exists
+      - name: Check `${{ steps.tag-name.outputs.TAG_NAME }}` tag exists
         run: |
-          if ! gh release view --repo ${GITHUB_REPOSITORY} ${TAG_NAME}; then
-            echo "::notice::\"${TAG_NAME}\" tag not found to replace, skipping" 
+          if ! gh release view --repo ${GITHUB_REPOSITORY} ${{ steps.tag-name.outputs.TAG_NAME }}; then
+            echo "::notice::\"${{ steps.tag-name.outputs.TAG_NAME }}\" tag not found to replace, skipping" 
             echo "SKIP=true" >> ${GITHUB_ENV}
           fi
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - uses: actions/checkout@v6
-        if: ${{ env.SKIP != 'true' }}
-        with:
-          ref: ${{ env.BRANCH_NAME }}
-          fetch-depth: 0
-
-      - name: List tags
-        if: runner.debug == '1'
-        run: |
-          git tag --list
-
-      - name: Recreate `${{ env.TAG_NAME }}` tag
+      - name: Recreate `${{ steps.tag-name.outputs.TAG_NAME }}` tag
         if: ${{ env.SKIP != 'true' }}
         run: |
-          # Delete local tag
-          git tag -d ${TAG_NAME}
-
-          # Create local tag
-          git tag ${TAG_NAME} origin/${BRANCH_NAME}
-
           # Delete remote tag
-          git push origin :refs/tags/${TAG_NAME}
+          gh api \
+              -X DELETE \
+              repos/${GITHUB_REPOSITORY}/git/refs/tags/${{ steps.tag-name.outputs.TAG_NAME }}
+
+          SHA=$(gh api \
+            repos/${GITHUB_REPOSITORY}/git/ref/heads/${BRANCH_NAME} \
+            --jq .object.sha)
 
           # Create remote tag
-          git push origin ${TAG_NAME}
+          gh api \
+            -X POST \
+            repos/${GITHUB_REPOSITORY}/git/refs \
+            -f ref=refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \
+            -f sha="${SHA}"
