@@ -84,8 +84,11 @@ await_image_operation()
     # Print request for status purposes
     jq <<< "${request}"
 
+    local status
+    status=$(jq -r '.data[-1].status' <<< "${request}")
+
     # Check the status of the most recent repository entry
-    case "$(jq -r '.data[-1].status' <<< "${request}")" in
+    case "${status}" in
       "completed")
         echo "Image '${image_id}' ${operation} operation completed"
         return 0
@@ -97,7 +100,7 @@ await_image_operation()
         return 1
         ;;
       *)
-        echo "Image '${image_id}' still not finished ${operation}, waiting..."
+        echo "Image '${image_id}' still not finished ${operation} (is ${status}), waiting..."
         sleep 5
         ;;
     esac
