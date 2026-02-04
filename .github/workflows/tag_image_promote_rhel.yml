@@ -211,7 +211,7 @@ jobs:
           . .github/scripts/rhel.functions.sh
 
           jq --raw-output '.[]' <<< '${{ steps.preflight.outputs.IMAGE_IDS }}' | while read IMAGE_ID; do
-            test_image_tags \
+            check_image_tags \
               "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" \
               "${IMAGE_ID}" \
               "${REDHAT_ROBOT_RHEL_API_KEY}" \

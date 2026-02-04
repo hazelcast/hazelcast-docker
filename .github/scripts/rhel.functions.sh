@@ -105,7 +105,7 @@ await_image_operation()
 }
 
 # Checks image has expected tags - if not, calls "sync-tags" until it does
-test_image_tags()
+check_image_tags()
 {
   local project_id=$1
   local image_id=$2
