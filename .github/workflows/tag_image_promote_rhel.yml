@@ -172,20 +172,20 @@ jobs:
           fi
 
       - name: Await publishing
+        # Although we use autopublish, this simply triggers an asynchronous process on the server side
+        # To _try_ to attain republish atomicity, we want to await the successful publishing of the new, unique tag _before_ we push (and implicitly replace) the existing tags
+        # Otherwise we'd replace a published image with an unpublished one
         timeout-minutes: 240
         run: |
           set -o errexit ${RUNNER_DEBUG:+-x}
 
           . .github/scripts/rhel.functions.sh
 
-          # Although we use autopublish, this simply triggers an asynchronous process on the server side
-          # To _try_ to attain republish atomicity, we want to await the successful publishing of the new, unique tag _before_ we push (and implicitly replace) the existing tags
-          # Otherwise we'd replace a published image with an unpublished one
-
           jq --raw-output '.[]' <<< '${{ steps.preflight.outputs.IMAGE_IDS }}' | while read IMAGE_ID; do
-            await_image_publish \
+            await_image_operation \
               "${IMAGE_ID}" \
-              "${REDHAT_ROBOT_RHEL_API_KEY}"
+              "${REDHAT_ROBOT_RHEL_API_KEY}" \
+              "publish"
           done
 
       - name: Copy remaining tags to RedHat Container Registry
@@ -196,6 +196,26 @@ jobs:
               --all \
               docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }} \
               docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${tag}
+          done
+        env:
+          TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
+
+      - name: Check tags published
+        # Just because the tag has been pushed to the registry, does not guarantee it's accessible
+        # RedHat has a `sync-tags` operation that is performed asynchronously after publish - and there have been scenarios where this has gone wrong and the tag is not accessible
+        # As such, await completion and test 
+        timeout-minutes: 240
+        run: |
+          set -o errexit ${RUNNER_DEBUG:+-x}
+
+          . .github/scripts/rhel.functions.sh
+
+          jq --raw-output '.[]' <<< '${{ steps.preflight.outputs.IMAGE_IDS }}' | while read IMAGE_ID; do
+            check_image_tags \
+              "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" \
+              "${IMAGE_ID}" \
+              "${REDHAT_ROBOT_RHEL_API_KEY}" \
+              "${TAGS_TO_PUSH}"
           done
         env:
           TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
