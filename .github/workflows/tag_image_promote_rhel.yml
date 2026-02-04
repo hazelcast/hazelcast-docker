@@ -190,7 +190,7 @@ jobs:
 
       - name: Copy remaining tags to RedHat Container Registry
         run: |
-          for tag in ${TAGS_TO_PUSH[@]}
+          for tag in ${TAGS_TO_PUSH}
           do
             skopeo copy \
               --all \

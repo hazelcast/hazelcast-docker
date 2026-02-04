@@ -85,7 +85,7 @@ jobs:
 
       - name: Push image to remote registry
         run: |
-          for tag in ${TAGS_TO_PUSH[@]}
+          for tag in ${TAGS_TO_PUSH}
           do
             skopeo copy \
               --all \
