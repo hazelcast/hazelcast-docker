@@ -1,0 +1,103 @@
+name: Promote image from pre-prod to live
+
+on:
+  workflow_dispatch:
+    inputs:
+      VERSION:
+        description: 'The version to promote'
+        required: true
+      RELEASE_TYPE:
+        description: 'What should be promoted'
+        required: true
+        type: choice
+        options:
+          - ALL
+          - OSS
+          - EE
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: environment
+      distinct_id:
+        description: 'Required exclusively for automated execution to track status of workflow execution'
+        required: false
+  workflow_call:
+    inputs:
+      VERSION:
+        description: 'The version to promote'
+        required: true
+        type: string
+      RELEASE_TYPE:
+        description: 'What should be promoted'
+        required: true
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
+
+jobs:
+  tag:
+    runs-on: ubuntu-slim
+    steps:
+        # https://github.com/Codex-/return-dispatch#receiving-repository-action
+      - name: Logging distinct ID (${{ github.event.inputs.distinct_id }})
+        run: echo ${{ github.event.inputs.distinct_id }}
+
+      - uses: hazelcast/docker-actions/get-tag-name@master
+        id: tag-name
+        with:
+          VERSION: ${{ inputs.VERSION }}
+
+      - name: Create `${{ steps.tag-name.outputs.TAG_NAME }}` tag
+        run: |
+          # Delete remote tag _if exists_
+          gh api \
+            -X DELETE \
+            repos/${GITHUB_REPOSITORY}/git/refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \
+            || true
+
+          SHA=$(gh api \
+            repos/${GITHUB_REPOSITORY}/git/ref/heads/${VERSION} \
+            --jq .object.sha)
+
+          # Create remote tag
+          gh api \
+            -X POST \
+            repos/${GITHUB_REPOSITORY}/git/refs \
+            -f ref=refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \
+            -f sha="${SHA}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.VERSION }}
+
+      - name: Create release
+        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1
+        with:
+          allowUpdates: true
+          tag: ${{ steps.tag-name.outputs.TAG_NAME }}
+
+  promote:
+    uses: ./.github/workflows/tag_image_promote.yml
+    with:
+      SOURCE_REF: ${{ inputs.VERSION }}
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
+      HZ_REVISION: ${{ inputs.VERSION }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+    secrets: inherit
+
+  promote-nlc:
+    if: inputs.RELEASE_TYPE != 'OSS'
+    uses: ./.github/workflows/ee-nlc-tag-promote.yml
+    with:
+      SOURCE_REF: ${{ inputs.VERSION }}
+      HZ_REVISION: ${{ inputs.VERSION }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+    secrets: inherit
+
+  readme:
+    needs: promote
+    uses: ./.github/workflows/update_readme.yml
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+    secrets: inherit
