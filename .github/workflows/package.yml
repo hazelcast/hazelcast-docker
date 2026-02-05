@@ -49,4 +49,3 @@ jobs:
       SOURCE_REF: ${{ inputs.VERSION }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
-
