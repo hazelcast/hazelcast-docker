@@ -16,6 +16,8 @@ jobs:
     env:
       BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
     steps:
+      - uses: actions/checkout@v6
+
       - name: Set branch name
         if: env.BRANCH_NAME == ''
         run: |
