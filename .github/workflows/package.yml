@@ -1,0 +1,52 @@
+name: Package images
+
+on:
+  workflow_dispatch:
+    inputs:
+      VERSION:
+        description: 'The version to build'
+        required: true
+      RELEASE_TYPE:
+        description: 'What should be built'
+        required: true
+        type: choice
+        options:
+          - ALL
+          - OSS
+          - EE
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: environment
+  workflow_call:
+    inputs:
+      VERSION:
+        description: 'The version to build'
+        required: true
+        type: string
+      RELEASE_TYPE:
+        description: 'What should be built'
+        required: true
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
+
+jobs:
+  package:
+    uses: ./.github/workflows/tag_image_package.yml
+    with:
+      SOURCE_REF: ${{ inputs.VERSION }}
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+    secrets: inherit
+
+  package-nlc:
+    if: inputs.RELEASE_TYPE != 'OSS'
+    uses: ./.github/workflows/ee-nlc-tag-package.yml
+    with:
+      SOURCE_REF: ${{ inputs.VERSION }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+    secrets: inherit
+
