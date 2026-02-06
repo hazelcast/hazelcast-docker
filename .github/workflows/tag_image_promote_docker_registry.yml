@@ -1,4 +1,4 @@
-name: Promote image to Docker registry
+name: Promote image from pre-prod to Docker registry
 
 on:
   # For debugging only
