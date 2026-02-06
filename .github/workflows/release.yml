@@ -37,6 +37,8 @@ jobs:
   tag:
     runs-on: ubuntu-slim
     steps:
+      - uses: actions/checkout@v6
+
       - uses: ./.github/actions/get-tag-name
         id: tag-name
         with:
@@ -46,9 +48,9 @@ jobs:
         run: |
           # Delete remote tag _if exists_
           gh api \
-              -X DELETE \
-              repos/${GITHUB_REPOSITORY}/git/refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \\
-              || true
+            -X DELETE \
+            repos/${GITHUB_REPOSITORY}/git/refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \
+            || true
 
           SHA=$(gh api \
             repos/${GITHUB_REPOSITORY}/git/ref/heads/${SOURCE_REF} \
