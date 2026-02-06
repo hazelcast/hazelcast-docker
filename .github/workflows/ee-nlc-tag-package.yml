@@ -1,6 +1,7 @@
 name: Package EE NLC image
 
 on:
+  # For debugging only
   workflow_dispatch:
     inputs:
       SOURCE_REF:

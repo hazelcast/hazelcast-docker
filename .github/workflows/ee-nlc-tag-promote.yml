@@ -1,6 +1,7 @@
 name: Promote EE NLC image
 
 on:
+  # For debugging only
   workflow_dispatch:
     inputs:
       VERSION:
