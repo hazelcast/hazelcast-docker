@@ -1,4 +1,4 @@
-name: Promote image
+name: Promote image from pre-prod to live registries
 
 on:
   workflow_dispatch:
