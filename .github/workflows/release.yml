@@ -82,6 +82,7 @@ jobs:
     secrets: inherit
 
   ee-nlc-tag-push:
+    if: inputs.RELEASE_TYPE != 'OSS'
     uses: ./.github/workflows/ee-nlc-tag-push.yml
     with:
       SOURCE_REF: ${{ inputs.SOURCE_REF }}
