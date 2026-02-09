@@ -1,6 +1,7 @@
 name: Do release
 
 on:
+  # For debugging only
   workflow_dispatch:
     inputs:
       SOURCE_REF:

@@ -1,6 +1,7 @@
 name: Promote image from pre-prod to prod registries
 
 on:
+  # For debugging only
   workflow_dispatch:
     inputs:
       VERSION:

@@ -1,6 +1,7 @@
 name: Promote EE NLC image from pre-prod to prod
 
 on:
+  # For debugging only
   workflow_dispatch:
     inputs:
       VERSION:

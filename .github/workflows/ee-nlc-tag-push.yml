@@ -1,6 +1,7 @@
 name: Build EE NLC image
 
 on:
+  # Triggered via Jenkins for SNAPSHOTs
   workflow_dispatch:
     inputs:
       SOURCE_REF:
