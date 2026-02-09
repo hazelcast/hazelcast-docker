@@ -38,12 +38,10 @@ jobs:
   tag:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: ./.github/actions/get-tag-name
+      - uses: hazelcast/docker-actions/get-tag-name@master
         id: tag-name
         with:
-          SOURCE_REF: ${{ inputs.SOURCE_REF }}
+          VERSION: ${{ inputs.SOURCE_REF }}
 
       - name: Create `${{ steps.tag-name.outputs.TAG_NAME }}` tag
         run: |
