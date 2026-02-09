@@ -1,6 +1,5 @@
 name: Package EE NLC image and deploy to pre-prod
 
-
 on:
   workflow_dispatch:
     inputs:
