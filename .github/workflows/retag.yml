@@ -16,17 +16,15 @@ jobs:
     env:
       BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
     steps:
-      - uses: actions/checkout@v6
-
       - name: Set branch name
         if: env.BRANCH_NAME == ''
         run: |
           echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> ${GITHUB_ENV}
 
-      - uses: ./.github/actions/get-tag-name
+      - uses: hazelcast/docker-actions/get-tag-name@master
         id: tag-name
         with:
-          SOURCE_REF: ${{ env.BRANCH_NAME }}
+          VERSION: ${{ env.BRANCH_NAME }}
 
       - name: Check `${{ steps.tag-name.outputs.TAG_NAME }}` tag exists
         run: |

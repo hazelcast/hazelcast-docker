@@ -1,6 +1,7 @@
 name: Do release
 
 on:
+  # For debugging only
   workflow_dispatch:
     inputs:
       VERSION:
@@ -37,12 +38,10 @@ jobs:
   tag:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: ./.github/actions/get-tag-name
+      - uses: hazelcast/docker-actions/get-tag-name@master
         id: tag-name
         with:
-          SOURCE_REF: ${{ inputs.VERSION }}
+          VERSION: ${{ inputs.VERSION }}
 
       - name: Create `${{ steps.tag-name.outputs.TAG_NAME }}` tag
         run: |
@@ -81,6 +80,7 @@ jobs:
     secrets: inherit
 
   ee-nlc-tag-push:
+    if: inputs.RELEASE_TYPE != 'OSS'
     uses: ./.github/workflows/ee-nlc-tag-push.yml
     with:
       SOURCE_REF: ${{ inputs.VERSION }}

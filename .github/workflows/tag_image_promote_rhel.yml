@@ -1,4 +1,4 @@
-name: Promote RHEL image
+name: Promote image from pre-prod to prod RedHat registry
 
 on:
   # For debugging only

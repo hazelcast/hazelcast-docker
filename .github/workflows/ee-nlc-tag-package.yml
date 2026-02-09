@@ -1,6 +1,7 @@
-name: Package EE NLC image
+name: Package EE NLC image and deploy to pre-prod
 
 on:
+  # For debugging only
   workflow_dispatch:
     inputs:
       SOURCE_REF:
