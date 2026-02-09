@@ -1,4 +1,4 @@
-name: Package image
+name: Package image and deploy to pre-prod
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: Promote EE NLC image
+name: Promote EE NLC image from pre-prod to prod
 
 on:
   workflow_dispatch:

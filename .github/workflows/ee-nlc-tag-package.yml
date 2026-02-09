@@ -1,4 +1,4 @@
-name: Package EE NLC image
+name: Package EE NLC image and deploy to pre-prod
 
 on:
   workflow_dispatch:
