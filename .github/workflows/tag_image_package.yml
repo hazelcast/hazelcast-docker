@@ -130,8 +130,6 @@ jobs:
           platforms: ${{ steps.platforms.outputs.platforms }}
           push: true
           tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
-          build-args: |
-            JDK_VERSION=${{ matrix.jdk }}
 
       - uses: hazelcast/docker-actions/get-jfrog-credentials@master
         id: authenticate-jfrog-write-dev-account

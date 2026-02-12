@@ -5,9 +5,6 @@ ARG HZ_VERSION=5.7.0-SNAPSHOT
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
-ARG USER_NAME="hazelcast"
-ARG USER_GROUP="hazelcast"
-ARG JDK_VERSION="21"
 
 FROM scratch AS get-distribution
 
@@ -24,7 +21,6 @@ ARG HZ_VERSION
 ARG HZ_HOME
 ARG USER_NAME
 ARG USER_GROUP
-ARG JDK_VERSION
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -46,9 +42,6 @@ LABEL name="Hazelcast Enterprise" \
       summary="Hazelcast Enterprise Image" \
       description="Hazelcast Enterprise Image"
 
-# Expose port
-EXPOSE 5701
-
 COPY licenses /licenses
 COPY --from=get-distribution /tmp/hz/ /tmp/hz/
 
@@ -67,17 +60,3 @@ RUN echo "Upgrading packages" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
     && chmod +x ${HZ_HOME}/bin/*
-
-COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
-
-WORKDIR ${HZ_HOME}
-
-RUN echo "Adding non-root user" \
-    && groupadd --system ${USER_GROUP} \
-    && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME}
-USER ${USER_NAME}
-
-HEALTHCHECK CMD ["hz-healthcheck"]
-
-# Start Hazelcast server
-CMD ["hz", "start"]
