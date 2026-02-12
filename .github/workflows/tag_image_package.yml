@@ -74,17 +74,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.SOURCE_REF }}
-          path: source_path
-          sparse-checkout: ${{ matrix.distribution-type.docker-dir }}
-
-      - name: Setup Docker
-        uses: ./.github/actions/setup-docker
-        with:
-          platforms: linux/arm64,linux/amd64,linux/s390x
-
       - name: Download the distribution file
         uses: hazelcast/docker-actions/download-hz-dist@master
         id: download-hz-dist
@@ -107,20 +96,10 @@ jobs:
           # LTS is implicitly EE only
           is-latest-lts: ${{ matrix.distribution-type.label == 'ee' && needs.prepare.outputs.is-latest-lts == 'true' }}
 
-      - name: Determine labels
-        id: labels
-        if: ${{ inputs.HZ_REVISION != '' }}
-        run: |
-          echo "label=hazelcast.revision=${HZ_REVISION}" >> ${GITHUB_OUTPUT}
-        env:
-          HZ_REVISION: ${{ inputs.HZ_REVISION }}
-
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: source_path/${{ matrix.distribution-type.docker-dir }}
-          labels: ${{ steps.labels.outputs.label }}
-          platforms: ${{ steps.platforms.outputs.platforms }}
           push: true
           tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
 
