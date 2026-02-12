@@ -43,6 +43,7 @@ ENV HZ_HOME="${HZ_HOME}" \
 EXPOSE 5701
 
 COPY --from=get-distribution ${HZ_HOME} ${HZ_HOME}/
+COPY --from=get-distribution /tmp/hz/ /tmp/hz/
 
 # Install
 RUN echo "Upgrading packages" \
