@@ -82,7 +82,6 @@ jobs:
     with:
       SOURCE_REF: ${{ inputs.VERSION }}
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
-      HZ_REVISION: ${{ inputs.VERSION }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
 
@@ -91,7 +90,6 @@ jobs:
     uses: ./.github/workflows/ee-nlc-tag-promote.yml
     with:
       SOURCE_REF: ${{ inputs.VERSION }}
-      HZ_REVISION: ${{ inputs.VERSION }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
 
