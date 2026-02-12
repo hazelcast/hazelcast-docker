@@ -61,6 +61,14 @@ jobs:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
         classifier: ${{ fromJSON(needs.prepare.outputs.distribution-classifiers) }}
         distribution-type: ${{ fromJSON(needs.prepare.outputs.distribution-types) }}
+    env:
+      LOCAL_IMAGE_NAME: localhost:5000/${{ matrix.distribution-type.image-name }}
+      TEST_CONTAINER_NAME: hazelcast-test
+    services:
+      registry:
+        image: registry:latest
+        ports:
+          - 5000:5000
     steps:
       - uses: actions/checkout@v6
         with:
@@ -94,6 +102,13 @@ jobs:
           # LTS is implicitly EE only
           is-latest-lts: ${{ matrix.distribution-type.label == 'ee' && needs.prepare.outputs.is-latest-lts == 'true' }}
 
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: source_path/${{ matrix.distribution-type.docker-dir }}
+          push: true
+          tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+
       - uses: hazelcast/docker-actions/get-jfrog-credentials@master
         id: authenticate-jfrog-write-dev-account
         with:
@@ -106,12 +121,16 @@ jobs:
           username: ${{ steps.authenticate-jfrog-write-dev-account.outputs.user }}
           password: ${{ steps.authenticate-jfrog-write-dev-account.outputs.token }}
 
-      - name: Build and push image
-        uses: docker/build-push-action@v6
-        with:
-          context: source_path/${{ matrix.distribution-type.docker-dir }}
-          push: true
-          tags: ${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}/${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+      - name: Push image to remote registry
+        run: |
+          # Skopeo expects HTTPS registry but local is HTTP
+          skopeo sync \
+            --all \
+            --src-tls-verify=false \
+            --src docker \
+            --dest docker \
+            ${LOCAL_IMAGE_NAME} \
+            ${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}/${{ vars.PREPROD_REGISTRY }}
 
   failure-notifications:
     name: Failure notification
