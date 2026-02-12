@@ -15,7 +15,7 @@ ARG HZ_HOME
 ARG HAZELCAST_DISTRIBUTION_FILE_NAME="hazelcast-distribution.tar.gz"
 
 # Expects distribution file to be on the local filesystem within the build context
-ADD ${HAZELCAST_DISTRIBUTION_FILE_NAME} /tmp/hz
+ADD ${HAZELCAST_DISTRIBUTION_FILE_NAME} .
 
 
 FROM alpine:3
@@ -40,7 +40,7 @@ ENV HZ_HOME="${HZ_HOME}" \
 # Expose port
 EXPOSE 5701
 
-COPY --from=get-distribution /tmp/hz/ /tmp/hz/
+COPY --from=get-distribution . /tmp/hz/
 
 # Install
 RUN echo "Upgrading packages" \

@@ -15,7 +15,7 @@ ARG HZ_HOME
 ARG HAZELCAST_DISTRIBUTION_FILE_NAME="hazelcast-enterprise-distribution.tar.gz"
 
 # Expects distribution file to be on the local filesystem within the build context
-ADD ${HAZELCAST_DISTRIBUTION_FILE_NAME} /tmp/hz
+ADD ${HAZELCAST_DISTRIBUTION_FILE_NAME} .
 
 
 FROM redhat/ubi9-minimal:9.7
@@ -50,7 +50,7 @@ LABEL name="Hazelcast Enterprise" \
 EXPOSE 5701
 
 COPY licenses /licenses
-COPY --from=get-distribution /tmp/hz/ /tmp/hz/
+COPY --from=get-distribution . /tmp/hz/
 
 # Install
 RUN echo "Upgrading packages" \
