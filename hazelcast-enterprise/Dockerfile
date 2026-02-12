@@ -15,7 +15,7 @@ ARG HZ_HOME
 ARG HAZELCAST_DISTRIBUTION_FILE_NAME="hazelcast-enterprise-distribution.tar.gz"
 
 # Expects distribution file to be on the local filesystem within the build context
-COPY ${HAZELCAST_DISTRIBUTION_FILE_NAME} /tmp/hz
+ADD ${HAZELCAST_DISTRIBUTION_FILE_NAME} /tmp/hz
 
 RUN mkdir -p ${HZ_HOME} \
     # Distribution archive structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
