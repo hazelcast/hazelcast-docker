@@ -111,6 +111,8 @@ jobs:
           context: source_path/${{ matrix.distribution-type.docker-dir }}
           push: true
           tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+        env:
+          SOURCE_DATE_EPOCH: 0
 
       - uses: hazelcast/docker-actions/get-jfrog-credentials@master
         id: authenticate-jfrog-write-dev-account
