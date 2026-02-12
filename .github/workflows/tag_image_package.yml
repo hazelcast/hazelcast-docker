@@ -122,6 +122,10 @@ jobs:
         env:
           HZ_REVISION: ${{ inputs.HZ_REVISION }}
 
+      - name: Get Git commit timestamps
+        working-directory: source_path
+        run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> $GITHUB_ENV
+
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -132,6 +136,8 @@ jobs:
           tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
           build-args: |
             JDK_VERSION=${{ matrix.jdk }}
+        env:
+          SOURCE_DATE_EPOCH: ${{ env.TIMESTAMP }}
 
       - name: Delete the distribution file
         run: |
