@@ -80,17 +80,10 @@ jobs:
           path: source_path
           sparse-checkout: ${{ matrix.distribution-type.docker-dir }}
 
-      - name: Get supported platforms
-        id: platforms
-        uses: hazelcast/docker-actions/get-supported-platforms@master
-        with:
-          dockerfile: ${{ matrix.distribution-type.docker-dir }}/Dockerfile
-          jdk: ${{ matrix.jdk }}
-
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
         with:
-          platforms: ${{ steps.platforms.outputs.platforms }}
+          platforms: linux/arm64,linux/amd64,linux/s390x
 
       - name: Download the distribution file
         uses: hazelcast/docker-actions/download-hz-dist@master
