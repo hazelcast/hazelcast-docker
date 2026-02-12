@@ -25,11 +25,3 @@ jobs:
       RELEASE_TYPE: ALL
       ENVIRONMENT: test
     secrets: inherit
-
-  test-push-nlc:
-    name: Test pushing image
-    uses: ./.github/workflows/ee-nlc-tag-push.yml
-    with:
-      SOURCE_REF: ${{ github.ref }}
-      ENVIRONMENT: test
-    secrets: inherit

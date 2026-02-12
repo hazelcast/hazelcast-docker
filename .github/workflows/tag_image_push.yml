@@ -50,13 +50,3 @@ jobs:
       HZ_REVISION: ${{ inputs.HZ_REVISION }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
-
-  promote:
-    needs: package
-    uses: ./.github/workflows/tag_image_promote.yml
-    with:
-      VERSION: ${{ inputs.SOURCE_REF }}
-      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
-      HZ_REVISION: ${{ inputs.HZ_REVISION }}
-      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-    secrets: inherit

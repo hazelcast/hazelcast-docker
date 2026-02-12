@@ -44,12 +44,6 @@ COPY --from=get-distribution /tmp/hz/ /tmp/hz/
 
 # Install
 RUN echo "Upgrading packages" \
-    && apk upgrade --no-cache \
-    && echo "Installing new packages" \
-    && apk add --no-cache \
-        bash \
-        curl \
-        openjdk${JDK_VERSION}-jre-headless \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && rm -rf /var/cache/apk/* \
     && mkdir -p ${HZ_HOME} \

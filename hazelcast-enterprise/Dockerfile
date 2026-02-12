@@ -54,15 +54,6 @@ COPY --from=get-distribution /tmp/hz/ /tmp/hz/
 
 # Install
 RUN echo "Upgrading packages" \
-    && microdnf -y update --nodocs \
-    && echo "Installing new packages" \
-    && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
-        --disableplugin=subscription-manager install \
-        java-${JDK_VERSION}-openjdk-headless \
-        shadow-utils \
-        tar \
-        tzdata-java \
-        util-linux \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && microdnf -y clean all \
     && mkdir -p ${HZ_HOME} \
