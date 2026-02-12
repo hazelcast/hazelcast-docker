@@ -74,6 +74,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.SOURCE_REF }}
+          path: source_path
+          sparse-checkout: ${{ matrix.distribution-type.docker-dir }}
+
       - name: Download the distribution file
         uses: hazelcast/docker-actions/download-hz-dist@master
         id: download-hz-dist
