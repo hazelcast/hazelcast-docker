@@ -17,18 +17,6 @@ ARG HAZELCAST_DISTRIBUTION_FILE_NAME="hazelcast-distribution.tar.gz"
 # Expects distribution file to be on the local filesystem within the build context
 ADD ${HAZELCAST_DISTRIBUTION_FILE_NAME} /tmp/hz
 
-RUN mkdir -p ${HZ_HOME} \
-    # Distribution archive structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
-    # Move all the content up a level so that the path contains no version and is constant
-    && mv /tmp/hz/*/* ${HZ_HOME}/ \
-    && rm -rf /tmp/* \
-    && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
-    && echo "Granting read permission to ${HZ_HOME}" \
-    && chmod -R +r ${HZ_HOME} \
-    && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
-    && chmod +x ${HZ_HOME}/bin/*
-
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 
@@ -65,7 +53,19 @@ RUN echo "Upgrading packages" \
         curl \
         openjdk${JDK_VERSION}-jre-headless \
     && echo "Removing unnecessary packages and redundant files/folders" \
-    && rm -rf /var/cache/apk/* 
+    && rm -rf /var/cache/apk/* \
+    && mkdir -p ${HZ_HOME} \
+    # Distribution archive structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
+    # Move all the content up a level so that the path contains no version and is constant
+    && mv /tmp/hz/*/* ${HZ_HOME}/ \
+    && rm -rf /tmp/* \
+    && echo "Setting Pardot ID to 'docker'" \
+    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
+    && echo "Granting read permission to ${HZ_HOME}" \
+    && chmod -R +r ${HZ_HOME} \
+    && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
+    && chmod +x ${HZ_HOME}/bin/*
+ 
 
 WORKDIR ${HZ_HOME}
 
