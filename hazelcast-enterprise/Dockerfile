@@ -17,8 +17,6 @@ ARG HAZELCAST_DISTRIBUTION_FILE_NAME="hazelcast-enterprise-distribution.tar.gz"
 # Expects distribution file to be on the local filesystem within the build context
 ADD ${HAZELCAST_DISTRIBUTION_FILE_NAME} /tmp/hz
 
-COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
-
 
 FROM redhat/ubi9-minimal:9.7
 
@@ -52,7 +50,6 @@ LABEL name="Hazelcast Enterprise" \
 EXPOSE 5701
 
 COPY licenses /licenses
-COPY --from=get-distribution ${HZ_HOME} ${HZ_HOME}/
 COPY --from=get-distribution /tmp/hz/ /tmp/hz/
 
 # Install
@@ -79,6 +76,8 @@ RUN echo "Upgrading packages" \
     && chmod -R +r ${HZ_HOME} \
     && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
     && chmod +x ${HZ_HOME}/bin/*
+
+COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 WORKDIR ${HZ_HOME}
 
