@@ -1,4 +1,4 @@
-name: Promote image from pre-prod to live
+name: Promote image from pre-prod to prod
 
 on:
   workflow_dispatch:
