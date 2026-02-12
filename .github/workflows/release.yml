@@ -1,7 +1,6 @@
 name: Do release
 
 on:
-  # For debugging only
   workflow_dispatch:
     inputs:
       VERSION:
@@ -35,61 +34,18 @@ on:
         type: string
 
 jobs:
-  tag:
-    runs-on: ubuntu-slim
-    steps:
-      - uses: hazelcast/docker-actions/get-tag-name@master
-        id: tag-name
-        with:
-          VERSION: ${{ inputs.VERSION }}
-
-      - name: Create `${{ steps.tag-name.outputs.TAG_NAME }}` tag
-        run: |
-          # Delete remote tag _if exists_
-          gh api \
-            -X DELETE \
-            repos/${GITHUB_REPOSITORY}/git/refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \
-            || true
-
-          SHA=$(gh api \
-            repos/${GITHUB_REPOSITORY}/git/ref/heads/${SOURCE_REF} \
-            --jq .object.sha)
-
-          # Create remote tag
-          gh api \
-            -X POST \
-            repos/${GITHUB_REPOSITORY}/git/refs \
-            -f ref=refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \
-            -f sha="${SHA}"
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SOURCE_REF: ${{ inputs.VERSION }}
-
-      - name: Create release
-        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1
-        with:
-          allowUpdates: true
-          tag: ${{ steps.tag-name.outputs.TAG_NAME }}
-
-  tag-image-push:
-    uses: ./.github/workflows/tag_image_push.yml
+  package:
+    uses: ./.github/workflows/package.yml
     with:
-      SOURCE_REF: ${{ inputs.VERSION }}
+      VERSION: ${{ inputs.VERSION }}
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
 
-  ee-nlc-tag-push:
-    if: inputs.RELEASE_TYPE != 'OSS'
-    uses: ./.github/workflows/ee-nlc-tag-push.yml
+  promote:
+    uses: ./.github/workflows/promote.yml
     with:
-      SOURCE_REF: ${{ inputs.VERSION }}
-      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-    secrets: inherit
-
-  readme:
-    needs: tag-image-push
-    uses: ./.github/workflows/update_readme.yml
-    with:
+      VERSION: ${{ inputs.VERSION }}
+      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit

@@ -4,8 +4,8 @@ on:
   # For debugging only
   workflow_dispatch:
     inputs:
-      VERSION:
-        description: 'The version to promote'
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to promote'
         required: true
       RELEASE_TYPE:
         description: 'What should be promoted'
@@ -24,8 +24,8 @@ on:
         type: environment
   workflow_call:
     inputs:
-      VERSION:
-        description: 'The version to promote'
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to promote'
         required: true
         type: string
       RELEASE_TYPE:
@@ -45,7 +45,7 @@ jobs:
   prepare:
     uses: ./.github/workflows/tag_image_prepare.yml
     with:
-      SOURCE_REF: ${{ inputs.VERSION }}
+      SOURCE_REF: ${{ inputs.SOURCE_REF }}
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 

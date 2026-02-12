@@ -1,11 +1,10 @@
-name: Build OS and EE image
+name: Package all images and deploy to pre-prod
 
 on:
-  # Triggered via Jenkins for SNAPSHOTs
   workflow_dispatch:
     inputs:
-      SOURCE_REF:
-        description: 'The hazelcast-docker branch to build the image from'
+      VERSION:
+        description: 'The version to build'
         required: true
       RELEASE_TYPE:
         description: 'What should be built'
@@ -15,26 +14,19 @@ on:
           - ALL
           - OSS
           - EE
-      HZ_REVISION:
-        description: 'Commit id of Hazelcast snapshot jar'
-        required: false
       ENVIRONMENT:
         description: 'Environment to use'
         required: true
         type: environment
   workflow_call:
     inputs:
-      SOURCE_REF:
-        description: 'The hazelcast-docker branch to build the image from'
+      VERSION:
+        description: 'The version to build'
         required: true
         type: string
       RELEASE_TYPE:
         description: 'What should be built'
         required: true
-        type: string
-      HZ_REVISION:
-        description: 'Commit id of Hazelcast snapshot jar'
-        required: false
         type: string
       ENVIRONMENT:
         description: 'Environment to use'
@@ -45,18 +37,15 @@ jobs:
   package:
     uses: ./.github/workflows/tag_image_package.yml
     with:
-      SOURCE_REF: ${{ inputs.SOURCE_REF }}
+      SOURCE_REF: ${{ inputs.VERSION }}
       RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
-      HZ_REVISION: ${{ inputs.HZ_REVISION }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
 
-  promote:
-    needs: package
-    uses: ./.github/workflows/tag_image_promote.yml
+  package-nlc:
+    if: inputs.RELEASE_TYPE != 'OSS'
+    uses: ./.github/workflows/ee-nlc-tag-package.yml
     with:
-      SOURCE_REF: ${{ inputs.SOURCE_REF }}
-      RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
-      HZ_REVISION: ${{ inputs.HZ_REVISION }}
+      SOURCE_REF: ${{ inputs.VERSION }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
