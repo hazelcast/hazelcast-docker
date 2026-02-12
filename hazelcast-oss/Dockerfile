@@ -9,7 +9,7 @@ ARG USER_NAME="hazelcast"
 ARG USER_GROUP="hazelcast"
 ARG JDK_VERSION="21"
 
-FROM alpine:3 AS get-distribution
+FROM scratch AS get-distribution
 
 ARG HZ_HOME
 ARG HAZELCAST_DISTRIBUTION_FILE_NAME="hazelcast-distribution.tar.gz"
