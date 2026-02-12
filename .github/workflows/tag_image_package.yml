@@ -102,6 +102,9 @@ jobs:
           # LTS is implicitly EE only
           is-latest-lts: ${{ matrix.distribution-type.label == 'ee' && needs.prepare.outputs.is-latest-lts == 'true' }}
 
+      - name: Get hash
+        run: md5sum "source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.tar.gz"
+
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
