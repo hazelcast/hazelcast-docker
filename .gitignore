@@ -50,6 +50,5 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 
-hazelcast-oss/hazelcast-distribution.zip
-hazelcast-enterprise/hazelcast-enterprise-distribution.zip
-
+hazelcast-oss/hazelcast-distribution.tar.gz
+hazelcast-enterprise/hazelcast-enterprise-distribution.tar.gz

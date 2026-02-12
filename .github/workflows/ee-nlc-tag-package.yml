@@ -83,10 +83,10 @@ jobs:
             subdir=
           fi
 
-          S3_NLC_ZIP_URL=${S3_NLC_URL}${subdir}/hazelcast-enterprise-${{ needs.prepare.outputs.hz-version }}-nlc.zip
-          OUTPUT_FILE=source_path/${DOCKER_DIR}/hazelcast-enterprise-distribution.zip
+          S3_NLC_DISTRIBUTION_URL=${S3_NLC_URL}${subdir}/hazelcast-enterprise-${{ needs.prepare.outputs.hz-version }}-nlc.tar.gz
+          OUTPUT_FILE=source_path/${DOCKER_DIR}/hazelcast-enterprise-distribution.tar.gz
 
-          aws s3 cp "${S3_NLC_ZIP_URL}" "${OUTPUT_FILE}" --no-progress
+          aws s3 cp "${S3_NLC_DISTRIBUTION_URL}" "${OUTPUT_FILE}" --no-progress
 
           echo "output_file=${OUTPUT_FILE}" >> "${GITHUB_OUTPUT}"
         env:

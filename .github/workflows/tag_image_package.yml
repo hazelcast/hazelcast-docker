@@ -101,8 +101,8 @@ jobs:
           distribution: ${{ matrix.distribution-type.distribution }}
           hz_version: ${{ needs.prepare.outputs.hz-version }}
           classifier: ${{ matrix.classifier }}
-          packaging: "zip"
-          output_file: "source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
+          packaging: "tar.gz"
+          output_file: "source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.tar.gz"
 
       - id: get-tags-to-push
         uses: ./.github/actions/get-tags-to-push

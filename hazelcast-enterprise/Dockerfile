@@ -12,18 +12,15 @@ ARG JDK_VERSION="21"
 FROM alpine:3 AS get-distribution
 
 ARG HZ_HOME
-ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-enterprise-distribution.zip"
+ARG HAZELCAST_DISTRIBUTION_FILE_NAME="hazelcast-enterprise-distribution.tar.gz"
 
-# Expects distribution ZIP to be on the local filesystem within the build context
-COPY ${HAZELCAST_ZIP_FILE_NAME} /tmp/
+# Expects distribution file to be on the local filesystem within the build context
+COPY ${HAZELCAST_DISTRIBUTION_FILE_NAME} /tmp/hz
 
 RUN mkdir -p ${HZ_HOME} \
-    && apk add --no-cache unzip \
-    && unzip -qq /tmp/${HAZELCAST_ZIP_FILE_NAME} -d /tmp/hz \
-    # Distribution ZIP structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
+    # Distribution archive structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
     # Move all the content up a level so that the path contains no version and is constant
     && mv /tmp/hz/*/* ${HZ_HOME}/ \
-    && apk del unzip \
     && rm -rf /tmp/* \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
