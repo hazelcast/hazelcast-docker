@@ -6,20 +6,10 @@ ARG HZ_VERSION=5.7.0-SNAPSHOT
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
 
-FROM scratch AS get-distribution
+FROM scratch
 
 ARG HZ_HOME
 ARG HAZELCAST_DISTRIBUTION_FILE_NAME="hazelcast-distribution.tar.gz"
 
 # Expects distribution file to be on the local filesystem within the build context
 ADD ${HAZELCAST_DISTRIBUTION_FILE_NAME} /tmp/hz
-
-
-FROM alpine:3
-
-ARG HZ_HOME
-ARG USER_NAME
-ARG USER_GROUP
-
-COPY --from=get-distribution /tmp/hz/ /tmp/hz/
-

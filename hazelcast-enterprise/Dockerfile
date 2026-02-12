@@ -6,29 +6,10 @@ ARG HZ_VERSION=5.7.0-SNAPSHOT
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
 
-FROM scratch AS get-distribution
+FROM scratch
 
 ARG HZ_HOME
 ARG HAZELCAST_DISTRIBUTION_FILE_NAME="hazelcast-enterprise-distribution.tar.gz"
 
 # Expects distribution file to be on the local filesystem within the build context
 ADD ${HAZELCAST_DISTRIBUTION_FILE_NAME} /tmp/hz
-
-
-FROM redhat/ubi9-minimal:9.7
-
-ARG HZ_VERSION
-ARG HZ_HOME
-ARG USER_NAME
-ARG USER_GROUP
-
-LABEL name="Hazelcast Enterprise" \
-      maintainer="info@hazelcast.com" \
-      vendor="Hazelcast, Inc." \
-      version="${HZ_VERSION}" \
-      release="1" \
-      summary="Hazelcast Enterprise Image" \
-      description="Hazelcast Enterprise Image"
-
-COPY licenses /licenses
-COPY --from=get-distribution /tmp/hz/ /tmp/hz/
