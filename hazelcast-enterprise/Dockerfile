@@ -22,18 +22,6 @@ ARG HZ_HOME
 ARG USER_NAME
 ARG USER_GROUP
 
-# Runtime variables
-ENV HZ_HOME="${HZ_HOME}" \
-    CLASSPATH_DEFAULT="${HZ_HOME}/*" \
-    JAVA_OPTS_DEFAULT="-Djava.net.preferIPv4Stack=true -XX:MaxRAMPercentage=80.0" \
-    PROMETHEUS_PORT="" \
-    PROMETHEUS_CONFIG="${HZ_HOME}/config/jmx_agent_config.yaml" \
-    CLASSPATH="" \
-    JAVA_OPTS="" \
-    HAZELCAST_CONFIG=config/hazelcast-docker.xml \
-    LANG=C.UTF-8 \
-    PATH=${HZ_HOME}/bin:$PATH
-
 LABEL name="Hazelcast Enterprise" \
       maintainer="info@hazelcast.com" \
       vendor="Hazelcast, Inc." \
@@ -44,19 +32,3 @@ LABEL name="Hazelcast Enterprise" \
 
 COPY licenses /licenses
 COPY --from=get-distribution /tmp/hz/ /tmp/hz/
-
-# Install
-RUN echo "Upgrading packages" \
-    && echo "Removing unnecessary packages and redundant files/folders" \
-    && microdnf -y clean all \
-    && mkdir -p ${HZ_HOME} \
-    # Distribution archive structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
-    # Move all the content up a level so that the path contains no version and is constant
-    && mv /tmp/hz/*/* ${HZ_HOME}/ \
-    && rm -rf /tmp/* \
-    && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
-    && echo "Granting read permission to ${HZ_HOME}" \
-    && chmod -R +r ${HZ_HOME} \
-    && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
-    && chmod +x ${HZ_HOME}/bin/*
