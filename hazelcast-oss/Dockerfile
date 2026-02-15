@@ -77,7 +77,6 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
     && echo "Installing new packages" \
     && apk add --no-cache --no-logfile \
         bash \
-        curl \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && rm -rf /var/cache/apk/* \
     && find / -newer /tmp/.timestamp-marker -xdev \
