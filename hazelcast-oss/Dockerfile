@@ -39,12 +39,11 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml /build_root$
 # Normalize timestamps for reproducible layer
 RUN find /build_root -exec touch -h -t 202307011700.00 {} +
 
-FROM alpine:3
+FROM eclipse-temurin:${JDK_VERSION}-jre-alpine
 
 ARG HZ_HOME
 ARG USER_NAME
 ARG USER_GROUP
-ARG JDK_VERSION
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -70,7 +69,6 @@ RUN echo "Upgrading packages" \
     && apk add --no-cache \
         bash \
         curl \
-        openjdk${JDK_VERSION}-jre-headless \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && rm -rf /var/cache/apk/* 
 
