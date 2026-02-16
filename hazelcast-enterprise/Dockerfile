@@ -41,7 +41,7 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml /build_root$
 # Normalize timestamps for reproducible layer
 RUN find /build_root -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
 
-FROM redhat/ubi9-minimal:9.7
+FROM eclipse-temurin:${JDK_VERSION}-jre-ubi9-minimal
 
 ARG HZ_VERSION
 ARG HZ_HOME
@@ -78,24 +78,19 @@ COPY licenses /licenses
 COPY --link --from=get-distribution /build_root/ /
 
 # Install
-RUN echo "Upgrading packages" \
+RUN touch /tmp/.timestamp-marker && sleep 1 \
+    && echo "Adding non-root user" \
+    && groupadd --system ${USER_GROUP} \
+    && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME} \
+    && echo "Upgrading packages" \
     && microdnf -y update --nodocs \
-    && echo "Installing new packages" \
-    && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
-        --disableplugin=subscription-manager install \
-        java-${JDK_VERSION}-openjdk-headless \
-        shadow-utils \
-        tar \
-        tzdata-java \
-        util-linux \
     && echo "Removing unnecessary packages and redundant files/folders" \
-    && microdnf -y clean all
+    && microdnf -y clean all \
+    && find / -depth -newer /tmp/.timestamp-marker -xdev \
+            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; rm -f /tmp/.timestamp-marker; touch -d "@$SOURCE_DATE_EPOCH" /tmp
 
 WORKDIR ${HZ_HOME}
 
-RUN echo "Adding non-root user" \
-    && groupadd --system ${USER_GROUP} \
-    && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME}
 USER ${USER_NAME}
 
 HEALTHCHECK CMD ["hz-healthcheck"]
