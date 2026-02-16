@@ -8,32 +8,38 @@ ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
 ARG USER_GROUP="hazelcast"
 ARG JDK_VERSION="21"
+ARG SOURCE_DATE_EPOCH=1688223600
 
 FROM alpine:3 AS get-distribution
 
 ARG HZ_HOME
+ARG SOURCE_DATE_EPOCH
 ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-enterprise-distribution.zip"
 
 # Expects distribution ZIP to be on the local filesystem within the build context
 COPY ${HAZELCAST_ZIP_FILE_NAME} /tmp/
 
-RUN mkdir -p ${HZ_HOME} \
+ENV SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH
+
+RUN mkdir -p /build_root${HZ_HOME} \
     && apk add --no-cache unzip \
     && unzip -qq /tmp/${HAZELCAST_ZIP_FILE_NAME} -d /tmp/hz \
     # Distribution ZIP structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
     # Move all the content up a level so that the path contains no version and is constant
-    && mv /tmp/hz/*/* ${HZ_HOME}/ \
+    && mv /tmp/hz/*/* /build_root${HZ_HOME}/ \
     && apk del unzip \
     && rm -rf /tmp/* \
     && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
-    && echo "Granting read permission to ${HZ_HOME}" \
-    && chmod -R +r ${HZ_HOME} \
+    && echo 'hazelcastDownloadId=docker' > "/build_root${HZ_HOME}/lib/hazelcast-download.properties" \
+    && echo "Granting read permission to /build_root${HZ_HOME}" \
+    && chmod -R +r /build_root${HZ_HOME} \
     && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
-    && chmod +x ${HZ_HOME}/bin/*
+    && chmod +x /build_root${HZ_HOME}/bin/*
 
-COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
+COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml /build_root${HZ_HOME}/config/
 
+# Normalize timestamps for reproducible layer
+RUN find /build_root -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
 
 FROM redhat/ubi9-minimal:9.7
 
@@ -42,6 +48,7 @@ ARG HZ_HOME
 ARG USER_NAME
 ARG USER_GROUP
 ARG JDK_VERSION
+ARG SOURCE_DATE_EPOCH
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -53,7 +60,8 @@ ENV HZ_HOME="${HZ_HOME}" \
     JAVA_OPTS="" \
     HAZELCAST_CONFIG=config/hazelcast-docker.xml \
     LANG=C.UTF-8 \
-    PATH=${HZ_HOME}/bin:$PATH
+    PATH=${HZ_HOME}/bin:$PATH \
+    SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH
 
 LABEL name="Hazelcast Enterprise" \
       maintainer="info@hazelcast.com" \
@@ -67,7 +75,7 @@ LABEL name="Hazelcast Enterprise" \
 EXPOSE 5701
 
 COPY licenses /licenses
-COPY --from=get-distribution ${HZ_HOME} ${HZ_HOME}/
+COPY --link --from=get-distribution /build_root/ /
 
 # Install
 RUN echo "Upgrading packages" \
