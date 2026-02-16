@@ -81,7 +81,7 @@ jobs:
 
       - name: Get supported platforms
         id: platforms
-        uses: hazelcast/docker-actions/get-supported-platforms@master
+        uses: hazelcast/docker-actions/get-supported-platforms@no-s390x-in-os
         with:
           dockerfile: ${{ matrix.distribution-type.docker-dir }}/Dockerfile
           jdk: ${{ matrix.jdk }}
