@@ -70,7 +70,9 @@ COPY licenses /licenses
 COPY --from=get-distribution ${HZ_HOME} ${HZ_HOME}/
 
 # Install
-RUN echo "Installing new packages" \
+RUN echo "Upgrading packages" \
+    && microdnf -y update --nodocs \
+    && echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
         --disableplugin=subscription-manager install \
         java-${JDK_VERSION}-openjdk-headless \
