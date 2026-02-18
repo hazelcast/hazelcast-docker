@@ -79,6 +79,7 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
     && apk add --no-cache --no-logfile \
         openjdk${JDK_VERSION}-jre-headless \
         bash \
+        curl \
     && echo "Regenerating Java cacerts with SOURCE_DATE_EPOCH for reproducibility" \
     && trust extract --overwrite --format=java-cacerts --filter=ca-anchors \
         --purpose server-auth /etc/ssl/certs/java/cacerts \
