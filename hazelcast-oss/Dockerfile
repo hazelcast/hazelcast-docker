@@ -43,8 +43,9 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml /build_root$
 # Normalize timestamps for reproducible layer
 RUN find /build_root -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
 
-FROM eclipse-temurin:${JDK_VERSION}-jre-alpine
+FROM alpine:3
 
+ARG JDK_VERSION
 ARG HZ_HOME
 ARG USER_NAME
 ARG USER_GROUP
@@ -76,7 +77,11 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
     && apk upgrade --no-cache --no-logfile \
     && echo "Installing new packages" \
     && apk add --no-cache --no-logfile \
+        openjdk${JDK_VERSION}-jre-headless \
         bash \
+    && echo "Regenerating Java cacerts with SOURCE_DATE_EPOCH for reproducibility" \
+    && trust extract --overwrite --format=java-cacerts --filter=ca-anchors \
+        --purpose server-auth /etc/ssl/certs/java/cacerts \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && rm -rf /var/cache/apk/* \
     && find / -newer /tmp/.timestamp-marker -xdev \
