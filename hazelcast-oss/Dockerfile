@@ -21,8 +21,6 @@ ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-distribution.zip"
 # Expects distribution ZIP to be on the local filesystem within the build context
 COPY ${HAZELCAST_ZIP_FILE_NAME} /tmp/
 
-ENV SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH
-
 RUN mkdir -p /build_root${HZ_HOME} \
     && apk add --no-cache unzip \
     && unzip -qq /tmp/${HAZELCAST_ZIP_FILE_NAME} -d /tmp/hz \
@@ -85,6 +83,7 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
         --purpose server-auth /etc/ssl/certs/java/cacerts \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && rm -rf /var/cache/apk/* \
+    && echo "Fixing non-deterministic files for reproducibility" \
     && find / -newer /tmp/.timestamp-marker -xdev \
             -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; rm -f /tmp/.timestamp-marker; touch -d "@$SOURCE_DATE_EPOCH" /tmp
 
