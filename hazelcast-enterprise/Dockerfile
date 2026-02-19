@@ -21,8 +21,6 @@ ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-enterprise-distribution.zip"
 # Expects distribution ZIP to be on the local filesystem within the build context
 COPY ${HAZELCAST_ZIP_FILE_NAME} /tmp/
 
-ENV SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH
-
 RUN mkdir -p /build_root${HZ_HOME} \
     && apk add --no-cache unzip \
     && unzip -qq /tmp/${HAZELCAST_ZIP_FILE_NAME} -d /tmp/hz \
@@ -43,46 +41,33 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml /build_root$
 # Normalize timestamps for reproducible layer
 RUN find /build_root -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
 
-# Intermediate stage: apply all system modifications on top of the base image.
-# The final image copies the result onto scratch, which avoids non-deterministic
-# whiteout entries that RPM-based package updates create in layer diffs.
-FROM eclipse-temurin:${JDK_VERSION}-jre-ubi9-minimal AS runtime-setup
+FROM eclipse-temurin:${JDK_VERSION}-jre-ubi9-minimal
 
 ARG HZ_HOME
 ARG USER_NAME
 ARG USER_GROUP
 ARG SOURCE_DATE_EPOCH
 
-ENV SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH
-
 COPY licenses /licenses
 
-RUN echo "Adding non-root user" \
+COPY --link --from=get-distribution /build_root/ /
+
+RUN touch /tmp/.timestamp-marker && sleep 1 \
+    && echo "Adding non-root user" \
     && groupadd --system ${USER_GROUP} \
     && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME} \
+    && chage -d 0 ${USER_NAME} \
     && echo "Upgrading packages" \
     && microdnf -y update --nodocs \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && microdnf -y clean all \
+    && truncate -s 0 /var/cache/ldconfig/aux-cache \
+    && truncate -s 0 /var/lib/dnf/history.sqlite* \
     && echo "Fixing non-deterministic files for reproducibility" \
-    && EPOCH_DAYS=$((SOURCE_DATE_EPOCH / 86400)) \
-    && sed -i "s/^\(${USER_NAME}:[^:]*:\)[0-9]*:/\1${EPOCH_DAYS}:/" /etc/shadow \
-    && sed -i "s/^\(${USER_NAME}:[^:]*:\)[0-9]*:/\1${EPOCH_DAYS}:/" /etc/shadow- \
-    && rm -f /var/cache/ldconfig/aux-cache \
-    && rm -f /var/lib/dnf/history.sqlite* \
-    && find / -xdev -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null || true
-
-# Final image: two layers - runtime base (cached) + distribution (changes with zip).
-# Copying from runtime-setup onto scratch avoids non-deterministic whiteout entries.
-FROM scratch
-
-ARG HZ_VERSION
-ARG HZ_HOME
-ARG USER_NAME
-ARG SOURCE_DATE_EPOCH
-
-COPY --link --from=runtime-setup / /
-COPY --link --from=get-distribution /build_root/ /
+    && find / -newer /tmp/.timestamp-marker -xdev \
+            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null \
+    && rm -f /tmp/.timestamp-marker \
+    && touch -d "@$SOURCE_DATE_EPOCH" /tmp
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
