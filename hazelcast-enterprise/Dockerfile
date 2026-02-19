@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 # Used for image metadata only
 # Describes the version of the Dockerfile, *not* the version of the bundled Hazelcast binary as this is/can be controlled externally
 # Dockerfile needs some concept of versioning so that the release pipeline can tag/archive with an appropriate label
@@ -41,14 +43,46 @@ COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml /build_root$
 # Normalize timestamps for reproducible layer
 RUN find /build_root -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
 
-FROM eclipse-temurin:${JDK_VERSION}-jre-ubi9-minimal
+# Intermediate stage: apply all system modifications on top of the base image.
+# The final image copies the result onto scratch, which avoids non-deterministic
+# whiteout entries that RPM-based package updates create in layer diffs.
+FROM eclipse-temurin:${JDK_VERSION}-jre-ubi9-minimal AS runtime-setup
+
+ARG HZ_HOME
+ARG USER_NAME
+ARG USER_GROUP
+ARG SOURCE_DATE_EPOCH
+
+ENV SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH
+
+COPY licenses /licenses
+
+RUN echo "Adding non-root user" \
+    && groupadd --system ${USER_GROUP} \
+    && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME} \
+    && echo "Upgrading packages" \
+    && microdnf -y update --nodocs \
+    && echo "Removing unnecessary packages and redundant files/folders" \
+    && microdnf -y clean all \
+    && echo "Fixing non-deterministic files for reproducibility" \
+    && EPOCH_DAYS=$((SOURCE_DATE_EPOCH / 86400)) \
+    && sed -i "s/^\(${USER_NAME}:[^:]*:\)[0-9]*:/\1${EPOCH_DAYS}:/" /etc/shadow \
+    && sed -i "s/^\(${USER_NAME}:[^:]*:\)[0-9]*:/\1${EPOCH_DAYS}:/" /etc/shadow- \
+    && rm -f /var/cache/ldconfig/aux-cache \
+    && rm -f /var/lib/dnf/history.sqlite* \
+    && find / -xdev -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null || true
+
+# Final image: two layers - runtime base (cached) + distribution (changes with zip).
+# Copying from runtime-setup onto scratch avoids non-deterministic whiteout entries.
+FROM scratch
 
 ARG HZ_VERSION
 ARG HZ_HOME
 ARG USER_NAME
-ARG USER_GROUP
-ARG JDK_VERSION
 ARG SOURCE_DATE_EPOCH
+
+COPY --link --from=runtime-setup / /
+COPY --link --from=get-distribution /build_root/ /
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -73,21 +107,6 @@ LABEL name="Hazelcast Enterprise" \
 
 # Expose port
 EXPOSE 5701
-
-COPY licenses /licenses
-COPY --link --from=get-distribution /build_root/ /
-
-# Install
-RUN touch /tmp/.timestamp-marker && sleep 1 \
-    && echo "Adding non-root user" \
-    && groupadd --system ${USER_GROUP} \
-    && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME} \
-    && echo "Upgrading packages" \
-    && microdnf -y update --nodocs \
-    && echo "Removing unnecessary packages and redundant files/folders" \
-    && microdnf -y clean all \
-    && find / -depth -newer /tmp/.timestamp-marker -xdev \
-            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; rm -f /tmp/.timestamp-marker; touch -d "@$SOURCE_DATE_EPOCH" /tmp
 
 WORKDIR ${HZ_HOME}
 
