@@ -81,8 +81,6 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
     && echo "Regenerating Java cacerts with SOURCE_DATE_EPOCH for reproducibility" \
     && trust extract --overwrite --format=java-cacerts --filter=ca-anchors \
         --purpose server-auth /etc/ssl/certs/java/cacerts \
-    && echo "Removing unnecessary packages and redundant files/folders" \
-    && rm -rf /var/cache/apk/* \
     && echo "Fixing non-deterministic files for reproducibility" \
     && find / -newer /tmp/.timestamp-marker -xdev \
             -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; rm -f /tmp/.timestamp-marker; touch -d "@$SOURCE_DATE_EPOCH" /tmp
