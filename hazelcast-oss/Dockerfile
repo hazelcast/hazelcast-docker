@@ -71,8 +71,6 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
     && echo "Adding non-root user" \
     && addgroup -S ${USER_GROUP} \
     && adduser -S ${USER_NAME} -G ${USER_GROUP} \
-    && echo "Upgrading packages" \
-    && apk upgrade --no-cache --no-logfile \
     && echo "Installing new packages" \
     && apk add --no-cache --no-logfile \
         openjdk${JDK_VERSION}-jre-headless \
@@ -84,6 +82,15 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
     && echo "Fixing non-deterministic files for reproducibility" \
     && find / -newer /tmp/.timestamp-marker -xdev \
             -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; rm -f /tmp/.timestamp-marker; touch -d "@$SOURCE_DATE_EPOCH" /tmp
+
+# The explicit touch of / /etc /tmp catches parent directories that overlay2 copies up with stale timestamps during
+# the upgrade - find -newer misses them because their mtime predates the marker.
+RUN touch /tmp/.timestamp-marker && sleep 1 \
+    && echo "Upgrading packages" \
+    && apk upgrade --no-cache --no-logfile \
+    && find / -newer /tmp/.timestamp-marker -xdev \
+            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; \
+    rm -f /tmp/.timestamp-marker; touch -h -d "@$SOURCE_DATE_EPOCH" / /etc /tmp 2>/dev/null
 
 WORKDIR ${HZ_HOME}
 
