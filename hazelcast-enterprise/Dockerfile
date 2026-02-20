@@ -44,6 +44,7 @@ RUN find /build_root -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
 FROM eclipse-temurin:${JDK_VERSION}-jre-ubi9-minimal
 
 ARG HZ_HOME
+ARG HZ_VERSION
 ARG USER_NAME
 ARG USER_GROUP
 ARG SOURCE_DATE_EPOCH
