@@ -81,7 +81,8 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
         --purpose server-auth /etc/ssl/certs/java/cacerts \
     && echo "Fixing non-deterministic files for reproducibility" \
     && find / -newer /tmp/.timestamp-marker -xdev \
-            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; rm -f /tmp/.timestamp-marker; touch -d "@$SOURCE_DATE_EPOCH" /tmp
+            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; \
+    rm -f /tmp/.timestamp-marker; touch -d "@$SOURCE_DATE_EPOCH" /tmp
 
 # The explicit touch of / /etc /tmp catches parent directories that overlay2 copies up with stale timestamps during
 # the upgrade - find -newer misses them because their mtime predates the marker.
