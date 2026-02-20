@@ -1,0 +1,46 @@
+name: Verify layer reproducibility
+
+on:
+  workflow_call:
+    inputs:
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to verify'
+        required: true
+        type: string
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - context: hazelcast-oss
+            dist-file: hazelcast-distribution.zip
+          - context: hazelcast-enterprise
+            dist-file: hazelcast-enterprise-distribution.zip
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.SOURCE_REF }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create test distribution
+        run: |
+          dist_dir=$(mktemp -d)
+          mkdir -p "$dist_dir/hazelcast-0.0.0/bin" "$dist_dir/hazelcast-0.0.0/lib"
+          printf '#!/bin/bash\n' > "$dist_dir/hazelcast-0.0.0/bin/hz"
+          printf '#!/bin/bash\n' > "$dist_dir/hazelcast-0.0.0/bin/hz-healthcheck"
+          chmod +x "$dist_dir/hazelcast-0.0.0/bin/"*
+          touch "$dist_dir/hazelcast-0.0.0/lib/placeholder"
+          (cd "$dist_dir" && zip -qr "$GITHUB_WORKSPACE/${{ matrix.context }}/${{ matrix.dist-file }}" hazelcast-0.0.0/)
+          rm -rf "$dist_dir"
+
+      - name: Verify layer reproducibility
+        run: |
+          .github/scripts/verify-layer-reproducibility.sh \
+            -f ${{ matrix.context }}/Dockerfile \
+            -- ${{ matrix.context }}/
