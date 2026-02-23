@@ -62,8 +62,8 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
     && microdnf -y update --nodocs \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && microdnf -y clean all \
-    && truncate -s 0 /var/cache/ldconfig/aux-cache \
-    && truncate -s 0 /var/lib/dnf/history.sqlite* \
+    && truncate --size 0 /var/cache/ldconfig/aux-cache \
+    && truncate --size 0 /var/lib/dnf/history.sqlite* \
     && echo "Fixing non-deterministic files for reproducibility" \
     && find / -newer /tmp/.timestamp-marker -xdev \
             -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null \
