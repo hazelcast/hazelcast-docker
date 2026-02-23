@@ -1,6 +1,7 @@
 name: Do release
 
 on:
+  # Called from release pipeline
   workflow_dispatch:
     inputs:
       VERSION:
@@ -18,20 +19,6 @@ on:
         description: 'Environment to use'
         required: true
         type: environment
-  workflow_call:
-    inputs:
-      VERSION:
-        description: 'The version to release (e.g. `5.4.1`)'
-        required: true
-        type: string
-      RELEASE_TYPE:
-        description: 'What should be built'
-        required: true
-        type: string
-      ENVIRONMENT:
-        description: 'Environment to use'
-        required: true
-        type: string
 
 jobs:
   package:
