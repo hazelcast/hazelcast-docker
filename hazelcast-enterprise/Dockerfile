@@ -57,7 +57,7 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
     && echo "Adding non-root user" \
     && groupadd --system ${USER_GROUP} \
     && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME} \
-    && chage -d 0 ${USER_NAME} \
+    && chage --lastday 0 ${USER_NAME} \
     && echo "Upgrading packages" \
     && microdnf -y update --nodocs \
     && echo "Removing unnecessary packages and redundant files/folders" \
