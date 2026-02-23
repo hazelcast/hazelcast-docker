@@ -15,7 +15,7 @@ on:
         required: false
         type: boolean
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '0 12 * * MON-FRI' # At 12:00 on every day-of-week from Monday through Friday. 
 
 jobs:
   get-environment:
