@@ -68,7 +68,7 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
     && find / -newer /tmp/.timestamp-marker -xdev \
             -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null \
     && rm -f /tmp/.timestamp-marker \
-    && touch -d "@$SOURCE_DATE_EPOCH" /tmp
+    && touch -d "@${SOURCE_DATE_EPOCH}" /tmp
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
