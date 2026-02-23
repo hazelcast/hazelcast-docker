@@ -49,27 +49,6 @@ ARG USER_NAME
 ARG USER_GROUP
 ARG SOURCE_DATE_EPOCH
 
-COPY licenses /licenses
-
-COPY --link --from=get-distribution /build_root/ /
-
-RUN touch /tmp/.timestamp-marker && sleep 1 \
-    && echo "Adding non-root user" \
-    && groupadd --system ${USER_GROUP} \
-    && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME} \
-    && chage --lastday 0 ${USER_NAME} \
-    && echo "Upgrading packages" \
-    && microdnf -y update --nodocs \
-    && echo "Removing unnecessary packages and redundant files/folders" \
-    && microdnf -y clean all \
-    && truncate --size 0 /var/cache/ldconfig/aux-cache \
-    && truncate --size 0 /var/lib/dnf/history.sqlite* \
-    && echo "Fixing non-deterministic files for reproducibility" \
-    && find / -newer /tmp/.timestamp-marker -xdev \
-            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null \
-    && rm -f /tmp/.timestamp-marker \
-    && touch -d "@${SOURCE_DATE_EPOCH}" /tmp
-
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
     CLASSPATH_DEFAULT="${HZ_HOME}/*" \
@@ -93,6 +72,28 @@ LABEL name="Hazelcast Enterprise" \
 
 # Expose port
 EXPOSE 5701
+
+COPY licenses /licenses
+
+COPY --link --from=get-distribution /build_root/ /
+
+RUN touch /tmp/.timestamp-marker && sleep 1 \
+    && echo "Adding non-root user" \
+    && groupadd --system ${USER_GROUP} \
+    && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME} \
+    && chage --lastday 0 ${USER_NAME} \
+    && echo "Upgrading packages" \
+    && microdnf -y update --nodocs \
+    && echo "Removing unnecessary packages and redundant files/folders" \
+    && microdnf -y clean all \
+    && truncate --size 0 /var/cache/ldconfig/aux-cache \
+    && truncate --size 0 /var/lib/dnf/history.sqlite* \
+    && echo "Fixing non-deterministic files for reproducibility" \
+    && find / -newer /tmp/.timestamp-marker -xdev \
+            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null \
+    && rm -f /tmp/.timestamp-marker \
+    && touch -d "@${SOURCE_DATE_EPOCH}" /tmp
+
 
 WORKDIR ${HZ_HOME}
 
