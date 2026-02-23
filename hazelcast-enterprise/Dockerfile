@@ -81,7 +81,7 @@ ENV HZ_HOME="${HZ_HOME}" \
     HAZELCAST_CONFIG=config/hazelcast-docker.xml \
     LANG=C.UTF-8 \
     PATH=${HZ_HOME}/bin:$PATH \
-    SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH
+    SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 
 LABEL name="Hazelcast Enterprise" \
       maintainer="info@hazelcast.com" \
