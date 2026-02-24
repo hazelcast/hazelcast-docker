@@ -104,6 +104,29 @@ jobs:
           packaging: "zip"
           output_file: "source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
 
+      - name: Determine if SBOM applicable
+        uses: madhead/semver-utils@latest
+        id: sbom-applicable
+        if: matrix.distribution-type.label == 'ee'
+        with:
+          version: ${{ needs.prepare.outputs.hz-version }}
+          # The first version that SBOMs were introduced
+          # Needs to be a SNAPSHOT as the action is smart enough to tell the difference
+          compare-to: 5.7.0-SNAPSHOT
+
+      - name: Download the SBOM
+        uses: hazelcast/docker-actions/download-hz-dist@master
+        if: steps.sbom-applicable.outputs.comparison-result == '=' || steps.sbom-applicable.outputs.comparison-result == '>' 
+        id: download-hz-sbom
+        with:
+          repo-vars-as-json: ${{ toJSON(vars) }}
+          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          distribution: ${{ matrix.distribution-type.distribution }}
+          hz_version: ${{ needs.prepare.outputs.hz-version }}
+          classifier: cyclonedx
+          packaging: "json"
+          output_file: "source_path/${{ matrix.distribution-type.docker-dir }}/hazelcast-sbom.json"
+
       - id: get-tags-to-push
         uses: ./.github/actions/get-tags-to-push
         with:
@@ -128,6 +151,7 @@ jobs:
           context: source_path/${{ matrix.distribution-type.docker-dir }}
           labels: ${{ steps.labels.outputs.label }}
           platforms: ${{ steps.platforms.outputs.platforms }}
+          sbom: ${{ steps.download-hz-sbom.outcome == 'success' }}
           push: true
           tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
           build-args: |
