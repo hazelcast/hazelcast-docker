@@ -10,7 +10,8 @@ ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
 ARG USER_GROUP="hazelcast"
 ARG JDK_VERSION="21"
-ARG SOURCE_DATE_EPOCH=1688223600
+# set SOURCE_DATE_EPOCH to some fixed value to have reproducible timestamps in the image layer
+ARG SOURCE_DATE_EPOCH=1234567890
 ARG BUILD_ROOT=/build_root
 
 FROM alpine:3 AS get-distribution
