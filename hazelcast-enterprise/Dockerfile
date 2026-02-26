@@ -81,6 +81,8 @@ COPY licenses /licenses
 
 COPY --link --from=get-distribution ${BUILD_ROOT}/ /
 
+# sleep 1 is needed to ensure that the timestamp marker is reliably older than any files modified during the RUN
+# - without it, the find -newer can miss files due to the second resolution of some filesystems (e.g. overlay2 on Linux)
 RUN touch /tmp/.timestamp-marker && sleep 1 \
     && echo "Adding non-root user" \
     && groupadd --system ${USER_GROUP} \

@@ -71,6 +71,8 @@ EXPOSE 5701
 
 COPY --link --from=get-distribution ${BUILD_ROOT}/ /
 
+# sleep 1 is needed to ensure that the timestamp marker is reliably older than any files modified during the RUN
+# - without it, the find -newer can miss files due to the second resolution of some filesystems (e.g. overlay2 on Linux)
 RUN touch /tmp/.timestamp-marker && sleep 1 \
     && echo "Adding non-root user" \
     && addgroup -S ${USER_GROUP} \
@@ -88,6 +90,8 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
             -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; \
     rm -f /tmp/.timestamp-marker; touch -d "@$SOURCE_DATE_EPOCH" /tmp
 
+# sleep 1 is needed to ensure that the timestamp marker is reliably older than any files modified during the RUN
+# - without it, the find -newer can miss files due to the second resolution of some filesystems (e.g. overlay2 on Linux)
 # The explicit touch of / /etc /tmp catches parent directories that overlay2 copies up with stale timestamps during
 # the upgrade - find -newer misses them because their mtime predates the marker.
 RUN touch /tmp/.timestamp-marker && sleep 1 \
