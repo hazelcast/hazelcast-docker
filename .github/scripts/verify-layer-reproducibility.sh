@@ -54,18 +54,27 @@ echo "=== Layer Reproducibility Report ==="
 echo ""
 
 if [[ "${count_a}" -ne "${count_b}" ]]; then
-    echo "FAIL: Layer count mismatch (${count_a} vs ${count_b})"
-    exit 1
+    echo "WARNING: Layer count mismatch (${count_a} vs ${count_b})"
+    echo ""
 fi
 
+max_count=$(( count_a > count_b ? count_a : count_b ))
 has_diff=false
-for i in $(seq 0 $((count_a - 1))); do
-    digest_a=$(echo "${layers_a}" | jq -r ".[$i]")
-    digest_b=$(echo "${layers_b}" | jq -r ".[$i]")
-    if [[ "${digest_a}" == "${digest_b}" ]]; then
-        echo "  Layer $((i + 1))/${count_a}: MATCH"
+for i in $(seq 0 $((max_count - 1))); do
+    digest_a=$(echo "${layers_a}" | jq -r ".[$i] // empty")
+    digest_b=$(echo "${layers_b}" | jq -r ".[$i] // empty")
+    if [[ -z "${digest_a}" ]]; then
+        echo "  Layer $((i + 1))/${max_count}: ONLY IN B"
+        echo "    B: ${digest_b}"
+        has_diff=true
+    elif [[ -z "${digest_b}" ]]; then
+        echo "  Layer $((i + 1))/${max_count}: ONLY IN A"
+        echo "    A: ${digest_a}"
+        has_diff=true
+    elif [[ "${digest_a}" == "${digest_b}" ]]; then
+        echo "  Layer $((i + 1))/${max_count}: MATCH"
     else
-        echo "  Layer $((i + 1))/${count_a}: DIFFER"
+        echo "  Layer $((i + 1))/${max_count}: DIFFER"
         echo "    A: ${digest_a}"
         echo "    B: ${digest_b}"
         has_diff=true
