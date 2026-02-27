@@ -79,7 +79,7 @@ jobs:
         # GitHub doesn't support outputs of matrix jobs - https://github.com/orgs/community/discussions/26639
         # Instead, write the content to artifact(s) and upload those to consume downstream
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.version }}
           path: rebuild-*
