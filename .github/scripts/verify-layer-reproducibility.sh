@@ -6,10 +6,10 @@ set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 # Exits 0 if all layers are identical across both builds, 1 if any differ.
 #
 # Usage:
-#   verify-layer-reproducibility.sh -f <dockerfile> [-- <extra buildx build args...>]
+#   verify-layer-reproducibility.sh <dockerfile> [extra buildx build args...]
 #
 # Example:
-#   verify-layer-reproducibility.sh -f hazelcast-oss/Dockerfile -- hazelcast-oss/
+#   verify-layer-reproducibility.sh hazelcast-oss/Dockerfile hazelcast-oss/
 
 readonly RANDOM_SUFFIX="$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 readonly TAG_A="repro-check-a-${RANDOM_SUFFIX}"
@@ -20,40 +20,28 @@ cleanup() {
 }
 trap cleanup EXIT
 
-dockerfile=""
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -f) dockerfile="$2"; shift 2 ;;
-        --) shift; break ;;
-        *) echo "Unknown option: $1" >&2; exit 1 ;;
-    esac
-done
-
-if [[ -z "${dockerfile}" ]]; then
-    echo "Error: -f <dockerfile> is required" >&2
-    exit 1
-fi
-
-extra_args=("$@")
+readonly dockerfile="${1:?Error: <dockerfile> is required}"
+shift
 
 build_image() {
     local tag="$1"
+    shift
     echo "==> Building image '${tag}'..."
     docker buildx build \
         --no-cache \
         --load \
         -f "${dockerfile}" \
         -t "${tag}" \
-        "${extra_args[@]}"
+        "$@"
 }
 
 get_layers() {
     docker inspect --format '{{json .RootFS.Layers}}' "$1"
 }
 
-build_image "${TAG_A}"
+build_image "${TAG_A}" "$@"
 echo ""
-build_image "${TAG_B}"
+build_image "${TAG_B}" "$@"
 echo ""
 
 layers_a=$(get_layers "${TAG_A}")

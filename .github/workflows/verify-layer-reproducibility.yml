@@ -36,5 +36,5 @@ jobs:
       - name: Verify layer reproducibility
         run: |
           .github/scripts/verify-layer-reproducibility.sh \
-            -f ${{ matrix.context }}/Dockerfile \
-            -- ${{ matrix.context }}/
+            ${{ matrix.context }}/Dockerfile \
+            ${{ matrix.context }}/
