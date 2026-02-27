@@ -11,8 +11,7 @@ set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 # Example:
 #   verify-layer-reproducibility.sh -f hazelcast-oss/Dockerfile -- hazelcast-oss/
 
-RANDOM_SUFFIX="$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-readonly RANDOM_SUFFIX
+readonly RANDOM_SUFFIX="$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 readonly TAG_A="repro-check-a-${RANDOM_SUFFIX}"
 readonly TAG_B="repro-check-b-${RANDOM_SUFFIX}"
 
