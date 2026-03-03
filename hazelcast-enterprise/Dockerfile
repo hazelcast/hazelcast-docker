@@ -8,14 +8,11 @@ ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
 ARG USER_GROUP="hazelcast"
 ARG JDK_VERSION="21"
-# set SOURCE_DATE_EPOCH to some fixed value to have reproducible timestamps in the image layer
-ARG SOURCE_DATE_EPOCH=1234567890
 ARG BUILD_ROOT=/build_root
 
 FROM alpine:3 AS get-distribution
 
 ARG HZ_HOME
-ARG SOURCE_DATE_EPOCH
 ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-enterprise-distribution.zip"
 ARG BUILD_ROOT
 ARG BUILD_HZ_HOME="${BUILD_ROOT}${HZ_HOME}"
@@ -40,17 +37,15 @@ RUN mkdir -p ${BUILD_HZ_HOME} \
 
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${BUILD_HZ_HOME}/config/
 
-# Normalize timestamps for reproducible layer
-RUN find ${BUILD_ROOT} -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
-
 FROM eclipse-temurin:${JDK_VERSION}-jre-ubi9-minimal
 
 ARG HZ_HOME
 ARG HZ_VERSION
 ARG USER_NAME
 ARG USER_GROUP
-ARG SOURCE_DATE_EPOCH
 ARG BUILD_ROOT
+# RPM/microdnf respects SOURCE_DATE_EPOCH to write deterministic timestamps into rpmdb.sqlite
+ARG SOURCE_DATE_EPOCH
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -62,8 +57,7 @@ ENV HZ_HOME="${HZ_HOME}" \
     JAVA_OPTS="" \
     HAZELCAST_CONFIG=config/hazelcast-docker.xml \
     LANG=C.UTF-8 \
-    PATH=${HZ_HOME}/bin:$PATH \
-    SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
+    PATH=${HZ_HOME}/bin:$PATH
 
 LABEL name="Hazelcast Enterprise" \
       maintainer="info@hazelcast.com" \
@@ -80,10 +74,7 @@ COPY licenses /licenses
 
 COPY --link --from=get-distribution ${BUILD_ROOT} /
 
-# sleep 1 is needed to ensure that the timestamp marker is reliably older than any files modified during the RUN
-# - without it, the find -newer can miss files due to the second resolution of some filesystems (e.g. overlay2 on Linux)
-RUN touch /tmp/.timestamp-marker && sleep 1 \
-    && echo "Adding non-root user" \
+RUN echo "Adding non-root user" \
     && groupadd --system ${USER_GROUP} \
     && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME} \
     && chage --lastday 0 ${USER_NAME} \
@@ -92,12 +83,7 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && microdnf -y clean all \
     && truncate --size 0 /var/cache/ldconfig/aux-cache \
-    && truncate --size 0 /var/lib/dnf/history.sqlite* \
-    && echo "Fixing non-deterministic files for reproducibility" \
-    && find / -newer /tmp/.timestamp-marker -xdev \
-            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null \
-    && rm -f /tmp/.timestamp-marker \
-    && touch -d "@${SOURCE_DATE_EPOCH}" /tmp
+    && truncate --size 0 /var/lib/dnf/history.sqlite*
 
 
 WORKDIR ${HZ_HOME}

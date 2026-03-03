@@ -25,8 +25,17 @@ jobs:
         with:
           ref: ${{ inputs.SOURCE_REF }}
 
+      - name: Get supported platforms
+        id: platforms
+        uses: hazelcast/docker-actions/get-supported-platforms@master
+        with:
+          dockerfile: ${{ matrix.context }}/Dockerfile
+          jdk: ${{ matrix.jdk }}
+
       - name: Set up Docker Buildx
         uses: ./.github/actions/setup-docker
+        with:
+          platforms: ${{ steps.platforms.outputs.platforms }}
 
       - name: Create test distribution
         run: |
@@ -34,7 +43,10 @@ jobs:
           create_fake_distribution_zip "$GITHUB_WORKSPACE/${{ matrix.context }}/${{ matrix.dist-file }}"
 
       - name: Verify layer reproducibility
+        env:
+          SOURCE_DATE_EPOCH: "1234567890"
         run: |
           .github/scripts/verify-layer-reproducibility.sh \
             ${{ matrix.context }}/Dockerfile \
+            --output type=docker,rewrite-timestamp=true \
             ${{ matrix.context }}/

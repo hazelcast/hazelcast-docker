@@ -8,14 +8,11 @@ ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
 ARG USER_GROUP="hazelcast"
 ARG JDK_VERSION="21"
-# set SOURCE_DATE_EPOCH to some fixed value to have reproducible timestamps in the image layer
-ARG SOURCE_DATE_EPOCH=1234567890
 ARG BUILD_ROOT=/build_root
 
 FROM alpine:3 AS get-distribution
 
 ARG HZ_HOME
-ARG SOURCE_DATE_EPOCH
 ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-distribution.zip"
 ARG BUILD_ROOT
 ARG BUILD_HZ_HOME="${BUILD_ROOT}${HZ_HOME}"
@@ -40,17 +37,15 @@ RUN mkdir -p ${BUILD_HZ_HOME} \
 
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${BUILD_HZ_HOME}/config/
 
-# Normalize timestamps for reproducible layer
-RUN find ${BUILD_ROOT} -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
-
 FROM alpine:3
 
 ARG JDK_VERSION
 ARG HZ_HOME
 ARG USER_NAME
 ARG USER_GROUP
-ARG SOURCE_DATE_EPOCH
 ARG BUILD_ROOT
+# apk/trust extract respect SOURCE_DATE_EPOCH for deterministic package database and cacerts content
+ARG SOURCE_DATE_EPOCH
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -62,18 +57,14 @@ ENV HZ_HOME="${HZ_HOME}" \
     JAVA_OPTS="" \
     HAZELCAST_CONFIG=config/hazelcast-docker.xml \
     LANG=C.UTF-8 \
-    PATH=${HZ_HOME}/bin:$PATH \
-    SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH
+    PATH=${HZ_HOME}/bin:$PATH
 
 # Expose port
 EXPOSE 5701
 
 COPY --link --from=get-distribution ${BUILD_ROOT} /
 
-# sleep 1 is needed to ensure that the timestamp marker is reliably older than any files modified during the RUN
-# - without it, the find -newer can miss files due to the second resolution of some filesystems (e.g. overlay2 on Linux)
-RUN touch /tmp/.timestamp-marker && sleep 1 \
-    && echo "Adding non-root user" \
+RUN echo "Adding non-root user" \
     && addgroup -S ${USER_GROUP} \
     && adduser -S ${USER_NAME} -G ${USER_GROUP} \
     && echo "Installing new packages" \
@@ -83,22 +74,10 @@ RUN touch /tmp/.timestamp-marker && sleep 1 \
         curl \
     && echo "Regenerating Java cacerts with SOURCE_DATE_EPOCH for reproducibility" \
     && trust extract --overwrite --format=java-cacerts --filter=ca-anchors \
-        --purpose server-auth /etc/ssl/certs/java/cacerts \
-    && echo "Fixing non-deterministic files for reproducibility" \
-    && find / -newer /tmp/.timestamp-marker -xdev \
-            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; \
-    rm -f /tmp/.timestamp-marker; touch -d "@$SOURCE_DATE_EPOCH" /tmp
+        --purpose server-auth /etc/ssl/certs/java/cacerts
 
-# sleep 1 is needed to ensure that the timestamp marker is reliably older than any files modified during the RUN
-# - without it, the find -newer can miss files due to the second resolution of some filesystems (e.g. overlay2 on Linux)
-# The explicit touch of / /etc /tmp catches parent directories that overlay2 copies up with stale timestamps during
-# the upgrade - find -newer misses them because their mtime predates the marker.
-RUN touch /tmp/.timestamp-marker && sleep 1 \
-    && echo "Upgrading packages" \
-    && apk upgrade --no-cache --no-logfile \
-    && find / -newer /tmp/.timestamp-marker -xdev \
-            -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + 2>/dev/null; \
-    rm -f /tmp/.timestamp-marker; touch -h -d "@$SOURCE_DATE_EPOCH" / /etc /tmp 2>/dev/null
+RUN echo "Upgrading packages" \
+    && apk upgrade --no-cache --no-logfile
 
 WORKDIR ${HZ_HOME}
 

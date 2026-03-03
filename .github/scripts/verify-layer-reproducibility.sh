@@ -8,8 +8,9 @@ set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 # Usage:
 #   verify-layer-reproducibility.sh <dockerfile> [extra buildx build args...]
 #
-# Example:
+# Examples:
 #   verify-layer-reproducibility.sh hazelcast-oss/Dockerfile hazelcast-oss/
+#   verify-layer-reproducibility.sh hazelcast-oss/Dockerfile --output type=docker,rewrite-timestamp=true hazelcast-oss/
 
 readonly RANDOM_SUFFIX="$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 readonly TAG_A="repro-check-a-${RANDOM_SUFFIX}"
@@ -23,13 +24,21 @@ trap cleanup EXIT
 readonly dockerfile="${1:?Error: <dockerfile> is required}"
 shift
 
+# Add --load if user didn't provide --output
+load_flag="--load"
+for arg in "$@"; do
+    case "${arg}" in
+        --output|--output=*) load_flag="" ;;
+    esac
+done
+
 build_image() {
     local tag="$1"
     shift
     echo "==> Building image '${tag}'..."
     docker buildx build \
         --no-cache \
-        --load \
+        ${load_flag} \
         -f "${dockerfile}" \
         -t "${tag}" \
         "$@"
