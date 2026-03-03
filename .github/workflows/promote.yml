@@ -1,6 +1,7 @@
 name: Promote image from pre-prod to prod
 
 on:
+  # Called from release orchestrator
   workflow_dispatch:
     inputs:
       VERSION:
