@@ -79,8 +79,6 @@ RUN echo "Adding non-root user" \
     && groupadd --system ${USER_GROUP} \
     && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME} \
     && chage --lastday 0 ${USER_NAME} \
-    && echo "Upgrading packages" \
-    && microdnf -y update --nodocs \
     && echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
         --disableplugin=subscription-manager install \
@@ -91,8 +89,12 @@ RUN echo "Adding non-root user" \
         util-linux \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && microdnf -y clean all \
-    && truncate --size 0 /var/cache/ldconfig/aux-cache \
-    && truncate --size 0 /var/lib/dnf/history.sqlite*
+    && rm -f /var/cache/ldconfig/aux-cache /var/lib/dnf/history.sqlite*
+
+RUN echo "Upgrading packages" \
+    && microdnf -y update --nodocs \
+    && microdnf -y clean all \
+    && rm -f /var/cache/ldconfig/aux-cache /var/lib/dnf/history.sqlite*
 
 
 WORKDIR ${HZ_HOME}
