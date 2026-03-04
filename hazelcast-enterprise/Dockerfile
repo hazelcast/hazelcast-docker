@@ -37,12 +37,13 @@ RUN mkdir -p ${BUILD_HZ_HOME} \
 
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${BUILD_HZ_HOME}/config/
 
-FROM eclipse-temurin:${JDK_VERSION}-jre-ubi9-minimal
+FROM redhat/ubi9-minimal:9.7
 
 ARG HZ_HOME
 ARG HZ_VERSION
 ARG USER_NAME
 ARG USER_GROUP
+ARG JDK_VERSION
 ARG BUILD_ROOT
 # RPM/microdnf respects SOURCE_DATE_EPOCH to write deterministic timestamps into rpmdb.sqlite
 ARG SOURCE_DATE_EPOCH
@@ -80,6 +81,14 @@ RUN echo "Adding non-root user" \
     && chage --lastday 0 ${USER_NAME} \
     && echo "Upgrading packages" \
     && microdnf -y update --nodocs \
+    && echo "Installing new packages" \
+    && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
+        --disableplugin=subscription-manager install \
+        java-${JDK_VERSION}-openjdk-headless \
+        shadow-utils \
+        tar \
+        tzdata-java \
+        util-linux \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && microdnf -y clean all \
     && truncate --size 0 /var/cache/ldconfig/aux-cache \
