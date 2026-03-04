@@ -48,6 +48,12 @@ get_layers() {
     docker inspect --format '{{json .RootFS.Layers}}' "$1"
 }
 
+get_digest() {
+    local layers="$1"
+    local index="$2"
+    echo "${layers}" | jq -r ".[${index}] // empty"
+}
+
 build_image "${TAG_A}" "$@"
 echo ""
 build_image "${TAG_B}" "$@"
@@ -70,8 +76,8 @@ fi
 max_count=$(( count_a > count_b ? count_a : count_b ))
 has_diff=false
 for i in $(seq 0 $((max_count - 1))); do
-    digest_a=$(echo "${layers_a}" | jq -r ".[$i] // empty")
-    digest_b=$(echo "${layers_b}" | jq -r ".[$i] // empty")
+    digest_a=$(get_digest "${layers_a}" "$i")
+    digest_b=$(get_digest "${layers_b}" "$i")
     if [[ -z "${digest_a}" ]]; then
         echo "  Layer $((i + 1))/${max_count}: ONLY IN B"
         echo "    B: ${digest_b}"
