@@ -1,12 +1,3 @@
-#!/usr/bin/env bash
-#
-# Functions to create a fake Hazelcast distribution ZIP.
-# Used to build Docker images without real Java artifacts.
-#
-# Usage:
-#   source .github/scripts/fake-zip.functions.sh
-#   create_fake_distribution_zip <output_zip_path>
-
 create_fake_distribution_zip() {
     local output_zip="$1"
     if [[ -z "$output_zip" ]]; then
