@@ -40,7 +40,7 @@ jobs:
       - name: Create test distribution
         run: |
           source .github/scripts/fake-zip.functions.sh
-          create_fake_distribution_zip "$GITHUB_WORKSPACE/${{ matrix.context }}/${{ matrix.dist-file }}"
+          create_fake_distribution_zip "${{ matrix.context }}/${{ matrix.dist-file }}"
 
       - name: Verify layer reproducibility
         env:
