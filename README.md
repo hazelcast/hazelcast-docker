@@ -7,7 +7,6 @@ This repository contains Dockerfiles for the official Hazelcast Docker images.
 ### Hazelcast
 
 You can launch a Hazelcast Docker Container by running the following command. Check [Hazelcast Versions](#hazelcast-versions) for the versions to replace $HAZELCAST_VERSION.
-Dumm change because PR builder being silly.
 ```
 $ docker run hazelcast/hazelcast:$HAZELCAST_VERSION
 ```
