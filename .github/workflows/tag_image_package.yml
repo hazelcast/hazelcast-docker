@@ -124,11 +124,14 @@ jobs:
 
       - name: Build and push image
         uses: docker/build-push-action@v6
+        env:
+          # Fixed timestamp (like 0 EPOCH) is needed for reproducible builds
+          SOURCE_DATE_EPOCH: "0"
         with:
           context: source_path/${{ matrix.distribution-type.docker-dir }}
           labels: ${{ steps.labels.outputs.label }}
           platforms: ${{ steps.platforms.outputs.platforms }}
-          push: true
+          outputs: type=image,push=true,rewrite-timestamp=true
           tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
           build-args: |
             JDK_VERSION=${{ matrix.jdk }}

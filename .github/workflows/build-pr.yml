@@ -26,6 +26,12 @@ jobs:
       ENVIRONMENT: test
     secrets: inherit
 
+  verify-reproducibility:
+    name: Verify layer reproducibility
+    uses: ./.github/workflows/verify-layer-reproducibility.yml
+    with:
+      SOURCE_REF: ${{ github.ref }}
+
   test-push-nlc:
     name: Test pushing image
     uses: ./.github/workflows/ee-nlc-tag-push.yml

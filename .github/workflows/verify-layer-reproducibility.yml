@@ -1,0 +1,53 @@
+name: Verify layer reproducibility
+
+on:
+  workflow_call:
+    inputs:
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to verify'
+        required: true
+        type: string
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - context: hazelcast-oss
+            dist-file: hazelcast-distribution.zip
+          - context: hazelcast-enterprise
+            dist-file: hazelcast-enterprise-distribution.zip
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.SOURCE_REF }}
+
+      - name: Get supported platforms
+        id: platforms
+        uses: hazelcast/docker-actions/get-supported-platforms@master
+        with:
+          dockerfile: ${{ matrix.context }}/Dockerfile
+          jdk: ${{ matrix.jdk }}
+
+      - name: Set up Docker Buildx
+        uses: ./.github/actions/setup-docker
+        with:
+          platforms: ${{ steps.platforms.outputs.platforms }}
+
+      - name: Create test distribution
+        run: |
+          source .github/scripts/fake-zip.functions.sh
+          create_fake_distribution_zip "${{ matrix.context }}/${{ matrix.dist-file }}"
+
+      - name: Verify layer reproducibility
+        env:
+          # Fixed timestamp (like 0 EPOCH) is needed for reproducible builds
+          SOURCE_DATE_EPOCH: "0"
+        run: |
+          .github/scripts/verify-layer-reproducibility.sh \
+            ${{ matrix.context }}/Dockerfile \
+            --output type=docker,rewrite-timestamp=true \
+            ${{ matrix.context }}/
