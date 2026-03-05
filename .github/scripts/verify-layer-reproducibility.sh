@@ -73,7 +73,7 @@ echo "=== Layer Reproducibility Report ==="
 echo ""
 
 if [[ "${layer_count_a}" -ne "${layer_count_b}" ]]; then
-    echoerr "WARNING: Layer count mismatch (${layer_count_a} vs ${layer_count_b})"
+    echowarning "WARNING: Layer count mismatch (${layer_count_a} vs ${layer_count_b})"
     echo ""
 fi
 
