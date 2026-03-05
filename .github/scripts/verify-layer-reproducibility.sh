@@ -55,7 +55,7 @@ get_layers() {
 get_digest() {
     local layers="$1"
     local index="$2"
-    echo "${layers}" | jq -r ".[${index}] // empty"
+    echo "${layers}" | jq --raw-output ".[${index}] // empty"
 }
 
 build_image "${TAG_A}" "$@"
