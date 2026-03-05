@@ -20,20 +20,20 @@ ARG BUILD_HZ_HOME="${BUILD_ROOT}${HZ_HOME}"
 # Expects distribution ZIP to be on the local filesystem within the build context
 COPY ${HAZELCAST_ZIP_FILE_NAME} /tmp/
 
-RUN mkdir -p ${BUILD_HZ_HOME} \
+RUN mkdir -p "${BUILD_HZ_HOME}" \
     && apk add --no-cache unzip \
     && unzip -qq /tmp/${HAZELCAST_ZIP_FILE_NAME} -d /tmp/hz \
     # Distribution ZIP structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
     # Move all the content up a level so that the path contains no version and is constant
-    && mv /tmp/hz/*/* ${BUILD_HZ_HOME}/ \
+    && mv /tmp/hz/*/* "${BUILD_HZ_HOME}/" \
     && apk del unzip \
     && rm -rf /tmp/* \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > "${BUILD_HZ_HOME}/lib/hazelcast-download.properties" \
     && echo "Granting read permission to ${BUILD_HZ_HOME}" \
-    && chmod -R +r ${BUILD_HZ_HOME} \
+    && chmod -R +r "${BUILD_HZ_HOME}" \
     && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
-    && chmod +x ${BUILD_HZ_HOME}/bin/*
+    && chmod +x "${BUILD_HZ_HOME}/bin"/*
 
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${BUILD_HZ_HOME}/config/
 

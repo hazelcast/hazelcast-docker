@@ -20,7 +20,8 @@ readonly TAG_A="repro-check-a-${RANDOM_SUFFIX}"
 readonly TAG_B="repro-check-b-${RANDOM_SUFFIX}"
 
 cleanup() {
-    docker rmi "${TAG_A}" "${TAG_B}" 2>/dev/null || true
+    docker rmi "${TAG_A}" "${TAG_B}" 2>/dev/null
+    return 0
 }
 trap cleanup EXIT
 
@@ -32,6 +33,7 @@ load_flag="--load"
 for arg in "$@"; do
     case "${arg}" in
         --output|--output=*) load_flag="" ;;
+        *) ;;
     esac
 done
 
@@ -45,17 +47,20 @@ build_image() {
         -f "${dockerfile}" \
         -t "${tag}" \
         "$@"
+    return $?
 }
 
 get_layers() {
     local tag="$1"
     docker inspect --format '{{json .RootFS.Layers}}' "${tag}"
+    return $?
 }
 
 get_digest() {
     local layers="$1"
     local index="$2"
     echo "${layers}" | jq --raw-output ".[${index}] // empty"
+    return $?
 }
 
 build_image "${TAG_A}" "$@"
