@@ -78,7 +78,7 @@ jobs:
           parse-json-secrets: true
 
       - name: Login to NLC registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.NLC_IMAGE_REGISTRY_URL }}
           username: ${{ env.NLC_IMAGE_REGISTRY_USERNAME }}
