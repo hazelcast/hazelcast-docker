@@ -44,7 +44,8 @@ jobs:
 
       - name: Verify layer reproducibility
         env:
-          SOURCE_DATE_EPOCH: "1234567890"
+          # Fixed timestamp (like 0 EPOCH) is needed for reproducible builds
+          SOURCE_DATE_EPOCH: "0"
         run: |
           .github/scripts/verify-layer-reproducibility.sh \
             ${{ matrix.context }}/Dockerfile \

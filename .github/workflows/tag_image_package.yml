@@ -125,7 +125,8 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v6
         env:
-          SOURCE_DATE_EPOCH: "1234567890"
+          # Fixed timestamp (like 0 EPOCH) is needed for reproducible builds
+          SOURCE_DATE_EPOCH: "0"
         with:
           context: source_path/${{ matrix.distribution-type.docker-dir }}
           labels: ${{ steps.labels.outputs.label }}
