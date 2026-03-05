@@ -45,7 +45,8 @@ build_image() {
 }
 
 get_layers() {
-    docker inspect --format '{{json .RootFS.Layers}}' "$1"
+    local tag="$1"
+    docker inspect --format '{{json .RootFS.Layers}}' "${tag}"
 }
 
 get_digest() {
@@ -62,36 +63,36 @@ echo ""
 layers_a=$(get_layers "${TAG_A}")
 layers_b=$(get_layers "${TAG_B}")
 
-count_a=$(echo "${layers_a}" | jq 'length')
-count_b=$(echo "${layers_b}" | jq 'length')
+layer_count_a=$(echo "${layers_a}" | jq 'length')
+layer_count_b=$(echo "${layers_b}" | jq 'length')
 
 echo "=== Layer Reproducibility Report ==="
 echo ""
 
-if [[ "${count_a}" -ne "${count_b}" ]]; then
-    echo "WARNING: Layer count mismatch (${count_a} vs ${count_b})"
+if [[ "${layer_count_a}" -ne "${layer_count_b}" ]]; then
+    echo "WARNING: Layer count mismatch (${layer_count_a} vs ${layer_count_b})"
     echo ""
 fi
 
-max_count=$(( count_a > count_b ? count_a : count_b ))
+layer_max_count=$(( layer_count_a > layer_count_b ? layer_count_a : layer_count_b ))
 has_diff=false
-for i in $(seq 0 $((max_count - 1))); do
-    digest_a=$(get_digest "${layers_a}" "$i")
-    digest_b=$(get_digest "${layers_b}" "$i")
-    if [[ -z "${digest_a}" ]]; then
-        echo "  Layer $((i + 1))/${max_count}: ONLY IN B"
-        echo "    B: ${digest_b}"
+for layerIndex in $(seq 0 $((layer_max_count - 1))); do
+    layer_digest_a=$(get_digest "${layers_a}" "${layerIndex}")
+    layer_digest_b=$(get_digest "${layers_b}" "${layerIndex}")
+    if [[ -z "${layer_digest_a}" ]]; then
+        echo "  Layer $((layerIndex + 1))/${layer_max_count}: ONLY IN B"
+        echo "    B: ${layer_digest_b}"
         has_diff=true
-    elif [[ -z "${digest_b}" ]]; then
-        echo "  Layer $((i + 1))/${max_count}: ONLY IN A"
-        echo "    A: ${digest_a}"
+    elif [[ -z "${layer_digest_b}" ]]; then
+        echo "  Layer $((layerIndex + 1))/${layer_max_count}: ONLY IN A"
+        echo "    A: ${layer_digest_a}"
         has_diff=true
-    elif [[ "${digest_a}" == "${digest_b}" ]]; then
-        echo "  Layer $((i + 1))/${max_count}: MATCH"
+    elif [[ "${layer_digest_a}" == "${layer_digest_b}" ]]; then
+        echo "  Layer $((layerIndex + 1))/${layer_max_count}: MATCH"
     else
-        echo "  Layer $((i + 1))/${max_count}: DIFFER"
-        echo "    A: ${digest_a}"
-        echo "    B: ${digest_b}"
+        echo "  Layer $((layerIndex + 1))/${layer_max_count}: DIFFER"
+        echo "    A: ${layer_digest_a}"
+        echo "    B: ${layer_digest_b}"
         has_diff=true
     fi
 done
@@ -102,4 +103,4 @@ if [[ "${has_diff}" == "true" ]]; then
     exit 1
 fi
 
-echo "RESULT: PASS - all ${count_a} layers are identical"
+echo "RESULT: PASS - all ${layer_count_a} layers are identical"
