@@ -2,6 +2,9 @@
 
 set -o errexit -o nounset -o pipefail ${RUNNER_DEBUG:+-x}
 
+# shellcheck source=../.github/scripts/logging.functions.sh
+. .github/scripts/logging.functions.sh
+
 # Verifies Docker image build reproducibility by building twice and comparing layer digests.
 # Exits 0 if all layers are identical across both builds, 1 if any differ.
 #
@@ -70,7 +73,7 @@ echo "=== Layer Reproducibility Report ==="
 echo ""
 
 if [[ "${layer_count_a}" -ne "${layer_count_b}" ]]; then
-    echo "WARNING: Layer count mismatch (${layer_count_a} vs ${layer_count_b})"
+    echoerr "WARNING: Layer count mismatch (${layer_count_a} vs ${layer_count_b})"
     echo ""
 fi
 
@@ -99,7 +102,7 @@ done
 
 echo ""
 if [[ "${has_diff}" == "true" ]]; then
-    echo "RESULT: FAIL - some layers differ between builds"
+    echoerr "RESULT: FAIL - some layers differ between builds"
     exit 1
 fi
 
