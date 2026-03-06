@@ -78,7 +78,6 @@ RUN echo "Upgrading packages" \
         java-${JDK_VERSION}-openjdk-headless \
         shadow-utils \
         tar \
-        tzdata-java \
         util-linux \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && microdnf -y clean all
