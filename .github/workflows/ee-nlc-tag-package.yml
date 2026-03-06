@@ -115,7 +115,7 @@ jobs:
           HZ_REVISION: ${{ inputs.HZ_REVISION }}
 
       - name: Build and push image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: source_path/${{ env.DOCKER_DIR }}
           labels: ${{ steps.labels.outputs.label }}
