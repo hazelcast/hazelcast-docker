@@ -46,8 +46,7 @@ jobs:
         env:
           # Fixed timestamp (like 0 EPOCH) is needed for reproducible builds
           SOURCE_DATE_EPOCH: "0"
-        run: |
-          .github/scripts/verify-layer-reproducibility.sh \
-            ${{ matrix.context }}/Dockerfile \
-            --output type=docker,rewrite-timestamp=true \
-            ${{ matrix.context }}/
+        uses: hazelcast/docker-actions/verify-docker-reproducibility@master
+        with:
+          dockerfile: ${{ matrix.context }}/Dockerfile
+          extra-args: --output type=docker,rewrite-timestamp=true ${{ matrix.context }}
