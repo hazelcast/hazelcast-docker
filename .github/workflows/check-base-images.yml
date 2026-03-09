@@ -15,7 +15,7 @@ on:
         required: false
         type: boolean
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '0 12 * * MON-FRI' # At 12:00 on every day-of-week from Monday through Friday. 
 
 jobs:
   get-environment:
@@ -79,7 +79,7 @@ jobs:
         # GitHub doesn't support outputs of matrix jobs - https://github.com/orgs/community/discussions/26639
         # Instead, write the content to artifact(s) and upload those to consume downstream
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.version }}
           path: rebuild-*
@@ -92,7 +92,7 @@ jobs:
     outputs:
       rebuild-ee-matrix: ${{ steps.set-matrix.outputs.rebuild_ee_matrix }}
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           merge-multiple: true
       - id: set-matrix

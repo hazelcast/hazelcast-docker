@@ -85,7 +85,6 @@ RUN echo "Adding non-root user" \
         java-${JDK_VERSION}-openjdk-headless \
         shadow-utils \
         tar \
-        tzdata-java \
         util-linux \
     && echo "Removing unnecessary packages and redundant files/folders" \
     && microdnf -y clean all \
