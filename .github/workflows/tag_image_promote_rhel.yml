@@ -149,7 +149,7 @@ jobs:
             --submit --pyxis-api-token=${REDHAT_ROBOT_RHEL_API_KEY} \
             --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
             --docker-config ~/.docker/config.json \
-            2>&1)
+            2>&1 || true)
 
           echodebug "${PREFLIGHT_OUTPUT}"
 
