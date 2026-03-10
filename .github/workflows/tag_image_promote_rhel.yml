@@ -151,7 +151,7 @@ jobs:
             --docker-config ~/.docker/config.json \
             2>&1 || true)
 
-          echodebug "${PREFLIGHT_OUTPUT}"
+          echo "${PREFLIGHT_OUTPUT}"
 
           # Multi-arch images will have multiple image IDs
           IMAGE_IDS=$(grep --perl-regexp --only-matching "image id is: \K[a-f0-9]+" <<< "${PREFLIGHT_OUTPUT}" || true)
