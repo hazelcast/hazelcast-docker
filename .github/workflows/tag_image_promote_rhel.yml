@@ -153,6 +153,34 @@ jobs:
 
           echo "${PREFLIGHT_OUTPUT}"
 
+          # Reproducible builds produce identical digests across rebuilds.
+          # If the same digest was already certified and published by a previous run,
+          # Pyxis rejects the submission with "is published, published image can't be updated".
+          # This is expected - the image is already certified.
+          if grep -q "is published, published image can't be updated" <<< "${PREFLIGHT_OUTPUT}"; then
+            echonotice "Image digest already certified and published by a previous run"
+
+            . .github/scripts/rhel.functions.sh
+
+            # Look up the existing image ID from Pyxis so downstream steps can still verify tags
+            DIGEST=$(grep -oP 'sha256:[a-f0-9]{64}' <<< "${PREFLIGHT_OUTPUT}" | head -1 || true)
+            if [[ -n "${DIGEST}" ]]; then
+              EXISTING_IMAGE_ID=$(get_image_id_by_digest \
+                "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" \
+                "${DIGEST}" \
+                "${REDHAT_ROBOT_RHEL_API_KEY}")
+
+              if [[ -n "${EXISTING_IMAGE_ID}" && "${EXISTING_IMAGE_ID}" != "null" ]]; then
+                echo "IMAGE_IDS=[\"${EXISTING_IMAGE_ID}\"]" >> ${GITHUB_OUTPUT}
+                echonotice "Found existing image ID: ${EXISTING_IMAGE_ID}"
+              else
+                echowarning "Could not find existing image ID for digest ${DIGEST}"
+              fi
+            fi
+
+            exit 0
+          fi
+
           # Multi-arch images will have multiple image IDs
           IMAGE_IDS=$(grep --perl-regexp --only-matching "image id is: \K[a-f0-9]+" <<< "${PREFLIGHT_OUTPUT}" || true)
 
