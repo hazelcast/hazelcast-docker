@@ -32,6 +32,8 @@ RUN mkdir -p ${HZ_HOME} \
     && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
     && chmod +x ${HZ_HOME}/bin/*
 
+# Include SBOM if present
+COPY *-sbom.json ${HZ_HOME}/spdx
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
 
 
