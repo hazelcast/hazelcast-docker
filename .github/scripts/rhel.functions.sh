@@ -48,6 +48,8 @@ get_image_id_by_digest()
     --header "X-API-KEY: ${api_key}" \
     "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${project_id}/images?filter=docker_image_digest==${digest}" | \
     jq --raw-output '.data[0]._id'
+
+  return 0
 }
 
 __sync_tags()
