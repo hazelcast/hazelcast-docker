@@ -42,6 +42,7 @@ get_image_id_by_digest()
   local digest=$2
   local api_key=$3
 
+  # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetCertProjectsForProductListing.html
   curl --fail \
     --silent \
     --show-error \
