@@ -112,7 +112,28 @@ jobs:
           classifier: ""
           is-latest-lts: ${{ inputs.IS_LATEST_LTS }}
 
+      - name: Check if image already published
+        id: image-already-published
+        run: |
+          source .github/scripts/logging.functions.sh
+          source .github/scripts/rhel.functions.sh
+
+          DIGEST=$(skopeo inspect --format '{{.Digest}}' \
+            docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }})
+
+          EXISTING_IMAGE_ID=$(get_image_id_by_digest \
+            "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" \
+            "${DIGEST}" \
+            "${REDHAT_ROBOT_RHEL_API_KEY}")
+
+          if [[ -n "${EXISTING_IMAGE_ID}" && "${EXISTING_IMAGE_ID}" != "null" ]]; then
+            echonotice "Image ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} already published with image ID: ${EXISTING_IMAGE_ID}, skipping certification"
+            echo "IMAGE_IDS=[\"${EXISTING_IMAGE_ID}\"]" >> ${GITHUB_ENV}
+            echo "IMAGE_ALREADY_PUBLISHED=true" >> ${GITHUB_OUTPUT}
+          fi
+
       - id: unique-destination-tag
+        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |
           # We need to add a new, unique tag for each image to workaround RedHat bug - https://github.com/hazelcast/hazelcast-docker/pull/1088
           #
@@ -126,6 +147,7 @@ jobs:
           echo "tag=${{ steps.get-tags-to-push.outputs.primary-tag }}-$(date +"%Y%m%d%H%M%S")" >> ${GITHUB_OUTPUT}
 
       - name: Copy new unique tag to RedHat Container Registry
+        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |
           # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
           skopeo copy \
@@ -135,6 +157,7 @@ jobs:
             docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
 
       - name: Install `preflight` OpenShift tool from GitHub
+        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         uses: redhat-actions/openshift-tools-installer@v1
         with:
           preflight: "latest"
@@ -142,6 +165,7 @@ jobs:
 
       - name: Run preflight scan
         id: preflight
+        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |
           source .github/scripts/logging.functions.sh
 
@@ -149,44 +173,16 @@ jobs:
             --submit --pyxis-api-token=${REDHAT_ROBOT_RHEL_API_KEY} \
             --certification-component-id=${{ steps.scan_registry_secrets.outputs.PROJECT_ID }} \
             --docker-config ~/.docker/config.json \
-            2>&1 || true)
+            2>&1)
 
           echo "${PREFLIGHT_OUTPUT}"
-
-          # Reproducible builds produce identical digests across rebuilds.
-          # If the same digest was already certified and published by a previous run,
-          # Pyxis rejects the submission with "is published, published image can't be updated".
-          # This is expected - the image is already certified.
-          if grep -q "is published, published image can't be updated" <<< "${PREFLIGHT_OUTPUT}"; then
-            echonotice "Image digest already certified and published by a previous run"
-
-            . .github/scripts/rhel.functions.sh
-
-            # Look up the existing image ID from Pyxis so downstream steps can still verify tags
-            DIGEST=$(grep -oP 'sha256:[a-f0-9]{64}' <<< "${PREFLIGHT_OUTPUT}" | head -1 || true)
-            if [[ -n "${DIGEST}" ]]; then
-              EXISTING_IMAGE_ID=$(get_image_id_by_digest \
-                "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" \
-                "${DIGEST}" \
-                "${REDHAT_ROBOT_RHEL_API_KEY}")
-
-              if [[ -n "${EXISTING_IMAGE_ID}" && "${EXISTING_IMAGE_ID}" != "null" ]]; then
-                echo "IMAGE_IDS=[\"${EXISTING_IMAGE_ID}\"]" >> ${GITHUB_OUTPUT}
-                echonotice "Found existing image ID: ${EXISTING_IMAGE_ID}"
-              else
-                echowarning "Could not find existing image ID for digest ${DIGEST}"
-              fi
-            fi
-
-            exit 0
-          fi
 
           # Multi-arch images will have multiple image IDs
           IMAGE_IDS=$(grep --perl-regexp --only-matching "image id is: \K[a-f0-9]+" <<< "${PREFLIGHT_OUTPUT}" || true)
 
           if [[ -n "${IMAGE_IDS}" ]]; then
             IMAGE_IDS_JSON=$(jq --raw-input --slurp --compact-output 'split("\n")[:-1]' <<< "${IMAGE_IDS}")
-            echo "IMAGE_IDS=${IMAGE_IDS_JSON}" >> ${GITHUB_OUTPUT}
+            echo "IMAGE_IDS=${IMAGE_IDS_JSON}" >> ${GITHUB_ENV}
           else
             echoerr "Unable to extract image ID from preflight output:"
             echoerr "${PREFLIGHT_OUTPUT}"
@@ -198,12 +194,13 @@ jobs:
         # To _try_ to attain republish atomicity, we want to await the successful publishing of the new, unique tag _before_ we push (and implicitly replace) the existing tags
         # Otherwise we'd replace a published image with an unpublished one
         timeout-minutes: 240
+        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'   
         run: |
           set -o errexit ${RUNNER_DEBUG:+-x}
 
           . .github/scripts/rhel.functions.sh
 
-          jq --raw-output '.[]' <<< '${{ steps.preflight.outputs.IMAGE_IDS }}' | while read IMAGE_ID; do
+          jq --raw-output '.[]' <<< '${{ env.IMAGE_IDS }}' | while read IMAGE_ID; do
             await_image_operation \
               "${IMAGE_ID}" \
               "${REDHAT_ROBOT_RHEL_API_KEY}" \
@@ -211,6 +208,7 @@ jobs:
           done
 
       - name: Copy remaining tags to RedHat Container Registry
+        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |
           for tag in ${TAGS_TO_PUSH}
           do
@@ -232,7 +230,7 @@ jobs:
 
           . .github/scripts/rhel.functions.sh
 
-          jq --raw-output '.[]' <<< '${{ steps.preflight.outputs.IMAGE_IDS }}' | while read IMAGE_ID; do
+          jq --raw-output '.[]' <<< '${{ env.IMAGE_IDS }}' | while read IMAGE_ID; do
             check_image_tags \
               "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" \
               "${IMAGE_ID}" \
