@@ -117,7 +117,7 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v7
         env:
-          # Fixed timestamp (like 0 EPOCH) is needed for reproducible builds
+          # Fixed timestamp (0 = Unix Epoch) needed for reproducible builds
           SOURCE_DATE_EPOCH: "0"
         with:
           context: source_path/${{ env.DOCKER_DIR }}
