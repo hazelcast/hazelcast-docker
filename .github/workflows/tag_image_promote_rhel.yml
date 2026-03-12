@@ -118,11 +118,12 @@ jobs:
           source .github/scripts/logging.functions.sh
           source .github/scripts/rhel.functions.sh
 
-          # Must use --override-os/arch to get the linux/amd64 manifest digest,
-          # matching how the image is pushed to RedHat Container Registry (single-arch, not manifest list)
-          DIGEST=$(skopeo inspect --override-os linux --override-arch amd64 --format '{{.Digest}}' \
-            docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }})
-          echo "Image linux/amd64 digest: ${DIGEST}"
+          # Extract the linux/amd64 manifest digest, matching how the image is pushed 
+          # to RedHat Container Registry (single-arch, not manifest list)
+          DIGEST=$(skopeo inspect --raw \
+            docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            | jq -r '.manifests[] | select(.platform.os == "linux" and .platform.architecture == "amd64") | .digest')
+          echo "Image linux/amd64 manifest digest: ${DIGEST}"
 
           echo "Checking for published image with this digest ${DIGEST}"
           EXISTING_IMAGE_ID=$(get_image_id_by_digest \
