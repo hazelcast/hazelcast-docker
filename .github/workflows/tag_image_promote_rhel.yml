@@ -118,7 +118,9 @@ jobs:
           source .github/scripts/logging.functions.sh
           source .github/scripts/rhel.functions.sh
 
-          DIGEST=$(skopeo inspect --format '{{.Digest}}' \
+          # Must use --override-os/arch to get the linux/amd64 manifest digest,
+          # matching how the image is pushed to RedHat Container Registry (single-arch, not manifest list)
+          DIGEST=$(skopeo inspect --override-os linux --override-arch amd64 --format '{{.Digest}}' \
             docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }})
 
           EXISTING_IMAGE_ID=$(get_image_id_by_digest \
