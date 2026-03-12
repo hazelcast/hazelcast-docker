@@ -122,7 +122,9 @@ jobs:
           # matching how the image is pushed to RedHat Container Registry (single-arch, not manifest list)
           DIGEST=$(skopeo inspect --override-os linux --override-arch amd64 --format '{{.Digest}}' \
             docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }})
+          echo "Image linux/amd64 digest: ${DIGEST}"
 
+          echo "Checking for published image with this digest ${DIGEST}"
           EXISTING_IMAGE_ID=$(get_image_id_by_digest \
             "${{ steps.scan_registry_secrets.outputs.PROJECT_ID }}" \
             "${DIGEST}" \
@@ -132,6 +134,8 @@ jobs:
             echonotice "Image ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} already published with image ID: ${EXISTING_IMAGE_ID}, skipping publish"
             echo "IMAGE_IDS=[\"${EXISTING_IMAGE_ID}\"]" >> ${GITHUB_ENV}
             echo "IMAGE_ALREADY_PUBLISHED=true" >> ${GITHUB_OUTPUT}
+          else
+            echo "No existing image found, will run preflight certification and publish"
           fi
 
       - id: unique-destination-tag
@@ -214,6 +218,7 @@ jobs:
         run: |
           for tag in ${TAGS_TO_PUSH}
           do
+            echo "Copying tag: ${{ steps.unique-destination-tag.outputs.tag }} -> ${tag}"
             skopeo copy \
               --all \
               docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }} \
