@@ -217,18 +217,19 @@ jobs:
           done
 
       - name: Copy remaining tags to RedHat Container Registry
-        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |
           for tag in ${TAGS_TO_PUSH}
           do
-            echo "Copying tag: ${{ steps.unique-destination-tag.outputs.tag }} -> ${tag}"
+            echo "Copying tag: ${FULL_PRIMARY_TAG} -> ${tag}"
             skopeo copy \
-              --all \
-              docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }} \
+              --override-os linux \
+              --override-arch amd64 \
+              docker://${FULL_PRIMARY_TAG} \
               docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${tag}
           done
         env:
           TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
+          FULL_PRIMARY_TAG: ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
 
       - name: Check tags published
         # Just because the tag has been pushed to the registry, does not guarantee it's accessible
