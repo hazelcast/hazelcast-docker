@@ -47,7 +47,7 @@ get_image_id_by_digest()
     --silent \
     --show-error \
     --header "X-API-KEY: ${api_key}" \
-    "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${project_id}/images?filter=docker_image_digest==${digest}" | \
+    "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${project_id}/images?filter=docker_image_digest==${digest};deleted!=true" | \
     jq --raw-output '.data[0]._id'
 
   return 0
