@@ -115,6 +115,8 @@ jobs:
           is-latest-lts: ${{ inputs.IS_LATEST_LTS }}
 
       - name: Check if image already published
+        # preflight / certification fails for republish of an identical image (i.e. the same digest we pushed before)
+        # To work around this RedHat quirk we need to skip these steps for republish
         id: image-already-published
         env:
           FULL_PRIMARY_TAG: ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
