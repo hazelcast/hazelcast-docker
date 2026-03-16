@@ -46,6 +46,8 @@ jobs:
   promote-rhel:
     env:
       SCAN_REGISTRY: "quay.io"
+      PLATFORM_OS: "linux"
+      PLATFORM_ARCH: "amd64"
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     permissions:
@@ -120,12 +122,12 @@ jobs:
           source .github/scripts/logging.functions.sh
           source .github/scripts/rhel.functions.sh
 
-          # Extract the linux/amd64 manifest digest, matching how the image is pushed 
+          # Extract the architecture-specific manifest digest, matching the image is pushed 
           # to RedHat Container Registry (single-arch, not manifest list)
           DIGEST=$(skopeo inspect --raw \
             docker://${FULL_PRIMARY_TAG} \
-            | jq -r '.manifests[] | select(.platform.os == "linux" and .platform.architecture == "amd64") | .digest')
-          echo "Image ${FULL_PRIMARY_TAG} for linux/amd64 has digest: ${DIGEST}"
+            | jq -r ".manifests[] | select(.platform.os == \"${PLATFORM_OS}\" and .platform.architecture == \"${PLATFORM_ARCH}\") | .digest")
+          echo "Image ${FULL_PRIMARY_TAG} for ${PLATFORM_OS}/${PLATFORM_ARCH} has digest: ${DIGEST}"
 
           echo "Checking if ${FULL_PRIMARY_TAG}@${DIGEST} image is published on RedHat"
           EXISTING_IMAGE_ID=$(get_image_id_by_digest \
@@ -160,8 +162,8 @@ jobs:
         run: |
           # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
           skopeo copy \
-            --override-os linux \
-            --override-arch amd64 \
+            --override-os "${PLATFORM_OS}" \
+            --override-arch "${PLATFORM_ARCH}" \
             docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
             docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
 
@@ -222,8 +224,8 @@ jobs:
           do
             echo "Copying tag: ${FULL_PRIMARY_TAG} -> ${tag}"
             skopeo copy \
-              --override-os linux \
-              --override-arch amd64 \
+              --override-os "${PLATFORM_OS}" \
+              --override-arch "${PLATFORM_ARCH}" \
               docker://${FULL_PRIMARY_TAG} \
               docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${tag}
           done
