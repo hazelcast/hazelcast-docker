@@ -8,40 +8,45 @@ ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
 ARG USER_GROUP="hazelcast"
 ARG JDK_VERSION="21"
+ARG BUILD_ROOT=/build_root
 
 FROM alpine:3 AS get-distribution
 
 ARG HZ_HOME
 ARG HAZELCAST_ZIP_FILE_NAME="hazelcast-enterprise-distribution.zip"
+ARG BUILD_ROOT
+ARG BUILD_HZ_HOME="${BUILD_ROOT}${HZ_HOME}"
 
 # Expects distribution ZIP to be on the local filesystem within the build context
 COPY ${HAZELCAST_ZIP_FILE_NAME} /tmp/
 
-RUN mkdir -p ${HZ_HOME} \
+RUN mkdir -p "${BUILD_HZ_HOME}" \
     && apk add --no-cache unzip \
     && unzip -qq /tmp/${HAZELCAST_ZIP_FILE_NAME} -d /tmp/hz \
     # Distribution ZIP structure is a single folder (e.g. "hazelcast-5.4.0-slim") containing the content
     # Move all the content up a level so that the path contains no version and is constant
-    && mv /tmp/hz/*/* ${HZ_HOME}/ \
+    && mv /tmp/hz/*/* "${BUILD_HZ_HOME}/" \
     && apk del unzip \
     && rm -rf /tmp/* \
     && echo "Setting Pardot ID to 'docker'" \
-    && echo 'hazelcastDownloadId=docker' > "${HZ_HOME}/lib/hazelcast-download.properties" \
-    && echo "Granting read permission to ${HZ_HOME}" \
-    && chmod -R +r ${HZ_HOME} \
+    && echo 'hazelcastDownloadId=docker' > "${BUILD_HZ_HOME}/lib/hazelcast-download.properties" \
+    && echo "Granting read permission to ${BUILD_HZ_HOME}" \
+    && chmod -R +r "${BUILD_HZ_HOME}" \
     && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
-    && chmod +x ${HZ_HOME}/bin/*
+    && chmod +x "${BUILD_HZ_HOME}/bin"/*
 
-COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${HZ_HOME}/config/
-
+COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${BUILD_HZ_HOME}/config/
 
 FROM redhat/ubi9-minimal:9.7
 
-ARG HZ_VERSION
 ARG HZ_HOME
+ARG HZ_VERSION
 ARG USER_NAME
 ARG USER_GROUP
 ARG JDK_VERSION
+ARG BUILD_ROOT
+# RPM/microdnf respects SOURCE_DATE_EPOCH to write deterministic timestamps into rpmdb.sqlite
+ARG SOURCE_DATE_EPOCH
 
 # Runtime variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -67,11 +72,13 @@ LABEL name="Hazelcast Enterprise" \
 EXPOSE 5701
 
 COPY licenses /licenses
-COPY --from=get-distribution ${HZ_HOME} ${HZ_HOME}/
 
-# Install
-RUN echo "Upgrading packages" \
-    && microdnf -y update --nodocs \
+COPY --link --from=get-distribution ${BUILD_ROOT} /
+
+RUN echo "Adding non-root user" \
+    && groupadd --system ${USER_GROUP} \
+    && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME} \
+    && chage --lastday 0 ${USER_NAME} \
     && echo "Installing new packages" \
     && microdnf -y --nodocs --disablerepo=* --enablerepo=ubi-9-appstream-rpms --enablerepo=ubi-9-baseos-rpms \
         --disableplugin=subscription-manager install \
@@ -80,13 +87,17 @@ RUN echo "Upgrading packages" \
         tar \
         util-linux \
     && echo "Removing unnecessary packages and redundant files/folders" \
-    && microdnf -y clean all
+    && microdnf -y clean all \
+    && rm -f /var/cache/ldconfig/aux-cache /var/lib/dnf/history.sqlite*
+
+RUN echo "Upgrading packages" \
+    && microdnf -y update --nodocs \
+    && microdnf -y clean all \
+    && rm -f /var/cache/ldconfig/aux-cache /var/lib/dnf/history.sqlite*
+
 
 WORKDIR ${HZ_HOME}
 
-RUN echo "Adding non-root user" \
-    && groupadd --system ${USER_GROUP} \
-    && useradd --no-log-init --system --gid ${USER_GROUP} --create-home ${USER_NAME}
 USER ${USER_NAME}
 
 HEALTHCHECK CMD ["hz-healthcheck"]

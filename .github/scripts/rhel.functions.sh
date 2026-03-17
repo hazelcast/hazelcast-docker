@@ -35,6 +35,24 @@ __get_image_tags()
   return 0
 }
 
+# Looks up a Pyxis image ID by digest within a certification project
+get_image_id_by_digest()
+{
+  local project_id=$1
+  local digest=$2
+  local api_key=$3
+
+  # https://catalog.redhat.com/api/containers/docs/endpoints/RESTGetCertProjectsForProductListing.html
+  curl --fail \
+    --silent \
+    --show-error \
+    --header "X-API-KEY: ${api_key}" \
+    "https://catalog.redhat.com/api/containers/v1/projects/certification/id/${project_id}/images?filter=docker_image_digest==${digest};deleted!=true" | \
+    jq --raw-output '.data[0]._id'
+
+  return 0
+}
+
 __sync_tags()
 {
   local project_id=$1
