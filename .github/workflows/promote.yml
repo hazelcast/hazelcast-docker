@@ -42,8 +42,10 @@ jobs:
     runs-on: ubuntu-slim
     steps:
         # https://github.com/Codex-/return-dispatch#receiving-repository-action
-      - name: Logging distinct ID (${{ github.event.inputs.distinct_id }})
-        run: echo ${{ github.event.inputs.distinct_id }}
+      - name: Logging distinct ID (${{ inputs.distinct_id }})
+        run: echo "${DISTINCT_ID}"
+        env:
+          DISTINCT_ID: ${{ inputs.distinct_id }}
 
       - uses: hazelcast/docker-actions/get-tag-name@master
         id: tag-name
