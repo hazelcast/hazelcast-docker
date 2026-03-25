@@ -1,4 +1,4 @@
-name: Package image and deploy to pre-prod
+run-name: Package image and deploy to pre-prod (`${{ inputs.SOURCE_REF }}`/${{ inputs.ENVIRONMENT }})
 
 on:
   # For debugging only

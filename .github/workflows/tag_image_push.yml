@@ -1,4 +1,4 @@
-name: Build OS and EE image
+run-name: Build OS and EE image (`${{ inputs.SOURCE_REF }}`/${{ inputs.ENVIRONMENT }})
 
 on:
   # Triggered via Jenkins for SNAPSHOTs

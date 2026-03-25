@@ -1,4 +1,4 @@
-name: Promote image from pre-prod to prod
+run-name: Promote image from pre-prod to prod (`${{ inputs.VERSION }}`/${{ inputs.ENVIRONMENT }})
 
 on:
   # Called from release orchestrator

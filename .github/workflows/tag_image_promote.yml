@@ -1,4 +1,4 @@
-name: Promote image from pre-prod to prod registries
+run-name: Promote image from pre-prod to prod registries (`${{ inputs.SOURCE_REF }}`/${{ inputs.ENVIRONMENT }})
 
 on:
   # For debugging only

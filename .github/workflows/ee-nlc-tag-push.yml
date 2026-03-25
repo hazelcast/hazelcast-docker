@@ -1,4 +1,4 @@
-name: Build EE NLC image
+run-name: Build EE NLC image (`${{ inputs.SOURCE_REF }}`/${{ inputs.ENVIRONMENT }})
 
 on:
   # Triggered via Jenkins for SNAPSHOTs
