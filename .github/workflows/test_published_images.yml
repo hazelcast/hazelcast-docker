@@ -123,7 +123,7 @@ jobs:
           aws-region: 'us-east-1'
 
       - name: Get Secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        uses: aws-actions/aws-secretsmanager-get-secrets@v3
         with:
           secret-ids: |
             REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT,REDHAT/REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT
