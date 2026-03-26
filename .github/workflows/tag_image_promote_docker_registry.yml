@@ -1,4 +1,4 @@
-run-name: Promote image from pre-prod to prod Docker registry (DockerHub or JFrog) (`${{ inputs.HZ_VERSION }}`/${{ inputs.ENVIRONMENT }})
+run-name: Promote image from pre-prod to prod Docker registry (DockerHub or JFrog) (`${{ inputs.HZ_VERSION }}`@${{ inputs.ENVIRONMENT }})
 
 on:
   # For debugging only
