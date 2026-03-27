@@ -13,7 +13,10 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"
+      # https://github.com/dependabot/dependabot-core/issues/6345#issuecomment-3376986288
+      - "/.github/actions/*"
     target-branch: "master"
     schedule:
       interval: "daily"
