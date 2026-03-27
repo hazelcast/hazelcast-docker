@@ -1,7 +1,7 @@
 # Used for image metadata only
 # Describes the version of the Dockerfile, *not* the version of the bundled Hazelcast binary as this is/can be controlled externally
 # Dockerfile needs some concept of versioning so that the release pipeline can tag/archive with an appropriate label
-ARG HZ_VERSION=5.7.0-SNAPSHOT
+ARG HZ_VERSION=5.8.0-SNAPSHOT
 
 # Build constants
 ARG HZ_HOME="/opt/hazelcast"
