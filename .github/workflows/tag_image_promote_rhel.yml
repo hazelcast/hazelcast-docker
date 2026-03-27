@@ -1,4 +1,5 @@
 name: Promote image from pre-prod to prod RedHat registry
+run-name: ${{ github.workflow }} (`${{ inputs.HZ_VERSION }}`@${{ inputs.ENVIRONMENT }})
 
 on:
   # For debugging only
