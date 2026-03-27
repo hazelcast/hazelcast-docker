@@ -1,4 +1,5 @@
-run-name: Build EE NLC image (`${{ inputs.SOURCE_REF }}`@${{ inputs.ENVIRONMENT }})
+name: Build EE NLC image
+run-name: ${{ github.workflow }} (`${{ inputs.SOURCE_REF }}`@${{ inputs.ENVIRONMENT }})
 
 on:
   # Triggered via Jenkins for SNAPSHOTs
