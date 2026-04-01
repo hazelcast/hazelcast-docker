@@ -7,8 +7,8 @@ jobs:
       id-token: write
     outputs:
       url: '${{ steps.jfrog.outputs.url }}'
-      user: '${{ steps.jfrog.outputs.oidc-user }}'
-      token: '${{ steps.jfrog.outputs.oidc-token }}'
+      user: '${{ steps.jfrog.outputs.user }}'
+      token: '${{ steps.jfrog.outputs.token }}'
     steps:
       - uses: hazelcast/docker-actions/get-jfrog-credentials@master
         id: jfrog
