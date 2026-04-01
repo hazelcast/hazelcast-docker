@@ -1,0 +1,32 @@
+name: Permissions reproducer
+
+on:
+  pull_request
+
+jobs:
+  with-default-permissions:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: 'us-east-1'
+
+  with-id-token-permission:
+    runs-on: ubuntu-slim
+    permissions:
+      id-token: write
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: 'us-east-1'
+
+  with-write-all-permissions:
+    runs-on: ubuntu-slim
+    permissions: write-all
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: 'us-east-1'
