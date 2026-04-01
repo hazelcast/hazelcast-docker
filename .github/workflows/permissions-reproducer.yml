@@ -1,0 +1,41 @@
+name: Permissions reproducer
+'on': pull_request
+jobs:
+  get-creds:
+    runs-on: ubuntu-slim
+    permissions:
+      id-token: write
+    outputs:
+      url: '${{ steps.jfrog.outputs.url }}'
+      user: '${{ steps.jfrog.outputs.user }}'
+      token: '${{ steps.jfrog.outputs.token }}'
+    steps:
+      - uses: hazelcast/docker-actions/get-jfrog-credentials@master
+        id: jfrog
+        with:
+          aws-role-to-assume: '${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}'
+          jfrog-oidc-provider-name: '${{ github.repository_owner }}-snapshot-internal'
+  use-creds:
+    runs-on: ubuntu-latest
+    needs: get-creds
+    steps:
+      - uses: s4u/maven-settings-action@894661b3ddae382f1ae8edbeab60987e08cf0788
+        with:
+          servers: |
+            [{
+                "id": "snapshot-internal",
+                "username": "${{ needs.get-creds.outputs.user }}",
+                "password": "${{ needs.get-creds.outputs.token }}"
+            }]
+      - run: |
+          set -x
+
+          mvn \
+              dependency:get \
+              -DremoteRepositories="snapshot-internal::::${{ needs.get-creds.outputs.url }}" \
+              -DgroupId="com.hazelcast" \
+              -DartifactId="hazelcast-distribution" \
+              -Dversion="5.7.0" \
+              -Dclassifier="slim" \
+              -Dpackaging="tar.gz" \
+              -Dtransitive=false \
