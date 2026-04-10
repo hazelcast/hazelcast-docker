@@ -100,12 +100,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v6
 
-      - uses: madhead/semver-utils@latest
+      - uses: madhead/semver-utils@36d1e0ed361bd7b4b77665de8093092eaeabe6ba # v4.3.0
         id: image-version
         with:
           version: ${{ inputs.IMAGE_VERSION }}
 
-      - uses: madhead/semver-utils@latest
+      - uses: madhead/semver-utils@36d1e0ed361bd7b4b77665de8093092eaeabe6ba # v4.3.0
         id: expected-hz-version
         with:
           version: ${{ inputs.EXPECTED_HZ_VERSION }}
