@@ -62,7 +62,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: madhead/semver-utils@latest
+      - uses: madhead/semver-utils@36d1e0ed361bd7b4b77665de8093092eaeabe6ba # v4.3.0
         id: version
         with:
           version: ${{ inputs.HZ_VERSION }}
