@@ -1,6 +1,12 @@
 name: Verify layer reproducibility
 
 on:
+  workflow_dispatch:
+    inputs:
+      SOURCE_REF:
+        description: 'The hazelcast-docker branch to verify'
+        required: true
+        type: string
   workflow_call:
     inputs:
       SOURCE_REF:
