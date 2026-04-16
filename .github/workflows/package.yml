@@ -2,7 +2,7 @@ name: Package all images and deploy to pre-prod
 run-name: ${{ github.workflow }} (`${{ inputs.VERSION }}`@${{ inputs.ENVIRONMENT }})
 
 on:
-  # Called from release pipeline
+  # Called from release orchestrator
   workflow_dispatch:
     inputs:
       VERSION:
@@ -20,6 +20,9 @@ on:
         description: 'Environment to use'
         required: true
         type: environment
+      distinct_id:
+        description: 'Required exclusively for automated execution to track status of workflow execution'
+        required: false
   workflow_call:
     inputs:
       VERSION:
@@ -36,6 +39,16 @@ on:
         type: string
 
 jobs:
+  log-distinct-id:
+    runs-on: ubuntu-slim
+    if: inputs.distinct_id != ''
+    steps:
+        # https://github.com/Codex-/return-dispatch#receiving-repository-action
+      - name: Logging distinct ID (${{ inputs.distinct_id }})
+        run: echo "${DISTINCT_ID}"
+        env:
+          DISTINCT_ID: ${{ inputs.distinct_id }}
+
   package:
     uses: ./.github/workflows/tag_image_package.yml
     with:
