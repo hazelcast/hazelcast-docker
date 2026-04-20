@@ -69,12 +69,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.VERSION }}
 
-      - name: Create release
-        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1
-        with:
-          allowUpdates: true
-          tag: ${{ steps.tag-name.outputs.TAG_NAME }}
-
   promote:
     uses: ./.github/workflows/tag_image_promote.yml
     with:
