@@ -7,7 +7,7 @@ ARG HZ_VERSION=5.7.0-SNAPSHOT
 ARG HZ_HOME="/opt/hazelcast"
 ARG USER_NAME="hazelcast"
 ARG USER_GROUP="hazelcast"
-ARG JDK_VERSION="21"
+ARG JDK_VERSION="25"
 ARG BUILD_ROOT=/build_root
 
 FROM alpine:3 AS get-distribution
