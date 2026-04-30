@@ -90,6 +90,7 @@ jobs:
           do
             skopeo copy \
               --all \
+              --retry-times 3 \
               docker://${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}/${NLC_IMAGE_NAME}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
               docker://${NLC_IMAGE_REGISTRY_URL}/${{ vars.NLC_NAMESPACE }}/${NLC_IMAGE_NAME}:${tag}
           done
