@@ -165,6 +165,7 @@ jobs:
         run: |
           # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
           skopeo copy \
+            --retry-times 3 \
             --override-os "${PLATFORM_OS}" \
             --override-arch "${PLATFORM_ARCH}" \
             docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
@@ -227,6 +228,7 @@ jobs:
           do
             echo "Copying tag: ${FULL_PRIMARY_TAG} -> ${tag}"
             skopeo copy \
+              --retry-times 3 \
               --override-os "${PLATFORM_OS}" \
               --override-arch "${PLATFORM_ARCH}" \
               docker://${FULL_PRIMARY_TAG} \

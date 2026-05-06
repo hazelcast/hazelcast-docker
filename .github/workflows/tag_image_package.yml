@@ -182,6 +182,7 @@ jobs:
           # Skopeo expects HTTPS registry but local is HTTP
           skopeo copy \
             --all \
+            --retry-times 3 \
             --src-tls-verify=false \
             docker://${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
             docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
