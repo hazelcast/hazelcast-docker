@@ -120,7 +120,7 @@ jobs:
         # To work around this RedHat quirk we need to skip these steps for republish
         id: image-already-published
         env:
-          FULL_PRIMARY_TAG: ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+          FULL_PRIMARY_TAG: hazelcast/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
         run: |
           source .github/scripts/logging.functions.sh
           source .github/scripts/rhel.functions.sh
@@ -168,7 +168,7 @@ jobs:
             --retry-times 3 \
             --override-os "${PLATFORM_OS}" \
             --override-arch "${PLATFORM_ARCH}" \
-            docker://${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            docker://hazelcast/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
             docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
 
       - name: Install `preflight` OpenShift tool from GitHub
@@ -236,7 +236,7 @@ jobs:
           done
         env:
           TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
-          FULL_PRIMARY_TAG: ${{ vars.DOCKERHUB_NAMESPACE }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+          FULL_PRIMARY_TAG: hazelcast/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
 
       - name: Check tags published
         # Just because the tag has been pushed to the registry, does not guarantee it's accessible
