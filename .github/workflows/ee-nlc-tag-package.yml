@@ -48,7 +48,7 @@ jobs:
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
     env:
-      LOCAL_IMAGE_NAME: localhost:5000/${{ secrets.NLC_IMAGE_NAME }}
+      LOCAL_IMAGE_NAME: localhost:5000/${{ vars.NLC_IMAGE_NAME }}
       DOCKER_DIR: hazelcast-enterprise
       TEST_CONTAINER_NAME: hazelcast-test
     services:
@@ -90,7 +90,7 @@ jobs:
 
           echo "output_file=${OUTPUT_FILE}" >> "${GITHUB_OUTPUT}"
         env:
-          S3_NLC_URL: ${{ secrets.S3_NLC_URL }}
+          S3_NLC_URL: ${{ vars.S3_NLC_URL }}
 
       - id: get-tags-to-push
         uses: ./.github/actions/get-tags-to-push-nlc
@@ -192,7 +192,7 @@ jobs:
             docker://${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
             docker://${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${NLC_IMAGE_NAME}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
         env:
-          NLC_IMAGE_NAME: ${{ secrets.NLC_IMAGE_NAME }}
+          NLC_IMAGE_NAME: ${{ vars.NLC_IMAGE_NAME }}
 
   failure-notifications:
     name: Failure notification
