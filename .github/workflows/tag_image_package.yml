@@ -98,7 +98,7 @@ jobs:
         id: download-hz-dist
         with:
           repo-vars-as-json: ${{ toJSON(vars) }}
-          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-role-to-assume: ${{ vars.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           distribution: ${{ matrix.distribution-type.distribution }}
           hz_version: ${{ needs.prepare.outputs.hz-version }}
           classifier: ${{ matrix.classifier }}
