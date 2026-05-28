@@ -89,7 +89,7 @@ jobs:
       - uses: hazelcast/docker-actions/get-jfrog-credentials@master
         id: authenticate-jfrog-write-dev-account
         with:
-          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-role-to-assume: ${{ vars.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           jfrog-oidc-provider-name: ${{ github.repository_owner }}-write-dev-account
 
       - uses: docker/login-action@v4
