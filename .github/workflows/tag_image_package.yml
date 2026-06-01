@@ -51,7 +51,9 @@ jobs:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
   package:
-    environment: ${{ inputs.ENVIRONMENT }}
+    environment:
+      name: ${{ inputs.ENVIRONMENT }}
+      deployment: false
     runs-on: ubuntu-latest
     permissions:
       id-token: write

@@ -32,7 +32,9 @@ on:
 
 jobs:
   prepare:
-    environment: ${{ inputs.ENVIRONMENT }}
+    environment:
+      name: ${{ inputs.ENVIRONMENT }}
+      deployment: false
     runs-on: ubuntu-latest
     outputs:
       distribution-classifiers: ${{ steps.distribution-classifiers.outputs.classifiers }}

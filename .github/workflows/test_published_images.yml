@@ -83,7 +83,9 @@ jobs:
         uses: hazelcast/docker-actions/get-distribution-classifiers@master
 
   test:
-    environment: live
+    environment:
+      name: live
+      deployment: false
     runs-on: ubuntu-latest
     permissions:
       id-token: write
