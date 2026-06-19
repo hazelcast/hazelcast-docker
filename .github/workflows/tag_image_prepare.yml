@@ -46,7 +46,7 @@ jobs:
       should-build-ee: ${{ steps.resolve-editions.outputs.should_build_ee }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.SOURCE_REF }}
           fetch-depth: 0
