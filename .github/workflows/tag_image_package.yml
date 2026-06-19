@@ -73,11 +73,11 @@ jobs:
         ports:
           - 5000:5000
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.SOURCE_REF }}
           path: source_path

@@ -50,7 +50,7 @@ jobs:
       distribution-classifiers: ${{ steps.distribution-classifiers.outputs.classifiers }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Parse input into matrix
         id: set-matrix
         run: |
@@ -100,7 +100,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - uses: madhead/semver-utils@4cf918affe9106ea59f86c6250e5ec4570ac4389 # v5.0.0
         id: image-version

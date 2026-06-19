@@ -55,7 +55,7 @@ jobs:
         ports:
           - 5000:5000
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - id: get-tags-to-push
         uses: ./.github/actions/get-tags-to-push-nlc
