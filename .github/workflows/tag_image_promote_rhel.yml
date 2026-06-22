@@ -222,6 +222,7 @@ jobs:
           done
 
       - name: Copy remaining tags to RedHat Container Registry
+        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |
           for tag in ${TAGS_TO_PUSH}
           do
@@ -242,6 +243,7 @@ jobs:
         # RedHat has a `sync-tags` operation that is performed asynchronously after publish - and there have been scenarios where this has gone wrong and the tag is not accessible
         # As such, await completion and test 
         timeout-minutes: 240
+        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |
           set -o errexit ${RUNNER_DEBUG:+-x}
 
