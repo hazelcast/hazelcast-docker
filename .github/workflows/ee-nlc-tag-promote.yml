@@ -90,7 +90,7 @@ jobs:
           do
             skopeo copy \
               --all \
-              --retry-times 3 \
+              --retry-times 10 \
               docker://${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${NLC_IMAGE_NAME}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
               docker://${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${NLC_IMAGE_NAME}:${tag}
           done
