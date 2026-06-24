@@ -189,7 +189,7 @@ jobs:
           # Skopeo expects HTTPS registry but local is HTTP
           skopeo copy \
             --all \
-            --retry-times 3 \
+            --retry-times 10 \
             --src-tls-verify=false \
             docker://${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
             docker://${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${NLC_IMAGE_NAME}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
