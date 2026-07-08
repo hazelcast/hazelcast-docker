@@ -5,7 +5,7 @@ set -eu ${RUNNER_DEBUG:+-x}
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 
 # Source the latest version of assert.sh unit testing library and include in current shell
-source /dev/stdin <<< "$(curl --fail --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)"
+source /dev/stdin <<< "$(curl --fail --retry 5 --retry-all-errors --show-error --silent https://raw.githubusercontent.com/hazelcast/assert.sh/main/assert.sh)"
 
 . "$SCRIPT_DIR"/get-tags-to-push.sh
 
