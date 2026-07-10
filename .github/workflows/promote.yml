@@ -41,6 +41,8 @@ on:
 jobs:
   tag:
     runs-on: ubuntu-slim
+    permissions:
+      contents: write
     steps:
         # https://github.com/Codex-/return-dispatch#receiving-repository-action
       - name: Logging distinct ID (${{ inputs.distinct_id }})
