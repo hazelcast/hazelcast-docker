@@ -48,26 +48,10 @@ jobs:
         env:
           DISTINCT_ID: ${{ inputs.distinct_id }}
 
-      - uses: hazelcast/docker-actions/get-tag-name@master
-        id: tag-name
+      - uses: hazelcast/docker-actions/create-tag@master
         with:
-          VERSION: ${{ inputs.VERSION }}
-
-      - name: Create `${{ steps.tag-name.outputs.TAG_NAME }}` tag
-        run: |
-          SHA=$(gh api \
-            repos/${GITHUB_REPOSITORY}/git/ref/heads/${VERSION} \
-            --jq .object.sha)
-
-          # Create remote tag
-          gh api \
-            -X POST \
-            repos/${GITHUB_REPOSITORY}/git/refs \
-            -f ref=refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \
-            -f sha="${SHA}"
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.VERSION }}
+          TOKEN: ${{ github.token }}
+          BRANCH: ${{ inputs.VERSION }}
 
   promote:
     uses: ./.github/workflows/tag_image_promote.yml

@@ -35,21 +35,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Recreate `${{ steps.tag-name.outputs.TAG_NAME }}` tag
+      - name: Delete remote `${{ steps.tag-name.outputs.TAG_NAME }}` tag
         if: ${{ env.SKIP != 'true' }}
         run: |
-          # Delete remote tag
           gh api \
               -X DELETE \
               repos/${GITHUB_REPOSITORY}/git/refs/tags/${{ steps.tag-name.outputs.TAG_NAME }}
 
-          SHA=$(gh api \
-            repos/${GITHUB_REPOSITORY}/git/ref/heads/${BRANCH_NAME} \
-            --jq .object.sha)
-
-          # Create remote tag
-          gh api \
-            -X POST \
-            repos/${GITHUB_REPOSITORY}/git/refs \
-            -f ref=refs/tags/${{ steps.tag-name.outputs.TAG_NAME }} \
-            -f sha="${SHA}"
+      - uses: hazelcast/docker-actions/create-tag@master
+        if: ${{ env.SKIP != 'true' }}
+        with:
+          TOKEN: ${{ github.token }}
+          BRANCH: ${{ env.BRANCH_NAME }}
+          TAG_NAME: ${{ steps.tag-name.outputs.TAG_NAME }}
