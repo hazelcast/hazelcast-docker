@@ -56,7 +56,7 @@ jobs:
         with:
           ref: ${{ inputs.VERSION }}
 
-      - name: Update `SNAPSHOT` to release version
+      - name: Update Dockerfile `SNAPSHOT` version to release version
         run: |
           find . -type f -iname 'Dockerfile' \
             -exec sed -i -E "s/^ARG HZ_VERSION=.*/ARG HZ_VERSION=${VERSION}/" {} +
