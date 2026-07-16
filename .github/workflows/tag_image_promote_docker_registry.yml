@@ -94,14 +94,14 @@ jobs:
 
       - uses: docker/login-action@v4
         with:
-          registry: ${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}
+          registry: docker.hazelcast.com
           username: ${{ steps.authenticate-jfrog-write-dev-account.outputs.user }}
           password: ${{ steps.authenticate-jfrog-write-dev-account.outputs.token }}
 
       - name: Push image to remote registry
         run: |
           if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-            remote_registry=${{ steps.authenticate-jfrog-write-dev-account.outputs.url }}/docker/hazelcast
+            remote_registry=docker.hazelcast.com/hazelcast
           else
             remote_registry=hazelcast
           fi
