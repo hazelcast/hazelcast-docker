@@ -101,7 +101,7 @@ jobs:
       - name: Push image to remote registry
         run: |
           if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
-            remote_registry=docker.hazelcast.com/hazelcast
+            remote_registry=docker.hazelcast.com/docker/hazelcast
           else
             remote_registry=hazelcast
           fi
