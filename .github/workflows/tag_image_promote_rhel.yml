@@ -172,7 +172,7 @@ jobs:
 
       - name: Install `preflight` OpenShift tool from GitHub
         if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
-        uses: redhat-actions/openshift-tools-installer@v1
+        uses: redhat-actions/openshift-tools-installer@v2
         with:
           preflight: "latest"
           source: github
