@@ -36,7 +36,32 @@ on:
         type: string
 
 jobs:
+  update-version:
+    runs-on: ubuntu-slim
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ inputs.VERSION }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.VERSION }}
+
+      - name: Update Dockerfile `SNAPSHOT` version to release version
+        run: |
+          find . -type f -iname 'Dockerfile' \
+            -exec sed -i -E "s/^ARG HZ_VERSION=.*/ARG HZ_VERSION=${VERSION}/" {} +
+
+      - name: Commit
+        run: |
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+          git commit --all --message "Upgrade version to \`${VERSION}\`"
+          git push
+
   package:
+    needs: update-version
     uses: ./.github/workflows/tag_image_package.yml
     with:
       SOURCE_REF: ${{ inputs.VERSION }}
@@ -46,6 +71,7 @@ jobs:
 
   package-nlc:
     if: inputs.RELEASE_TYPE != 'OSS'
+    needs: update-version
     uses: ./.github/workflows/ee-nlc-tag-package.yml
     with:
       SOURCE_REF: ${{ inputs.VERSION }}
