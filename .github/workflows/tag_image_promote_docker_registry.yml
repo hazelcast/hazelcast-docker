@@ -103,7 +103,7 @@ jobs:
           if [[ "${{ matrix.distribution-type.label }}" == "oss" && "${HZ_VERSION}" =~ SNAPSHOT ]]; then
             remote_registry=docker.hazelcast.com/docker/hazelcast
           else
-            remote_registry=hazelcast
+            remote_registry=${{ vars.DOCKERHUB_ORGANIZATION }}
           fi
 
           for tag in ${TAGS_TO_PUSH}
@@ -111,7 +111,7 @@ jobs:
             skopeo copy \
               --all \
               --retry-times 10 \
-              docker://hazelcast/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+              docker://${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
               docker://${remote_registry}/${{ matrix.distribution-type.image-name }}:${tag}
           done
         env:
