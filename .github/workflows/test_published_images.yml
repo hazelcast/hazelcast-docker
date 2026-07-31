@@ -113,7 +113,7 @@ jobs:
           version: ${{ inputs.EXPECTED_HZ_VERSION }}
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.5.2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
@@ -134,7 +134,7 @@ jobs:
 
       - name: Login to NLC registry
         if: matrix.distribution-type == 'ee'
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.5.2
         with:
           registry: ${{ env.NLC_IMAGE_REGISTRY_URL }}
           username: ${{ env.NLC_IMAGE_REGISTRY_USERNAME }}
@@ -142,7 +142,7 @@ jobs:
 
       - name: Login to Red Hat Catalog
         if: matrix.distribution-type == 'ee'
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.5.2
         with:
           registry: registry.connect.redhat.com
           username: ${{ env.REDHAT_CATALOG_REGISTRY_CONNECT_ROBOT_USERNAME }}
