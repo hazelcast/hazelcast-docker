@@ -56,6 +56,8 @@ jobs:
   calculate-rebuilds:
     environment: ${{ needs.get-environment.outputs.environment }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     name: Calculate if ${{ matrix.version }} needs a rebuild
     needs:
       - get-environment
@@ -68,9 +70,10 @@ jobs:
         # Always login to Dockerhub to avoid rate limiting when pulling base images
         if: ${{ !inputs.FORCE_REBUILD }}
         uses: docker/login-action@v4
+        env:
+          DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          username: ${{ vars.DOCKERHUB_ORGANIZATION }}
 
       - id: check-base-images
         if: ${{ !inputs.FORCE_REBUILD }}
