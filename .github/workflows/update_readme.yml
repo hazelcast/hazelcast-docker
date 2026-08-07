@@ -45,7 +45,7 @@ jobs:
         run: |
           .github/scripts/generate-docker-hub-description.sh
         env:
-          NAMESPACE: hazelcast
+          NAMESPACE: ${{ vars.DOCKERHUB_ORGANIZATION }}
           OSS_IMAGE_NAME: ${{ vars.DOCKERHUB_OSS_IMAGE_NAME }}
           EE_IMAGE_NAME: ${{ vars.DOCKERHUB_EE_IMAGE_NAME }}
           USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -56,7 +56,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          repository: hazelcast/${{ matrix.image_name }}
+          repository: ${{ vars.DOCKERHUB_ORGANIZATION }}/${{ matrix.image_name }}
           short-description: ${{ matrix.label }} Docker Image
           readme-filepath: ./README-docker.md
 

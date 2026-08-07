@@ -202,7 +202,7 @@ jobs:
           fi
 
           echo "Testing Docker registry"
-          simple-smoke-test "hazelcast" "${image_name}"
+          simple-smoke-test "${{ vars.DOCKERHUB_ORGANIZATION }}" "${image_name}"
 
           # Check additional EE repos
           # Only populated for default variant, not "slim"
