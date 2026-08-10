@@ -95,14 +95,6 @@ jobs:
         with:
           platforms: ${{ steps.platforms.outputs.platforms }}
 
-      - name: Login to Docker Hub
-        # Always login to Dockerhub to avoid rate limiting when pulling base images
-        uses: docker/login-action@v4
-        env:
-          DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
-        with:
-          username: ${{ vars.DOCKERHUB_ORGANIZATION }}
-
       - name: Download the distribution file
         uses: hazelcast/docker-actions/download-hz-dist@master
         id: download-hz-dist
@@ -180,6 +172,13 @@ jobs:
         with:
           name: docker-logs-tag-image-push-${{ matrix.distribution-type.image-name }}-${{ steps.get-tags-to-push.outputs.primary-tag }}
           path: docker.log
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        env:
+          DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
+        with:
+          username: ${{ vars.DOCKERHUB_ORGANIZATION }}
 
       - name: Push image to remote registry
         run: |

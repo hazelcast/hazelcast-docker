@@ -94,6 +94,8 @@ jobs:
         uses: docker/login-action@v4
         env:
           DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
+          # We need the token to be kept alive until the image has finished testing
+          DOCKERHUB_OIDC_EXPIREIN: 3600
         with:
           username: ${{ vars.DOCKERHUB_ORGANIZATION }}
 
@@ -208,7 +210,7 @@ jobs:
         # Although we use autopublish, this simply triggers an asynchronous process on the server side
         # To _try_ to attain republish atomicity, we want to await the successful publishing of the new, unique tag _before_ we push (and implicitly replace) the existing tags
         # Otherwise we'd replace a published image with an unpublished one
-        timeout-minutes: 240
+        timeout-minutes: 60
         if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'   
         run: |
           set -o errexit ${RUNNER_DEBUG:+-x}
