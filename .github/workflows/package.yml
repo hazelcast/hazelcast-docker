@@ -57,7 +57,7 @@ jobs:
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
-          git commit --all --message "Upgrade version to \`${VERSION}\`"
+          git commit --allow-empty --all --message "Upgrade version to \`${VERSION}\`"
           git push
 
   package:
