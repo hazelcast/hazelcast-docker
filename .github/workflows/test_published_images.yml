@@ -33,15 +33,22 @@ jobs:
     steps:
       - name: Add workflow inputs to summary
         run: |
-          echo "### Workflow inputs" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Name | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| IMAGE_VERSION | ${{ inputs.IMAGE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| EXPECTED_HZ_VERSION | ${{ inputs.EXPECTED_HZ_VERSION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| DISTRIBUTION_TYPE | ${{ inputs.DISTRIBUTION_TYPE }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| EXPECTED_DEFAULT_JAVA_VERSION | ${{ inputs.EXPECTED_DEFAULT_JAVA_VERSION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| OTHER_JDKS | ${{ inputs.OTHER_JDKS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "### Workflow inputs" >> ${GITHUB_STEP_SUMMARY}
+          echo "" >> ${GITHUB_STEP_SUMMARY}
+          echo "| Name | Value |" >> ${GITHUB_STEP_SUMMARY}
+          echo "|------|-------|" >> ${GITHUB_STEP_SUMMARY}
+          echo "| IMAGE_VERSION | ${IMAGE_VERSION} |" >> ${GITHUB_STEP_SUMMARY}
+          echo "| EXPECTED_HZ_VERSION | ${EXPECTED_HZ_VERSION} |" >> ${GITHUB_STEP_SUMMARY}
+          echo "| DISTRIBUTION_TYPE | ${DISTRIBUTION_TYPE} |" >> ${GITHUB_STEP_SUMMARY}
+          echo "| EXPECTED_DEFAULT_JAVA_VERSION | ${EXPECTED_DEFAULT_JAVA_VERSION} |" >> ${GITHUB_STEP_SUMMARY}
+          echo "| OTHER_JDKS | ${OTHER_JDKS} |" >> ${GITHUB_STEP_SUMMARY}
+        env:
+          IMAGE_VERSION: ${{ inputs.IMAGE_VERSION }}
+          EXPECTED_HZ_VERSION: ${{ inputs.EXPECTED_HZ_VERSION }}
+          DISTRIBUTION_TYPE: ${{ inputs.DISTRIBUTION_TYPE }}
+          EXPECTED_DEFAULT_JAVA_VERSION: ${{ inputs.EXPECTED_DEFAULT_JAVA_VERSION }}
+          OTHER_JDKS: ${{ inputs.OTHER_JDKS }}
+
   set-matrix:
     runs-on: ubuntu-latest
     outputs:
@@ -72,12 +79,12 @@ jobs:
               exit 1
               ;;
           esac
-          echo "distribution-type-matrix=${matrix}" >> $GITHUB_OUTPUT
+          echo "distribution-type-matrix=${matrix}" >> ${GITHUB_OUTPUT}
 
           # https://unix.stackexchange.com/a/719752 + trim
           # Add an "empty" option for base image
           matrix=$(echo '"${{ inputs.OTHER_JDKS }}"' | jq --compact-output 'split(",") + [""] | map(gsub("^\\s+|\\s+$"; ""))' )
-          echo "jdk-image-variants-matrix=${matrix}" >> $GITHUB_OUTPUT
+          echo "jdk-image-variants-matrix=${matrix}" >> ${GITHUB_OUTPUT}
 
       - id: distribution-classifiers
         uses: hazelcast/docker-actions/get-distribution-classifiers@master
@@ -167,7 +174,7 @@ jobs:
             if [ -n "${{ matrix.jdk-image-variant }}" ]; then
               expected_jdk_version=${{ matrix.jdk-image-variant }}
             else
-              expected_jdk_version=${{ inputs.EXPECTED_DEFAULT_JAVA_VERSION }}
+              expected_jdk_version=${EXPECTED_DEFAULT_JAVA_VERSION}
             fi
 
             # Compute tag by concatenating tag_elements
@@ -187,7 +194,7 @@ jobs:
               "${image}" \
               "${CONTAINER_NAME}" \
               "${{ matrix.distribution-type }}" \
-              "${{ inputs.EXPECTED_HZ_VERSION }}" \
+              "${EXPECTED_HZ_VERSION}" \
               "${expected_jdk_version}"
 
             docker stop "${CONTAINER_NAME}"
@@ -213,7 +220,7 @@ jobs:
           fi
 
           # To allow computing the required tag, store the elements in an array
-          tag_elements=("${{ inputs.IMAGE_VERSION }}")
+          tag_elements=("${IMAGE_VERSION}")
 
           if [[ -n "${{ matrix.classifier }}" ]]; then
             tag_elements+=("${{ matrix.classifier }}")
@@ -239,6 +246,10 @@ jobs:
             echo "Testing Red Hat Catalog"
             simple-smoke-test "registry.connect.redhat.com/hazelcast" "${image_name}-${{ steps.expected-hz-version.outputs.major }}-rhel8"
           fi
+        env:
+          IMAGE_VERSION: ${{ inputs.IMAGE_VERSION }}
+          EXPECTED_HZ_VERSION: ${{ inputs.EXPECTED_HZ_VERSION }}
+          EXPECTED_DEFAULT_JAVA_VERSION: ${{ inputs.EXPECTED_DEFAULT_JAVA_VERSION }}
 
       - name: Get docker logs
         if: always()
