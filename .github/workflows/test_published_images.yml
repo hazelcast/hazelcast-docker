@@ -171,7 +171,11 @@ jobs:
             fi
 
             # Compute tag by concatenating tag_elements
-            .github/scripts/simple-smoke-test.sh "${repository}/${image_name}":$(IFS=- ; echo "${tag_elements[*]}") "${CONTAINER_NAME}" "${{ matrix.distribution-type }}" "${{ inputs.EXPECTED_HZ_VERSION }}" "${expected_jdk_version}"
+            local image="${repository}/${image_name}":$(IFS=- ; echo "${tag_elements[*]}")
+
+            docker run -it --name "${CONTAINER_NAME}" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "${image}"
+            .github/scripts/simple-smoke-test.sh "${image}" "${CONTAINER_NAME}" "${{ matrix.distribution-type }}" "${{ inputs.EXPECTED_HZ_VERSION }}" "${expected_jdk_version}"
+            docker stop "${CONTAINER_NAME}"
           }
 
           case "${{ matrix.distribution-type }}" in
