@@ -151,8 +151,8 @@ jobs:
         run: |
           docker run \
             --name "${TEST_CONTAINER_NAME}" \
-            -e HZ_LICENSEKEY \
-            -p5701:5701 \
+            --env HZ_LICENSEKEY \
+            --expose 5701:5701 \
             "${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }}"
         env:
           HZ_LICENSEKEY: ${{ matrix.distribution-type.label == 'ee' && secrets.HAZELCAST_ENTERPRISE_KEY || '' }}
