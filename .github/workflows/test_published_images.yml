@@ -182,7 +182,14 @@ jobs:
               --name "${CONTAINER_NAME}" \
               --tty \
               "${image}"
-            .github/scripts/simple-smoke-test.sh "${image}" "${CONTAINER_NAME}" "${{ matrix.distribution-type }}" "${{ inputs.EXPECTED_HZ_VERSION }}" "${expected_jdk_version}"
+
+            .github/scripts/simple-smoke-test.sh \
+              "${image}" \
+              "${CONTAINER_NAME}" \
+              "${{ matrix.distribution-type }}" \
+              "${{ inputs.EXPECTED_HZ_VERSION }}" \
+              "${expected_jdk_version}"
+
             docker stop "${CONTAINER_NAME}"
           }
 
