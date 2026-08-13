@@ -184,7 +184,7 @@ jobs:
               --detach \
               --env HZ_INSTANCETRACKING_FILENAME \
               --env HZ_LICENSEKEY \
-              --expose 5701:5701 \
+              -p5701:5701 \
               --interactive \
               --name "${CONTAINER_NAME}" \
               --tty \

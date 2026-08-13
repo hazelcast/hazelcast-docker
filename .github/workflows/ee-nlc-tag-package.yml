@@ -143,7 +143,7 @@ jobs:
           docker run \
             --name "${TEST_CONTAINER_NAME}" \
             --env HZ_INSTANCETRACKING_FILENAME \
-            --expose 5701:5701 \
+            -p5701:5701 \
             "${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }}"
         env:
           HZ_INSTANCETRACKING_FILENAME: instance-tracking.txt
