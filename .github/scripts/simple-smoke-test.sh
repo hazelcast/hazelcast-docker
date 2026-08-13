@@ -8,28 +8,8 @@ set -o errexit ${RUNNER_DEBUG:+-x}
 # shellcheck source=../.github/scripts/version.functions.sh
 . .github/scripts/version.functions.sh
 
-function remove_container_if_exists() {
-    local containers
-    containers=$(docker ps --all --quiet --filter name="${container_name}")
-
-    if [[ -n "${containers}" ]]; then
-      echo "Removing existing '${container_name}' container"
-      docker container rm --force "${container_name}"
-    fi
-}
-
-function start_container() {
-    echo "Starting container '${container_name}' from image '${image}'"
-    docker run -it --name "${container_name}" -e HZ_LICENSEKEY -e HZ_INSTANCETRACKING_FILENAME -d -p5701:5701 "${image}"
-}
-
 function get_hz_logs() {
     docker logs "${container_name}"
-}
-
-function stop_container() {
-    echo "Stopping container ${container_name}"
-    docker stop "${container_name}"
 }
 
 function check_java_version() {
@@ -78,12 +58,6 @@ container_name=$2
 input_distribution_type=$3
 expected_version=$4
 expected_java_major_version=$5
-
-
-remove_container_if_exists
-start_container
-
-trap stop_container EXIT
 
 expected_distribution_type=$(derive_expected_distribution_type "${input_distribution_type}")
 test_package "${expected_distribution_type}" "${expected_version}"
