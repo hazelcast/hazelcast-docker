@@ -185,15 +185,16 @@ jobs:
           username: ${{ env.NLC_IMAGE_REGISTRY_USERNAME }}
           password: ${{ env.NLC_IMAGE_REGISTRY_TOKEN }}
 
+      - uses: oras-project/setup-oras@1d808f7d7f6995cc68b7bf507bfe5c5446e1dc9d # v2.0.1
+
       - name: Push image to remote registry
         run: |
-          # Skopeo expects HTTPS registry but local is HTTP
-          skopeo copy \
-            --all \
-            --retry-times 10 \
-            --src-tls-verify=false \
-            docker://${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
-            docker://${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${NLC_IMAGE_NAME}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+          # oras expects HTTPS registry but local is HTTP
+          oras cp \
+            --from-plain-http \
+            --recursive \
+            ${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            ${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${NLC_IMAGE_NAME}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
         env:
           NLC_IMAGE_NAME: ${{ vars.NLC_IMAGE_NAME }}
 

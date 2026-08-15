@@ -162,16 +162,18 @@ jobs:
           # Add date suffix to create unique output tag (e.g. 5.4.1-jdk17-20250909130347)
           echo "tag=${{ steps.get-tags-to-push.outputs.primary-tag }}-$(date +"%Y%m%d%H%M%S")" >> ${GITHUB_OUTPUT}
 
+      - if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'   
+        uses: oras-project/setup-oras@1d808f7d7f6995cc68b7bf507bfe5c5446e1dc9d # v2.0.1
+
       - name: Copy new unique tag to RedHat Container Registry
         if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |
           # Deliberately only copy a single architecture - https://github.com/hazelcast/hazelcast-docker/pull/1042#issuecomment-3141395993
-          skopeo copy \
-            --retry-times 10 \
-            --override-os "${PLATFORM_OS}" \
-            --override-arch "${PLATFORM_ARCH}" \
-            docker://${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
-            docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
+          oras cp \
+            --recursive \
+            --platform ${PLATFORM_OS}/${PLATFORM_ARCH} \
+            docker.io/${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            docker.io/${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
 
       - name: Install `preflight` OpenShift tool from GitHub
         if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
@@ -227,19 +229,13 @@ jobs:
       - name: Copy remaining tags to RedHat Container Registry
         if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |
-          for tag in ${TAGS_TO_PUSH}
-          do
-            echo "Copying tag: ${FULL_PRIMARY_TAG} -> ${tag}"
-            skopeo copy \
-              --retry-times 10 \
-              --override-os "${PLATFORM_OS}" \
-              --override-arch "${PLATFORM_ARCH}" \
-              docker://${FULL_PRIMARY_TAG} \
-              docker://${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${tag}
-          done
+          oras cp \
+            --recursive \
+            --platform ${PLATFORM_OS}/${PLATFORM_ARCH} \
+            docker.io/${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            ${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${TAGS_TO_PUSH// /,}
         env:
           TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
-          FULL_PRIMARY_TAG: ${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
 
       - name: Check tags published
         # Just because the tag has been pushed to the registry, does not guarantee it's accessible

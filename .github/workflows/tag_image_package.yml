@@ -181,15 +181,16 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_ORGANIZATION }}
 
+      - uses: oras-project/setup-oras@1d808f7d7f6995cc68b7bf507bfe5c5446e1dc9d # v2.0.1
+
       - name: Push image to remote registry
         run: |
-          # Skopeo expects HTTPS registry but local is HTTP
-          skopeo copy \
-            --all \
-            --retry-times 10 \
-            --src-tls-verify=false \
-            docker://${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
-            docker://${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+          # oras expects HTTPS registry but local is HTTP
+          oras cp \
+            --from-plain-http \
+            --recursive \
+            ${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            docker.io/${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
 
   failure-notifications:
     name: Failure notification
