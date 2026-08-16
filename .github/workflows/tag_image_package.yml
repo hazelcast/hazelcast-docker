@@ -136,6 +136,7 @@ jobs:
           platforms: ${{ steps.platforms.outputs.platforms }}
           outputs: type=image,push=true,rewrite-timestamp=true
           tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+          provenance: true
           build-args: |
             JDK_VERSION=${{ matrix.jdk }}
 
@@ -157,9 +158,13 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh -o install-scout.sh
           sh install-scout.sh
 
-      - name: Run Docker scout
+      - name: Run docker scout quickview
         run: |
           docker scout quickview ${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+
+      - name: Run docker scout recommendations
+        run: |
+           docker scout recommendations ${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }}
 
       - name: Run test container
         id: test-container
