@@ -126,6 +126,7 @@ jobs:
           HZ_REVISION: ${{ inputs.HZ_REVISION }}
 
       - name: Build and push image
+        id: build-and-push
         uses: docker/build-push-action@v7
         env:
           # Fixed timestamp (like 0 EPOCH) is needed for reproducible builds
@@ -138,6 +139,11 @@ jobs:
           tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
           build-args: |
             JDK_VERSION=${{ matrix.jdk }}
+
+      - uses: ./.github/actions/sign-image
+        with:
+          image-name: ${{ env.LOCAL_IMAGE_NAME }}
+          digest: ${{ steps.build-and-push.outputs.digest }}
 
       - name: Delete the distribution file
         run: |
@@ -181,15 +187,16 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_ORGANIZATION }}
 
+      - uses: oras-project/setup-oras@1d808f7d7f6995cc68b7bf507bfe5c5446e1dc9d # v2.0.1
+
       - name: Push image to remote registry
         run: |
-          # Skopeo expects HTTPS registry but local is HTTP
-          skopeo copy \
-            --all \
-            --retry-times 10 \
-            --src-tls-verify=false \
-            docker://${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
-            docker://${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+          # oras expects HTTPS registry but local is HTTP
+          oras cp \
+            --from-plain-http \
+            --recursive \
+            ${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            docker.io/${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
 
   failure-notifications:
     name: Failure notification
