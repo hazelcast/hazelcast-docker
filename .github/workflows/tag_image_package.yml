@@ -136,6 +136,7 @@ jobs:
           platforms: ${{ steps.platforms.outputs.platforms }}
           outputs: type=image,push=true,rewrite-timestamp=true
           tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+          provenance: true
           build-args: |
             JDK_VERSION=${{ matrix.jdk }}
 
