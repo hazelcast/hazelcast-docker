@@ -145,6 +145,22 @@ jobs:
           # The distribution is large and no longer required now the image has been built
           rm "${{ steps.download-hz-dist.outputs.output_file }}"
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        env:
+          DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
+        with:
+          username: ${{ vars.DOCKERHUB_ORGANIZATION }}
+
+      - name: Install Docker scout
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh -o install-scout.sh
+          sh install-scout.sh
+
+      - name: Run Docker scout
+        run: |
+          docker scout quickview ${LOCAL_IMAGE_NAME}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+
       - name: Run test container
         id: test-container
         background: true
@@ -173,13 +189,6 @@ jobs:
       - uses: hazelcast/docker-actions/assert-image-size@master
         with:
           image: ${{ env.LOCAL_IMAGE_NAME}}:${{ steps.get-tags-to-push.outputs.primary-tag }}
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        env:
-          DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
-        with:
-          username: ${{ vars.DOCKERHUB_ORGANIZATION }}
 
       - name: Push image to remote registry
         run: |
