@@ -35,6 +35,8 @@ RUN mkdir -p "${BUILD_HZ_HOME}" \
     && echo "Grant execute permission to scripts in order to address the issue of permissions not being accurately propagated on Windows OS" \
     && chmod +x "${BUILD_HZ_HOME}/bin"/*
 
+# Include SBOM if present
+COPY *-sbom.json ${BUILD_HZ_HOME}/spdx
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${BUILD_HZ_HOME}/config/
 
 FROM alpine:3
