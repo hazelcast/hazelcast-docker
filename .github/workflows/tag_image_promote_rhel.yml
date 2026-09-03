@@ -173,7 +173,7 @@ jobs:
             --recursive \
             --platform ${PLATFORM_OS}/${PLATFORM_ARCH} \
             docker.io/${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ vars.DOCKERHUB_EE_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
-            docker.io/${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
+            ${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
 
       - name: Install `preflight` OpenShift tool from GitHub
         if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
