@@ -90,11 +90,20 @@ jobs:
         run: |
           oras cp \
             --recursive \
-            ${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${NLC_IMAGE_NAME}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
-            ${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${NLC_IMAGE_NAME}:${TAGS_TO_PUSH// /,}
+            ${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${{ vars.NLC_IMAGE_NAME }}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }} \
+            ${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${{ vars.NLC_IMAGE_NAME }}:${TAGS_TO_PUSH// /,}
         env:
           TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
-          NLC_IMAGE_NAME: ${{ vars.NLC_IMAGE_NAME }}
+
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Validate image signature
+        run: |
+          # https://github.com/sigstore/cosign-installer#usage
+          cosign verify \
+            --certificate-identity-regexp "${GITHUB_SERVER_URL//./\\.}/${GITHUB_REPOSITORY}/.*" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            ${NLC_IMAGE_REGISTRY_URL}/hazelcast_cloud/${{ vars.NLC_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
 
       - name: Check RedHat service status
         if: failure()
