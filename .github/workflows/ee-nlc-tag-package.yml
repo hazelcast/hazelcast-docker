@@ -136,7 +136,10 @@ jobs:
       - name: Sign the image
         run: |
           # https://github.com/sigstore/cosign-installer#usage
-          cosign sign --yes "${LOCAL_IMAGE_NAME}@${{ steps.build-and-push.outputs.digest }}"
+          cosign sign \
+            --recursive=true \
+            --yes \
+            "${LOCAL_IMAGE_NAME}@${{ steps.build-and-push.outputs.digest }}"
 
       - name: Delete the distribution file
         run: |
