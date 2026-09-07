@@ -180,12 +180,19 @@ jobs:
 
       - name: Validate image signature
         if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
+        timeout-minutes: 1
         run: |
+          source /dev/stdin <<< "$(curl --fail --retry 5 --retry-all-errors --show-error --silent https://raw.githubusercontent.com/hazelcast/github-actions-common-scripts/main/logging.functions.sh)"
+
           # https://github.com/sigstore/cosign-installer#usage
-          cosign verify \
+          # Image signatures can take a couple of seconds to appear after the main image (suspect "oras cp --recursive" is not fully atomic), so poll for completion
+          while ! cosign verify \
             --certificate-identity-regexp "${GITHUB_SERVER_URL//./\\.}/${GITHUB_REPOSITORY}/.*" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            ${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}
+            ${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}:${{ steps.unique-destination-tag.outputs.tag }}; do
+              echodebug "Signature verification failed - additional annotations may not yet be available, retrying..."
+              sleep 1
+          done
 
       - name: Install `preflight` OpenShift tool from GitHub
         if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
