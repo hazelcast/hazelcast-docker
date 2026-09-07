@@ -64,6 +64,9 @@ EXPOSE 5701
 
 COPY --link --from=get-distribution ${BUILD_ROOT} /
 
+RUN echo "Upgrading packages" \
+    && apk upgrade --no-cache --no-logfile
+
 RUN echo "Adding non-root user" \
     && addgroup -S ${USER_GROUP} \
     && adduser -S ${USER_NAME} -G ${USER_GROUP} \
@@ -75,9 +78,6 @@ RUN echo "Adding non-root user" \
     && echo "Regenerating Java cacerts with SOURCE_DATE_EPOCH for reproducibility" \
     && trust extract --overwrite --format=java-cacerts --filter=ca-anchors \
         --purpose server-auth /etc/ssl/certs/java/cacerts
-
-RUN echo "Upgrading packages" \
-    && apk upgrade --no-cache --no-logfile
 
 WORKDIR ${HZ_HOME}
 
