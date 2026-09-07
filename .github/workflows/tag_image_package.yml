@@ -206,12 +206,19 @@ jobs:
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
 
       - name: Validate image signature
+        timeout-minutes: 1
         run: |
+          source /dev/stdin <<< "$(curl --fail --retry 5 --retry-all-errors --show-error --silent https://raw.githubusercontent.com/hazelcast/github-actions-common-scripts/main/logging.functions.sh)"
+
           # https://github.com/sigstore/cosign-installer#usage
-          cosign verify \
+          # Image signatures can take a couple of seconds to appear after the main image (suspect "oras cp --recursive" is not fully atomic), so poll for completion
+          while ! cosign verify \
             --certificate-identity-regexp "${GITHUB_SERVER_URL//./\\.}/${GITHUB_REPOSITORY}/.*" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            docker.io/${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+            docker.io/${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }}; do
+              echodebug "Signature verification failed - additional annotations may not yet be available, retrying..."
+              sleep 1
+          done
 
   failure-notifications:
     name: Failure notification
