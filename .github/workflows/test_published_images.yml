@@ -180,6 +180,8 @@ jobs:
             # Compute tag by concatenating tag_elements
             local image="${repository}/${image_name}":$(IFS=- ; echo "${tag_elements[*]}")
 
+            docker container rm --force "${CONTAINER_NAME}" 2>/dev/null || true
+
             docker run \
               --detach \
               --env HZ_INSTANCETRACKING_FILENAME \
