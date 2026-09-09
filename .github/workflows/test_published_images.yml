@@ -198,6 +198,7 @@ jobs:
               "${expected_jdk_version}"
 
             docker stop "${CONTAINER_NAME}"
+            docker container rm --force "${CONTAINER_NAME}"
           }
 
           case "${{ matrix.distribution-type }}" in
