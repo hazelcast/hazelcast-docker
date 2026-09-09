@@ -198,7 +198,8 @@ jobs:
               "${expected_jdk_version}"
 
             docker stop "${CONTAINER_NAME}"
-            docker container rm --force "${CONTAINER_NAME}"
+            # Remove container if exists
+            docker container rm --force "${CONTAINER_NAME}" || true
           }
 
           case "${{ matrix.distribution-type }}" in
