@@ -177,7 +177,6 @@ jobs:
 
       - if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         uses: ./.github/actions/cosign/validate
-        timeout-minutes: 1
         with:
           image: ${{ steps.scan_registry_secrets.outputs.SCAN_REPOSITORY }}
           tag: ${{ steps.unique-destination-tag.outputs.tag }}

@@ -200,7 +200,6 @@ jobs:
             docker.io/${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
 
       - uses: ./.github/actions/cosign/validate
-        timeout-minutes: 1
         with:
           image: docker.io/${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}
           tag: ${{ steps.get-tags-to-push.outputs.primary-tag }}

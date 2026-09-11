@@ -96,7 +96,6 @@ jobs:
           TAGS_TO_PUSH: ${{ steps.get-tags-to-push.outputs.all-destination-tags }}
 
       - uses: ./.github/actions/cosign/validate
-        timeout-minutes: 1
         with:
           image: ${{ env.NLC_IMAGE_REGISTRY_URL }}/hazelcast_cloud/${{ vars.NLC_IMAGE_NAME }}
           tag: ${{ steps.get-tags-to-push.outputs.primary-tag }}
