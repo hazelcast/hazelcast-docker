@@ -1,0 +1,23 @@
+name: Sign Image
+
+inputs:
+  image:
+    required: true
+  digest:
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: ./.github/actions/cosign/install
+
+    - name: Sign the image
+      shell: bash
+      run: |
+        # https://github.com/sigstore/cosign-installer#usage
+        cosign sign \
+          --recursive=true \
+          --yes \
+          "${IMAGE}@${DIGEST}"
+      env:
+        IMAGE: ${{ inputs.image }}
+        DIGEST: ${{ inputs.digest }}
