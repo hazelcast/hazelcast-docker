@@ -1,0 +1,45 @@
+name: Validate Image Signature
+
+inputs:
+  image:
+    required: true
+  tag:
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: ./.github/actions/cosign/install
+
+    - name: Validate image signature
+      shell: bash
+      run: |
+        source /dev/stdin <<< "$(curl --fail --retry 5 --retry-all-errors --show-error --silent https://raw.githubusercontent.com/hazelcast/github-actions-common-scripts/main/logging.functions.sh)"
+
+        # https://github.com/sigstore/cosign-installer#usage
+        # Image signatures can take a couple of seconds to appear after the main image (suspect "oras cp --recursive" is not fully atomic), so poll for completion
+
+        MAX_ATTEMPTS=30
+        verified=false
+
+        for ((attempt = 1; attempt <= MAX_ATTEMPTS; attempt++)); do
+          if cosign verify \
+            --certificate-identity-regexp "${GITHUB_SERVER_URL//./\\.}/${GITHUB_REPOSITORY}/.*" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            "${IMAGE}:${TAG}"; then
+            verified=true
+            break
+          fi
+
+          if (( attempt < MAX_ATTEMPTS )); then
+            echonotice "Signature verification failed - additional annotations may not yet be available (attempt ${attempt}/${MAX_ATTEMPTS}), retrying..."
+            sleep 1
+          fi
+        done
+
+        if [[ "${verified}" != true ]]; then
+          echoerr "Could not verify the signature of ${IMAGE} after ${MAX_ATTEMPTS} attempts"
+          exit 1
+        fi
+      env:
+        IMAGE: ${{ inputs.image }}
+        TAG: ${{ inputs.tag }}
