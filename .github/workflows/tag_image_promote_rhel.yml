@@ -162,7 +162,7 @@ jobs:
           # Add date suffix to create unique output tag (e.g. 5.4.1-jdk17-20250909130347)
           echo "tag=${{ steps.get-tags-to-push.outputs.primary-tag }}-$(date +"%Y%m%d%H%M%S")" >> ${GITHUB_OUTPUT}
 
-      - if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'   
+      - if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         uses: oras-project/setup-oras@1d808f7d7f6995cc68b7bf507bfe5c5446e1dc9d # v2.0.1
 
       - name: Copy new unique tag to RedHat Container Registry
