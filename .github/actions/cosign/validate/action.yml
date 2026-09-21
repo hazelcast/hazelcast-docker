@@ -32,7 +32,7 @@ runs:
 
           if (( attempt < MAX_ATTEMPTS )); then
             echonotice "Signature verification failed - additional annotations may not yet be available (attempt ${attempt}/${MAX_ATTEMPTS}), retrying..."
-            sleep 1
+            sleep 5
           fi
         done
 
