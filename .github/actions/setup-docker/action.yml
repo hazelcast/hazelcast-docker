@@ -12,13 +12,12 @@ runs:
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@ceedf095f4ec1a097402bc6bd80831f2e1a6fde6 # v2.0.0
       with:
-        tool-cache: false
+        preinstalled-runtimes: false
         android: false
         dotnet: true
         haskell: true
         large-packages: false
         docker-images: false
-        swap-storage: true
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v4
