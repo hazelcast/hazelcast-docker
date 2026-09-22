@@ -18,7 +18,7 @@ runs:
         # https://github.com/sigstore/cosign-installer#usage
         # Image signatures can take a couple of seconds to appear after the main image (suspect "oras cp --recursive" is not fully atomic), so poll for completion
 
-        MAX_ATTEMPTS=30
+        MAX_ATTEMPTS=100
         verified=false
 
         for ((attempt = 1; attempt <= MAX_ATTEMPTS; attempt++)); do
