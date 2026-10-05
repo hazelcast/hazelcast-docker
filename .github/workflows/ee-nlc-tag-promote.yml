@@ -104,6 +104,11 @@ jobs:
         if: failure()
         uses: hazelcast/docker-actions/check-redhat-service-status@master
 
+      - name: Remove tags from pre-prod
+        uses: ./.github/actions/delete-tags
+        with:
+          image_ref: ${{ env.NLC_IMAGE_REGISTRY_URL }}/hazelcast_cloud/${{ vars.NLC_IMAGE_NAME }}-${{ vars.PREPROD_REGISTRY }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+
   failure-notifications:
     name: Failure notification
     if: failure() && github.triggering_actor == 'devOpsHazelcast'

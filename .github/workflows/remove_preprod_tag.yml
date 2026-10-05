@@ -1,0 +1,96 @@
+name: Remove tags from pre-prod
+run-name: ${{ github.workflow }} (`${{ inputs.HZ_VERSION }}`@${{ inputs.ENVIRONMENT }})
+
+on:
+  # For debugging only
+  workflow_dispatch:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to remove, e.g. 5.1.1, 5.0.1'
+        required: true
+      JDKS:
+        description: 'Supported JDKs - e.g. `[17, 21]`'
+        required: true
+      IS_LATEST_LTS:
+        description: 'Is Latest LTS? e.g. `false`'
+        required: true
+      DEFAULT_JDK:
+        description: 'The Java major version (e.g. `21`, `8`) used by default in the image'
+        required: true
+      DISTRIBUTION_CLASSIFIERS:
+        required: true
+      DISTRIBUTION_TYPES:
+        required: true
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: environment
+  workflow_call:
+    inputs:
+      HZ_VERSION:
+        description: 'Version of Hazelcast to remove, e.g. 5.1.1, 5.0.1'
+        required: true
+        type: string
+      JDKS:
+        description: 'Supported JDKs - e.g. `[17, 21]`'
+        required: true
+        type: string
+      IS_LATEST_LTS:
+        description: 'Is Latest LTS? e.g. `false`'
+        required: true
+        type: string
+      DEFAULT_JDK:
+        description: 'The Java major version (e.g. `21`, `8`) used by default in the image'
+        required: true
+        type: string
+      DISTRIBUTION_CLASSIFIERS:
+        required: true
+        type: string
+      DISTRIBUTION_TYPES:
+        required: true
+        type: string
+      ENVIRONMENT:
+        description: 'Environment to use'
+        required: true
+        type: string
+
+jobs:
+  promote-docker-registry:
+    environment: ${{ inputs.ENVIRONMENT }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    strategy:
+      matrix:
+        jdk: ${{ fromJSON(inputs.JDKS) }}
+        classifier: ${{ fromJSON(inputs.DISTRIBUTION_CLASSIFIERS) }}
+        distribution-type: ${{ fromJSON(inputs.DISTRIBUTION_TYPES) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - id: get-tags-to-push
+        uses: ./.github/actions/get-tags-to-push
+        with:
+          hz-version: ${{ inputs.HZ_VERSION }}
+          jdk: ${{ matrix.jdk }}
+          default-jdk: ${{ inputs.DEFAULT_JDK }}
+          classifier: ${{ matrix.classifier }}
+          # LTS is implicitly EE only
+          is-latest-lts: ${{ matrix.distribution-type.label == 'ee' && inputs.IS_LATEST_LTS == 'true' }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        env:
+          DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
+        with:
+          username: ${{ vars.DOCKERHUB_ORGANIZATION }}
+
+      - name: Remove tags from pre-prod
+        uses: ./.github/actions/delete-tags
+        with:
+          image_ref: docker.io/${{ vars.DOCKERHUB_ORGANIZATION }}/${{ vars.PREPROD_REGISTRY }}-${{ matrix.distribution-type.image-name }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
+          # Dockerhub OIDC connection does not expose `delete` scope (only `push` / `pull`), so instead use a token
+          registry_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry_password: ${{ secrets.DOCKERHUB_PASSWORD }}

@@ -75,12 +75,27 @@ jobs:
       DEFAULT_JDK: ${{ needs.prepare.outputs.default-jdk }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
+  
+  remove-preprod-tag:
+    needs:
+      - prepare
+      - promote-docker-registry
+      - promote-rhel
+    uses: ./.github/workflows/remove_preprod_tag.yml
+    with:
+      HZ_VERSION: ${{ needs.prepare.outputs.hz-version }}
+      JDKS: ${{ needs.prepare.outputs.jdks }}
+      IS_LATEST_LTS: ${{ needs.prepare.outputs.is-latest-lts }}
+      DEFAULT_JDK: ${{ needs.prepare.outputs.default-jdk }}
+      DISTRIBUTION_CLASSIFIERS: ${{ needs.prepare.outputs.distribution-classifiers }}
+      DISTRIBUTION_TYPES: ${{ needs.prepare.outputs.distribution-types }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+    secrets: inherit
 
   failure-notifications:
     name: Failure notification
     if: ${{ failure() && github.triggering_actor == 'devOpsHazelcast' }}
     needs:
-      - promote-docker-registry
-      - promote-rhel
+      - remove-preprod-tag
     uses: ./.github/workflows/slack-notification.yml
     secrets: inherit
