@@ -20,6 +20,8 @@ on:
 jobs:
   get-environment:
     runs-on: ubuntu-latest
+    # never run in forks
+    if: github.repository_owner == 'hazelcast'
     outputs:
       environment: ${{ inputs.ENVIRONMENT || 'live' }}
     steps:
