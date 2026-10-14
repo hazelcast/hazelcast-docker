@@ -1,0 +1,39 @@
+name: Delete tags from registry
+
+inputs:
+  image_ref:
+    required: true
+  registry_username:
+    required: false
+  registry_password:
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - uses: regclient/actions/regctl-installer@1b705e32d40851370799ea5814e83d0a5f6a70dc # v0.1.0
+
+    - name: Login to registry
+      if: ${{ inputs.registry_username != '' && inputs.registry_password != '' }}
+      shell: bash
+      run: |
+        # https://regclient.org/cli/regctl/registry/login
+        echo "${REGISTRY_PASSWORD}" | \
+        regctl registry login \
+          ${IMAGE_REF%%/*} \
+          --user "${REGISTRY_USERNAME}" \
+          --pass-stdin \
+          ${RUNNER_DEBUG:+--verbosity debug}
+      env:
+        IMAGE_REF: ${{ inputs.image_ref }}
+        REGISTRY_USERNAME: ${{ inputs.registry_username }}
+        REGISTRY_PASSWORD: ${{ inputs.registry_password }}
+
+    - name: Delete tag
+      shell: bash
+      run: |
+        # https://regclient.org/cli/regctl/tag/delete
+        regctl tag delete \
+          ${IMAGE_REF} \
+          ${RUNNER_DEBUG:+--verbosity debug}
+      env:
+        IMAGE_REF: ${{ inputs.image_ref }}
