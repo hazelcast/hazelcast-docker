@@ -67,6 +67,7 @@ jobs:
     env:
       LOCAL_IMAGE_NAME: localhost:5000/${{ matrix.distribution-type.image-name }}
       TEST_CONTAINER_NAME: hazelcast-test
+      DISTRIBUTION_ARCHIVE: source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip
     services:
       registry:
         image: registry:latest
@@ -105,7 +106,7 @@ jobs:
           hz_version: ${{ needs.prepare.outputs.hz-version }}
           classifier: ${{ matrix.classifier }}
           packaging: "zip"
-          output_file: "source_path/${{ matrix.distribution-type.docker-dir }}/${{ matrix.distribution-type.distribution }}-distribution.zip"
+          output_file: ${{ env.DISTRIBUTION_ARCHIVE }}
 
       - id: get-tags-to-push
         uses: ./.github/actions/get-tags-to-push
@@ -125,6 +126,16 @@ jobs:
         env:
           HZ_REVISION: ${{ inputs.HZ_REVISION }}
 
+      - name: Determine if SBOM applicable
+        id: sbom-applicable
+        run: |
+          # Only generate SBOM for image if SBOM for distribution exists too (as not in all versions), partial SBOM would be inaccurate
+          if zipinfo -1 "${DISTRIBUTION_ARCHIVE}" | grep -q 'bom.cdx.json'; then
+            echo "found=true" >> ${GITHUB_OUTPUT}
+          else
+            echo "found=false" >> ${GITHUB_OUTPUT}
+          fi
+          
       - name: Build and push image
         id: build-and-push
         uses: docker/build-push-action@v7
@@ -136,6 +147,7 @@ jobs:
           labels: ${{ steps.labels.outputs.label }}
           platforms: ${{ steps.platforms.outputs.platforms }}
           outputs: type=image,push=true,rewrite-timestamp=true
+          sbom: ${{ steps.sbom-applicable.outputs.found == 'true' }}
           tags: ${{ env.LOCAL_IMAGE_NAME }}:${{ steps.get-tags-to-push.outputs.primary-tag }}
           build-args: |
             JDK_VERSION=${{ matrix.jdk }}
