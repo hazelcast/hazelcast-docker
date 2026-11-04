@@ -55,7 +55,7 @@ on:
         type: string
 
 jobs:
-  promote-docker-registry:
+  remove-preprod-tags:
     environment: ${{ inputs.ENVIRONMENT }}
     runs-on: ubuntu-latest
     permissions:
