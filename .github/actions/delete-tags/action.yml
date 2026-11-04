@@ -2,6 +2,7 @@ name: Delete tags from registry
 
 inputs:
   image_ref:
+    description: "The image + tag to remove, e.g. my-image:1.2.3"
     required: true
   registry_username:
     required: false
