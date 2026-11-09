@@ -3,7 +3,7 @@
 # shellcheck source=../.github/scripts/version.functions.sh
 . .github/scripts/version.functions.sh
 
-# Returns tags, ordered by specificality 
+# Returns tags, ordered by specificality
 function __get_version_only_tags_to_push() {
   local VERSION_TO_RELEASE=$1
   local IS_LATEST_LTS=$2

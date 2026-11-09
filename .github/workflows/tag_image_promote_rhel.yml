@@ -127,7 +127,7 @@ jobs:
           source .github/scripts/logging.functions.sh
           source .github/scripts/rhel.functions.sh
 
-          # Extract the architecture-specific manifest digest, matching the image is pushed 
+          # Extract the architecture-specific manifest digest, matching the image is pushed
           # to RedHat Container Registry (single-arch, not manifest list)
           DIGEST=$(skopeo inspect --raw \
             docker://${FULL_PRIMARY_TAG} \
@@ -219,7 +219,7 @@ jobs:
         # To _try_ to attain republish atomicity, we want to await the successful publishing of the new, unique tag _before_ we push (and implicitly replace) the existing tags
         # Otherwise we'd replace a published image with an unpublished one
         timeout-minutes: 60
-        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'   
+        if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |
           set -o errexit ${RUNNER_DEBUG:+-x}
 
@@ -246,7 +246,7 @@ jobs:
       - name: Check tags published
         # Just because the tag has been pushed to the registry, does not guarantee it's accessible
         # RedHat has a `sync-tags` operation that is performed asynchronously after publish - and there have been scenarios where this has gone wrong and the tag is not accessible
-        # As such, await completion and test 
+        # As such, await completion and test
         timeout-minutes: 240
         if: steps.image-already-published.outputs.IMAGE_ALREADY_PUBLISHED != 'true'
         run: |

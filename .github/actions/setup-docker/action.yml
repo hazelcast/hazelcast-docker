@@ -1,5 +1,5 @@
 name: Setup Docker
-description: Configures runner with tools required to build (not just manage) Docker images 
+description: Configures runner with tools required to build (not just manage) Docker images
 inputs:
   platforms:
     description: Platforms to install (e.g., `arm64,riscv64,arm`)

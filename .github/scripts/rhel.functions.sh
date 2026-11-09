@@ -163,7 +163,7 @@ check_image_tags()
 
     if contains_all_expected_tags "${expected_tags}" "${actual_tags}"; then
       return 0
-    else 
+    else
       echo "Resyncing tags"
       __sync_tags "${project_id}" "${image_id}" "${api_key}"
     fi
