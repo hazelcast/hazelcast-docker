@@ -28,8 +28,10 @@ jobs:
 
       - name: Check `${{ steps.tag-name.outputs.TAG_NAME }}` tag exists
         run: |
+          source /dev/stdin <<< "$(curl --fail --retry 5 --retry-all-errors --show-error --silent https://raw.githubusercontent.com/hazelcast/github-actions-common-scripts/main/logging.functions.sh)"
+
           if ! gh release view --repo ${GITHUB_REPOSITORY} ${{ steps.tag-name.outputs.TAG_NAME }}; then
-            echo "::notice::\"${{ steps.tag-name.outputs.TAG_NAME }}\" tag not found to replace, skipping" 
+            echonotice "\"${{ steps.tag-name.outputs.TAG_NAME }}\" tag not found to replace, skipping"
             echo "SKIP=true" >> ${GITHUB_ENV}
           fi
         env:
