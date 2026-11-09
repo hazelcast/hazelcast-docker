@@ -75,7 +75,7 @@ jobs:
       DEFAULT_JDK: ${{ needs.prepare.outputs.default-jdk }}
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets: inherit
-  
+
   remove-preprod-tag:
     needs:
       - prepare
