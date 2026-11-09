@@ -77,6 +77,7 @@ jobs:
     secrets: inherit
 
   remove-preprod-tag:
+    if: ${{ !failure() && !cancelled() }}
     needs:
       - prepare
       - promote-docker-registry
