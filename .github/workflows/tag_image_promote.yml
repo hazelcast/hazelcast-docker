@@ -16,6 +16,7 @@ jobs:
       - run: exit 0
 
   remove-preprod-tag:
+    if: ${{ !failure() && !cancelled() }}
     needs:
       - promote-docker-registry
       - promote-rhel
@@ -25,7 +26,7 @@ jobs:
 
   failure-notifications:
     name: Failure notification
-    if: ${{ failure() }}
+    if: ${{ always() }}
     needs:
       - remove-preprod-tag
     runs-on: ubuntu-latest
