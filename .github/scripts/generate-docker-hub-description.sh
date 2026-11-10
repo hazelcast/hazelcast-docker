@@ -43,7 +43,7 @@ function get_docker_access_token() {
     --show-error \
     --header "Content-Type: application/json" \
     --data "{\"identifier\":\"${USERNAME}\",\"secret\":\"${PASSWORD}\"}" \
-    https://hub.docker.com/v2/auth/token | 
+    https://hub.docker.com/v2/auth/token |
     jq -r '.access_token'
 }
 
