@@ -37,7 +37,7 @@ RUN mkdir -p "${BUILD_HZ_HOME}" \
 
 COPY log4j2.properties log4j2-json.properties jmx_agent_config.yaml ${BUILD_HZ_HOME}/config/
 
-FROM redhat/ubi9-minimal:9.8
+FROM redhat/ubi9-minimal:9.9
 
 ARG HZ_HOME
 ARG HZ_VERSION
