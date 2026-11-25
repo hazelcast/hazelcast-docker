@@ -61,6 +61,7 @@ jobs:
     permissions:
       id-token: write
     strategy:
+      fail-fast: false
       matrix:
         jdk: ${{ fromJSON(inputs.JDKS) }}
         classifier: ${{ fromJSON(inputs.DISTRIBUTION_CLASSIFIERS) }}

@@ -112,6 +112,7 @@ jobs:
       - convert-rebuilds-to-matrix
     if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
     strategy:
+      fail-fast: false
       matrix:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
     uses: ./.github/workflows/tag_image_push.yml
@@ -128,6 +129,7 @@ jobs:
       - convert-rebuilds-to-matrix
     if: ${{ needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix != '[]' }}
     strategy:
+      fail-fast: false
       matrix:
         version: ${{ fromJSON(needs.convert-rebuilds-to-matrix.outputs.rebuild-ee-matrix) }}
     uses: ./.github/workflows/ee-nlc-tag-push.yml
