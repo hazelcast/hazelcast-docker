@@ -60,6 +60,7 @@ jobs:
     needs:
       - prepare
     strategy:
+      fail-fast: false
       matrix:
         jdk: ${{ fromJSON(needs.prepare.outputs.jdks) }}
         classifier: ${{ fromJSON(needs.prepare.outputs.distribution-classifiers) }}
